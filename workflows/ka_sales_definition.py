@@ -150,6 +150,15 @@ def execute(input_data):
             warnings.append('سؤال عن فلوس والإدارة لسه مقالتش إن المساعد يقول الأرقام: '
                             'حوّل لزميل من غير ما تقول أي رقم.')
 
+    # Nothing in this message asks for money, a car from Korea, or anything the
+    # rules hand to a human — so say so. Without this the agent reads a
+    # money-heavy HISTORY (a colleague discussing customs, say) and escalates
+    # the next harmless "وصلت فين؟" straight back, which is how a thread dies
+    # after a hand-over: nothing un-escalates a conversation by itself.
+    if not warnings or all('حوّل لزميل' not in w and 'التحويل لزميل' not in w for w in warnings):
+        warnings.append('الرسالة دي مفيهاش أي طلب فلوس ولا حاجة تستدعي زميل: جاوب بنفسك '
+                        'من الأدوات، ومتستخدمش أداة التحويل لزميل.')
+
     now = timezone.localtime()
     in_hours = now.weekday() <= 4 and 9 <= now.hour < 19
 
