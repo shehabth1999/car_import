@@ -46,19 +46,23 @@ class Command(BaseCommand):
 
         owner = self._owner(options['owner'])
         tools = self._tool_ids(ToolDefinition, definition.TOOL_NAMES)
-        model_id = self._model_id(LLMModel, definition.LLM_MODEL_NAME, definition.LLM_PROVIDER_NAME)
-        backup_id = self._model_id(LLMModel, definition.BACKUP_LLM_MODEL_NAME, definition.BACKUP_LLM_PROVIDER_NAME)
+        model_id, model_name = self._first_model(LLMModel, definition.LLM_MODEL_CANDIDATES)
+        backup_id, backup_name = self._first_model(LLMModel, definition.BACKUP_LLM_MODEL_CANDIDATES)
 
         if model_id is None:
+            wanted = ', '.join(name for name, _p in definition.LLM_MODEL_CANDIDATES)
             raise CommandError(
-                f"No active LLM model named '{definition.LLM_MODEL_NAME}'. "
-                f"Run `setup_llm_providers`, or edit LLM_MODEL_NAME in ka_sales_definition.py."
+                f"None of these models is active on this instance: {wanted}. "
+                f"Run `setup_llm_providers`, or edit LLM_MODEL_CANDIDATES in ka_sales_definition.py."
             )
+        self.stdout.write(f"Model: {model_name}")
         if backup_id is None:
             self.stdout.write(self.style.WARNING(
-                f"No backup model '{definition.BACKUP_LLM_MODEL_NAME}' — set one in the node after this runs. "
-                f"Without a backup, a provider outage becomes the agent's reply text."
+                "No backup model resolved — set one in the node after this runs. "
+                "Without a backup, a provider outage becomes the agent's reply text."
             ))
+        else:
+            self.stdout.write(f"Backup model: {backup_name}")
 
         if options['dry_run']:
             self.stdout.write(f"Would build '{name}' with {len(tools)} tool(s), model {model_id}.")
@@ -135,6 +139,14 @@ class Command(BaseCommand):
         if provider:
             qs = qs.filter(provider__name=provider)
         return qs.values_list('pk', flat=True).first()
+
+    def _first_model(self, LLMModel, candidates):
+        """The first candidate this instance actually has, as (id, name)."""
+        for name, provider in candidates:
+            pk = self._model_id(LLMModel, name, provider)
+            if pk is not None:
+                return pk, name
+        return None, None
 
     def _canary(self, workflow, partner_ids):
         from modules.base.models import Partner

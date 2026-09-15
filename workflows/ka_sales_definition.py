@@ -23,12 +23,28 @@ import os
 BUNDLE_FORMAT = 'aistudio.workflow.bundle'
 BUNDLE_FORMAT_VERSION = 2
 
-#: Resolved by name when the bundle is imported. If your instance names them
-#: differently, pick the model in the node after importing.
-LLM_MODEL_NAME = 'claude-sonnet-5'
-LLM_PROVIDER_NAME = 'Anthropic'
-BACKUP_LLM_MODEL_NAME = 'gpt-5'
-BACKUP_LLM_PROVIDER_NAME = 'OpenAI'
+#: Resolved by name, best first, against whatever this instance actually has.
+#: A single hard-coded name is how the build died on the first tenant it met:
+#: its LLMModel table was seeded before Claude 5 existed, so the command
+#: refused to build anything at all. The first name that resolves wins; the
+#: build reports which one it used.
+LLM_MODEL_CANDIDATES = [
+    ('claude-sonnet-5', 'Anthropic'),
+    ('claude-opus-4-5-20251101', 'Anthropic'),
+    ('claude-sonnet-4-5-20250929', 'Anthropic'),
+]
+BACKUP_LLM_MODEL_CANDIDATES = [
+    ('gpt-5', 'OpenAI'),
+    ('gpt-4.1-2025-04-14', 'OpenAI'),
+    ('claude-haiku-4-5-20251001', 'Anthropic'),
+]
+
+#: What the exported bundle names. The importer resolves it by name and the
+#: model can be repicked in the node afterwards.
+LLM_MODEL_NAME = LLM_MODEL_CANDIDATES[0][0]
+LLM_PROVIDER_NAME = LLM_MODEL_CANDIDATES[0][1]
+BACKUP_LLM_MODEL_NAME = BACKUP_LLM_MODEL_CANDIDATES[0][0]
+BACKUP_LLM_PROVIDER_NAME = BACKUP_LLM_MODEL_CANDIDATES[0][1]
 
 TOOL_NAMES = [
     'ka_get_deal_status',
