@@ -123,6 +123,12 @@ car_deal_kanban_view = {
             "id": "car-import-deals",
             "name": _("Deal pipeline"),
             "description": _("Every open car, by shipping stage"),
+            # Without this the board is a flat wall of cards: the renderer only
+            # draws stage columns when the view names the field to group on.
+            "group_by": {
+                "name": "import_stage",
+                "tag": "field",
+            },
             "card": {
                 "header": {
                     "profile": {
