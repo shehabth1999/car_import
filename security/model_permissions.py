@@ -29,6 +29,13 @@ MODEL_PERMISSIONS = [
     {'model': 'car_import.importstage', 'group': 'car_import.operations', 'permissions': MANAGE},
     {'model': 'car_import.importstage', 'group': 'car_import.management', 'permissions': FULL},
 
+    # ── supplier listings carry the German purchase price ───────────────────
+    # Deliberately NOT granted to sales_agent: that price is cost data, and the
+    # brief makes hiding it from agents a contractual obligation.
+    {'model': 'car_import.supplierlisting', 'group': 'car_import.sales_manager', 'permissions': MANAGE},
+    {'model': 'car_import.supplierlisting', 'group': 'car_import.germany_team', 'permissions': MANAGE},
+    {'model': 'car_import.supplierlisting', 'group': 'car_import.management', 'permissions': FULL},
+
     # ── the log is evidence: nobody edits it ────────────────────────────────
     {'model': 'car_import.stagechangelog', 'group': 'car_import.sales_agent', 'permissions': VIEW_ONLY},
     {'model': 'car_import.stagechangelog', 'group': 'car_import.sales_manager', 'permissions': VIEW_ONLY},

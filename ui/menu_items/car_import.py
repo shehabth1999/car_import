@@ -31,6 +31,18 @@ menu_dict = {
                 "allowed_groups": ["car_import.sales_agent", "car_import.sales_manager",
                                    "car_import.germany_team", "car_import.management"],
             },
+            "car_import_menu_listings": {
+                "name": _("Supplier listings"),
+                "icon": "Search",
+                "module": "car_import",
+                "model": "car_import.supplierlisting",
+                "view_types": "list,form",
+                "sequence": 25,
+                # Not the sales agents: a listing carries the German purchase
+                # price, which is cost data they must not see.
+                "allowed_groups": ["car_import.sales_manager", "car_import.germany_team",
+                                   "car_import.management"],
+            },
             "car_import_menu_stage_log": {
                 "name": _("Message log"),
                 "icon": "Send",
