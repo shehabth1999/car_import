@@ -16,6 +16,7 @@ before doing this on a second tenant.
 | `base`, `notifications`, `contacts`, `crm`, `dashboard`, `chat`, `whatsapp` installed | The manifest depends on them |
 | **`sales`, `account`, `payment`, `products` NOT installed** | This project keeps accounting out; `check_ka_install` enforces it |
 | A superuser to own the workflow | `build_ka_workflows` assigns one |
+| **An API key on the AI provider the agent uses** | On `khaled_test` every `LLMProvider` row had `api_key` empty, so the agent answered "Anthropic authentication failed" instead of the customer. The backup model does not save you: it was configured, and its provider had no key either. Set the key in AI Studio → Providers, or through the deployment's environment on central, **before** any canary |
 
 ---
 
@@ -233,6 +234,15 @@ different problem from the screen.
 | The lead had no car-import fields and no button | The eleven `ka_*` fields and the `@action` were on the model from day one, and no view ever showed them. `ui/views/lead_views.py` patches `crm_lead_form_view` |
 | Instalments saved happily for a customer holding the initiative | The rule lived in `clean()`, and neither Django's `save()` nor this platform's write path calls it. It runs in `pre_save` now, where it becomes an HTTP 400 |
 | `build_ka_workflows` refused: "No active LLM model named 'claude-sonnet-5'" | Two things: the tenant's model catalogue predates Claude 5, and the provider filter was `'Anthropic'` while providers are seeded lower-case. The definition now carries an ordered candidate list and the match is case-insensitive |
+
+And from driving a whole Egyptian-Arabic conversation through the graph:
+
+| What you saw | What it actually was |
+|---|---|
+| Every turn ended at the logger node; the agent never ran once | The gate compared `{{ prepare_turn.needs_ai }}` with `'true'` using `equals`. For `data_type: boolean` this engine implements **only** `is_true` / `is_false` / `is_empty` / `is_not_empty` (`workflow_engine.py:1445`); anything else logs "Unknown operator" and returns False. Every structural check passed, because the wiring was never wrong |
+| The model was told "no open deal" about a customer whose car was at sea | A `function` node receives `partner` and `conversation` as **injected globals**, not inside `input_data` (`node_executor.py:_create_execution_context`) |
+| `حالة الدفع حسب المسجّل عندنا: Not paid` — English inside the Arabic message | Customer text was built from the model's choice labels, which are gettext strings resolved against the active language; a tool runs in Celery with no request, so the active language is English |
+| `Agent execution error: Anthropic authentication failed…` as the agent's answer | No provider on the tenant had an API key. Note the bridge treats an error in the output as a failure and escalates, so a customer would not see this — but they would get nothing from the AI either |
 
 Two things that were **not** faults, so nobody re-investigates them: a burst of
 `WebSocket error` lines in the browser console is the sockets dropping across a service
