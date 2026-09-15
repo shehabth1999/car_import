@@ -19,7 +19,11 @@ car_import_listing_list_view = {
                 {"name": "version", "string": _("Version"), "widget": "text", "width": "200"},
                 {"name": "model_year", "string": _("Year"), "widget": "number", "width": "80"},
                 {"name": "mileage_km", "string": _("Km"), "widget": "number", "width": "90"},
-                {"name": "price_gross_eur", "string": _("Price (EUR)"), "widget": "money", "width": "120"},
+                # "number", not "money": the money widget stamps the tenant's own
+                # currency symbol on it, and rendered a German EUR price as
+                # "$64,500.00". In a business quoting EUR, USD and EGP in the
+                # same breath, a wrong symbol is a wrong number.
+                {"name": "price_gross_eur", "string": _("Price (EUR)"), "widget": "number", "width": "120"},
                 # The column the whole price stack depends on — visible, not buried.
                 {"name": "vatable", "string": _("VAT deductible"), "widget": "switch", "width": "120"},
                 {"name": "seller_name", "string": _("Seller"), "widget": "text", "width": "180"},
@@ -104,7 +108,7 @@ car_import_listing_form_view = {
                     "groups": [
                         {
                             "fields": [
-                                {"name": "price_gross_eur", "string": _("Listed price (EUR)"), "widget": "money"},
+                                {"name": "price_gross_eur", "string": _("Listed price (EUR)"), "widget": "number"},
                                 {"name": "vatable", "string": _("VAT deductible"), "widget": "switch"},
                                 {"name": "vat_rate_pct", "string": _("German VAT %"), "widget": "number"},
                             ],
