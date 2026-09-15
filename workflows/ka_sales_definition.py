@@ -65,11 +65,18 @@ def execute(input_data):
     """Facts and warnings for this turn. The model never looks anything up itself."""
     from django.utils import timezone
 
-    partner = None
+    # `partner` and `conversation` are INJECTED GLOBALS in a function node's
+    # sandbox (node_executor.py:_create_execution_context) — they are not in
+    # input_data. Reading them from input_data is why every turn used to report
+    # "no open deal" and no warnings, for every customer alike.
+    try:
+        who = partner            # injected global, not an argument
+    except NameError:
+        who = None
     ctx = input_data.get('context') or {}
-    for source in (input_data, ctx):
-        partner = partner or source.get('partner')
-    partner_id = getattr(partner, 'pk', None) or ctx.get('partner_id') or input_data.get('partner_id')
+    partner_id = (getattr(who, 'pk', None)
+                  or ctx.get('partner_id')
+                  or input_data.get('partner_id'))
 
     message = (input_data.get('partner_message') or input_data.get('message') or '')
     if isinstance(message, dict):
@@ -193,10 +200,15 @@ def nodes(voice='aya', system_text=None):
             'configuration': {
                 'conditions': [
                     {
+                        # `boolean` implements ONLY is_true / is_false /
+                        # is_empty / is_not_empty (workflow_engine.py:1445).
+                        # 'equals' falls through to "Unknown operator" and
+                        # returns False, so every turn took the else branch and
+                        # the agent never ran once.
                         'data_type': 'boolean',
                         'variable1': '{{ prepare_turn.needs_ai }}',
-                        'operator': 'equals',
-                        'variable2': 'true',
+                        'operator': 'is_true',
+                        'variable2': '',
                     },
                 ],
             },
