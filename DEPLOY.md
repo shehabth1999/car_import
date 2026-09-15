@@ -1,8 +1,9 @@
 # car_import — deployment runbook
 
-Everything in this folder is ready to install. Nothing here has been run against a
-live database yet: the migration was generated offline and the workflow bundles
-were built from the definition in code.
+**Installed and exercised on `khaled_test` (khaled-test.genie-erp.com) on 2026-09-15.**
+Everything below has now been run against a real database, not just written down.
+What that run found is in "What the first install taught us" at the end — read it
+before doing this on a second tenant.
 
 ---
 
@@ -11,7 +12,7 @@ were built from the definition in code.
 | Need | Why |
 |---|---|
 | **This repo pushed to a remote the server can pull** | ⚠ `genie-ops <slug> update` and converge run `git reset --hard origin/main` inside every extension repo, with no dirty guard. Anything only committed locally is erased on the next deploy |
-| The module folder placed under a path in `EXTENSIONS_PATHS` on **that** server | That is how the platform finds an external module. Locally it is `E:\genie-erp\projects`; on the server check the deployment's `EXTENSIONS_PATHS` |
+| **The deployment's `extensions_repo_url` set on central** | One repo per deployment (`models_fleet.py:573`). If the tenant already points at another extension, pointing it here **removes that one** on the next converge. Central also only writes `EXTENSIONS_PATHS` into the tenant's `.env` when this field is non-empty (`provisioning_service.py:405`) — with it blank, the folder can be on disk and the app will never look at it |
 | `base`, `notifications`, `contacts`, `crm`, `dashboard`, `chat`, `whatsapp` installed | The manifest depends on them |
 | **`sales`, `account`, `payment`, `products` NOT installed** | This project keeps accounting out; `check_ka_install` enforces it |
 | A superuser to own the workflow | `build_ka_workflows` assigns one |
@@ -20,19 +21,55 @@ were built from the definition in code.
 
 ## 1. Install the module
 
-Take a baseline first — `git status` on core and this repo, `free -m`,
+Take a baseline first — a `genie-ops <slug> backup`, `free -m`, `df -h`,
 `manage.py sync_schema --status` — and run one `manage.py` process at a time.
 
+**Getting the code onto the tenant, without a converge.** A converge is fifteen
+phases long and rebuilds the frontend; none of that is needed to add an
+extension. The narrow path, which is what was actually used:
+
+```python
+# on central, as the central app user
+d = Deployment.objects.get(slug='<slug>')
+d.extensions_repo_url = 'https://github.com/shehabth1999/car_import.git'
+d.extensions_branch = 'main'
+d.save()
+ProvisioningService.push_env(d)      # rewrites .env, restarts the four units
+```
+
+Before that push, diff the rendered `.env` against the live one — `push_env`
+rewrites the WHOLE file from the row, so any key hand-added on the host is lost.
+On `khaled_test` the two were identical and the push added exactly one line.
+
+Then clone the repo on the tenant host, as the tenant's own user, into a folder
+named after the **package**, not the repository:
+
 ```bash
-uv run python manage.py install car_import
-uv run python manage.py migrate car_import                      # 4 tables: deal, stage, log, vehicle
-uv run python manage.py sync_schema --dry-run --from-module car_import
-uv run python manage.py sync_schema --from-module car_import    # partner / lead / ticket fields
-uv run python manage.py sync_schema --status                    # must now say up to date
-uv run python manage.py sync_all                                # views, menus, groups, permissions, actions
-uv run python manage.py sync_tools --app car_import             # registers the six AI tools
+sudo -n install -d -o genie_<slug> -g genie_<slug> -m 750 /srv/genie/<slug>/extensions
+sudo -n -u genie_<slug> bash -lc "cd /srv/genie/<slug> && \
+    git clone --branch main https://github.com/shehabth1999/car_import.git extensions/car_import"
+```
+
+A later converge finds this checkout by its remote URL and just fetches into it.
+
+```bash
+uv run python manage.py load_apps                               # the manifest must be a base_module row first
+uv run python manage.py install car_import                      # migrates the 4 tables AND adds the extension fields
+uv run python manage.py showmigrations car_import               # 0001, 0002 both [X]
+uv run python manage.py sync_schema --status                    # nothing pending FOR car_import
+uv run python manage.py sync_all                                # views, menus, groups, permissions, actions, tools
 uv run python manage.py check_ka_install                        # must print "clean"
 ```
+
+`install` does more than the name suggests: it adds the app to `INSTALLED_APPS`
+for its own process, migrates, and applies the model extensions — on
+`khaled_test` that was 4 tables plus 21 fields on the contact and the lead, in
+one command. A separate `sync_schema --from-module car_import` is belt and
+braces; run it if `--status` still lists car_import.
+
+`sync_schema --status` will very likely report **one** pending change that is
+not ours (`contenttypes.contenttype.name` from `modules.base`). It was pending
+before this module arrived. Leave it alone.
 
 Then restart the services, in this order: **Celery worker → gunicorn reload (HUP) →
 daphne**. Stage messages, the AI and the tool registry all live in the worker, and each
@@ -61,8 +98,12 @@ check for that file after any failure.
 uv run python manage.py seed_import_stages
 ```
 
-Creates the client's 13 stages with the Arabic drafts and **customer messages switched
-off**. Leave them off until Mr Khaled or the General Manager approves the wording and
+Creates the client's 14 stages (13 plus licensing as the final one) with the Arabic
+drafts and **customer messages switched off**, and the `car_import.cardeal` sequence
+that gives each deal its `KA/<year>/0001` reference. Do not skip it: without that
+sequence row `SequenceMixin` gives up silently and every deal saves nameless.
+
+Leave the messages off until Mr Khaled or the General Manager approves the wording and
 WhatsApp approves the templates. Then:
 
 ```bash
@@ -71,17 +112,34 @@ uv run python manage.py seed_import_stages --enable-messages
 
 ## 3. Load the AI workflow
 
-**Either** import the bundle through the UI — AI Studio → Workflows → Import → choose
-`workflows/ka_sales_aya.bundle.json` (also `_ramy` and `_social`). Tools and models are
-carried by name and resolved on this instance.
-
-**Or** build it from code on the server:
+**Preferred — build it from code on the server.** This is what was used on
+`khaled_test`; it resolves the model and the six tools against what the instance
+actually has and prints which model it picked:
 
 ```bash
 uv run python manage.py build_ka_workflows --voice aya
 ```
 
-Either way, open the agent node afterwards and confirm:
+**Or** import a bundle through the UI — AI Studio → Workflows → Import → choose
+`workflows/ka_sales_aya.bundle.json` (also `_ramy` and `_social`). Tools and models
+are carried by name, so pick the model in the node afterwards if the name differs.
+
+Either way, verify the graph before anyone connects a number — one entry node, both
+conditional handles wired, six tools resolving, no `ask_human` and no `human_approval`
+(in a channel flow those park the run forever and the customer gets nothing), and the
+workflow attached to **no** WhatsApp account yet:
+
+```bash
+uv run python manage.py shell -c "
+from modules.aistudio.models import WorkflowDefinition, ToolDefinition
+from modules.whatsapp.models import WhatsAppAccount
+w = WorkflowDefinition.objects.get(name='KA Sales — Aya')
+nodes = {n.node_id: n for n in w.nodes.all()}; edges = list(w.edges.all())
+print('entry:', [n for n in nodes if n not in {e.target_node_id for e in edges}])
+print('accounts:', list(WhatsAppAccount.objects.values_list('name', 'handled_by_ai', 'workflow_id')))"
+```
+
+Then open the agent node and confirm:
 
 - the **model** and the **backup model** resolved (without a backup, a provider outage
   becomes the agent's reply text);
@@ -159,6 +217,27 @@ or tick "Hold customer messages" on the deals concerned.
 - **Every stage move messages the customer** — from a button, a kanban drag, an automation
   rule or a list bulk-edit alike, because the hook sits on the model's save. That is
   deliberate, and it is why the suppression switch exists for migration day.
+
+## What the first install taught us
+
+Every one of these was found by using the module on `khaled_test`, not by reading it.
+They are fixed in the code; they are listed because each one would have looked like a
+different problem from the screen.
+
+| What you saw | What it actually was |
+|---|---|
+| "No form view found for this menu item" when opening any deal | The status header builds its pill options by reading `record.name` off the stage model (`ui_view.py:1146`). The stage called it `name_ar`, the AttributeError was swallowed into a 404. Migration 0002 renames it |
+| A deal saved with an empty reference, chatter announcing "Car Deal '—'" | No `Sequence` row for `car_import.cardeal`. `SequenceMixin` skips numbering without one and says nothing (`mixins.py:249`). `seed_import_stages` now creates it |
+| "Move to next stage" and "Send update to customer" did nothing, wherever you clicked | They were not there. The header lays the status pills and the buttons on one 30px row with overflow hidden, and fourteen Arabic stage names pushed both buttons to `x=-26, visibility:hidden`. The form no longer draws a status ribbon |
+| The kanban was a flat wall of cards | A kanban only draws columns when the view names a `group_by` field. It now names `import_stage` |
+| The lead had no car-import fields and no button | The eleven `ka_*` fields and the `@action` were on the model from day one, and no view ever showed them. `ui/views/lead_views.py` patches `crm_lead_form_view` |
+| Instalments saved happily for a customer holding the initiative | The rule lived in `clean()`, and neither Django's `save()` nor this platform's write path calls it. It runs in `pre_save` now, where it becomes an HTTP 400 |
+| `build_ka_workflows` refused: "No active LLM model named 'claude-sonnet-5'" | Two things: the tenant's model catalogue predates Claude 5, and the provider filter was `'Anthropic'` while providers are seeded lower-case. The definition now carries an ordered candidate list and the match is case-insensitive |
+
+Two things that were **not** faults, so nobody re-investigates them: a burst of
+`WebSocket error` lines in the browser console is the sockets dropping across a service
+restart, and `sync_schema --status` reporting one pending `contenttypes.contenttype.name`
+change belongs to `modules.base` and predates this module.
 
 ## Rules encoded here, so nobody has to remember them
 
