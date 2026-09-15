@@ -269,13 +269,37 @@ def get_backend():
 def _normalise(ad, simulated):
     """Flatten either backend's ad into the columns SupplierListing keeps."""
     if simulated:
-        data = dict(ad)
-        data['ad_id'] = str(ad.get('ad_id') or ad.get('id') or '')
-        data['price_gross_eur'] = ad.get('price')
-        data['mileage_km'] = ad.get('mileage')
-        data['is_simulated'] = True
-        data['raw'] = ad
-        return data
+        # Mapped field by field, NOT copied wholesale: the fixture speaks the
+        # marketplace's language (`price`, `mileage`) and the model speaks ours.
+        # Copying the dict shipped both, and the model rejected the extras.
+        return {
+            'ad_id': str(ad.get('ad_id') or ad.get('id') or ''),
+            'url': ad.get('url') or '',
+            'make': ad.get('make') or '',
+            'model': ad.get('model') or '',
+            'version': ad.get('version') or '',
+            'model_year': ad.get('model_year'),
+            'first_registration': ad.get('first_registration') or '',
+            'mileage_km': ad.get('mileage'),
+            'cc': ad.get('cc'),
+            'power_kw': ad.get('power_kw'),
+            'power_hp': ad.get('power_hp'),
+            'fuel': ad.get('fuel') or '',
+            'gearbox': ad.get('gearbox') or '',
+            'colour_exterior': ad.get('colour_exterior') or '',
+            'condition_new': bool(ad.get('condition_new')),
+            'accident_free': bool(ad.get('accident_free')),
+            'price_gross_eur': ad.get('price'),
+            'vatable': bool(ad.get('vatable')),
+            'seller_name': ad.get('seller_name') or '',
+            'seller_type': ad.get('seller_type') or 'unknown',
+            'seller_city': ad.get('seller_city') or '',
+            'country': ad.get('country') or '',
+            'images': ad.get('images') or [],
+            'features': ad.get('features') or [],
+            'is_simulated': True,
+            'raw': ad,
+        }
 
     # The live shape nests price and seller; keep the raw payload either way so
     # a mapping mistake can be corrected later without re-querying.
