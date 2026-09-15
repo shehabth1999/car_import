@@ -10,7 +10,8 @@ were built from the definition in code.
 
 | Need | Why |
 |---|---|
-| The module folder placed under a path in `EXTENSIONS_PATHS` | That is how the platform finds an external module (e.g. `E:\genie-erp\projects` or the server's equivalent) |
+| **This repo pushed to a remote the server can pull** | ⚠ `genie-ops <slug> update` and converge run `git reset --hard origin/main` inside every extension repo, with no dirty guard. Anything only committed locally is erased on the next deploy |
+| The module folder placed under a path in `EXTENSIONS_PATHS` on **that** server | That is how the platform finds an external module. Locally it is `E:\genie-erp\projects`; on the server check the deployment's `EXTENSIONS_PATHS` |
 | `base`, `notifications`, `contacts`, `crm`, `dashboard`, `chat`, `whatsapp` installed | The manifest depends on them |
 | **`sales`, `account`, `payment`, `products` NOT installed** | This project keeps accounting out; `check_ka_install` enforces it |
 | A superuser to own the workflow | `build_ka_workflows` assigns one |
@@ -19,18 +20,40 @@ were built from the definition in code.
 
 ## 1. Install the module
 
+Take a baseline first — `git status` on core and this repo, `free -m`,
+`manage.py sync_schema --status` — and run one `manage.py` process at a time.
+
 ```bash
 uv run python manage.py install car_import
-uv run python manage.py migrate car_import          # 4 tables: deal, stage, log, vehicle
-uv run python manage.py sync_schema --status        # shows the partner/lead/ticket fields
-uv run python manage.py sync_schema                 # apply them; a second run must say up to date
-uv run python manage.py sync_all                    # views, menus, groups, permissions, actions
-uv run python manage.py sync_tools --app car_import # registers the six AI tools
-uv run python manage.py check_ka_install            # must print "clean"
+uv run python manage.py migrate car_import                      # 4 tables: deal, stage, log, vehicle
+uv run python manage.py sync_schema --dry-run --from-module car_import
+uv run python manage.py sync_schema --from-module car_import    # partner / lead / ticket fields
+uv run python manage.py sync_schema --status                    # must now say up to date
+uv run python manage.py sync_all                                # views, menus, groups, permissions, actions
+uv run python manage.py sync_tools --app car_import             # registers the six AI tools
+uv run python manage.py check_ka_install                        # must print "clean"
 ```
 
-Restart the Celery workers afterwards — stage messages and the AI run there, and each
-worker holds its own copy of the code and the tool registry.
+Then restart the services, in this order: **Celery worker → gunicorn reload (HUP) →
+daphne**. Stage messages, the AI and the tool registry all live in the worker, and each
+worker process keeps its own copy until it restarts.
+
+Never run `sync_ui_views --app car_import` — the `--app` form deletes view rows. Use the
+global `sync_all`.
+
+**Later updates** to this extension (after the first install) are simply:
+
+```bash
+# on your machine: commit AND push first, or the deploy will wipe the change
+uv run python manage.py sync_schema --from-module car_import
+uv run python manage.py migrate car_import
+# restart worker → gunicorn reload → daphne → sync_all
+```
+
+or let the fleet do it: `genie-ops <slug> update`, which runs migrate → deploy_sync
+(sync_schema, sync_all, collectstatic) → a graceful service swap under a lock. If an
+update fails part-way it can leave `.maintenance` behind and nginx keeps serving 503 —
+check for that file after any failure.
 
 ## 2. Seed the stages
 
@@ -114,6 +137,28 @@ real stage move is then their first automatic message.
 | Website tracking-page feed | Waiting on an introduction to their engineer, Ahmed Saeed |
 | Call summaries from Dropbox | Separate module, `car_call_summary` |
 | Out-of-hours AI after 30 minutes of agent silence | Lives in the inbound path, not in this graph |
+
+## If it goes wrong
+
+Roll back in this order: revert the commit (and **push**, or the next deploy restores the
+bad version) → `sync_all`, which removes the view, menu and action rows → `migrate
+car_import zero` only if the tables must go too → restart worker, gunicorn, daphne.
+
+`sync_schema` never drops columns, so the fields added to contacts, leads and tickets stay
+behind as nullable columns. That is harmless, and safer than dropping data.
+
+To stop the AI without any deploy: `build_ka_workflows --rollback`. To stop stage messages
+without any deploy: set the `car_import.stage_messages_enabled` config parameter to `0`,
+or tick "Hold customer messages" on the deals concerned.
+
+## Two behaviours worth knowing before you demo
+
+- **Dragging a card in the kanban that a gate blocks reverts silently.** The board discards
+  the server's message (a core renderer limitation), so the card just snaps back. The same
+  move from the form or the status pill shows the real reason.
+- **Every stage move messages the customer** — from a button, a kanban drag, an automation
+  rule or a list bulk-edit alike, because the hook sits on the model's save. That is
+  deliberate, and it is why the suppression switch exists for migration day.
 
 ## Rules encoded here, so nobody has to remember them
 

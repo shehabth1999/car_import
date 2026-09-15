@@ -184,6 +184,9 @@ car_deal_form_view = {
                     "groups": [
                         {
                             "fields": [
+                                # Declared (hidden) so the ribbon can read it — the ribbon
+                                # renders from persisted data, not from the header alone.
+                                {"name": "state", "string": _("Status"), "widget": "select", "invisible": True},
                                 {"name": "name", "string": _("Reference"), "widget": "text", "readonly": True},
                                 {"name": "partner", "string": _("Customer"), "widget": "relation",
                                  "displayField": "name", "required": True, "multiSelect": False},

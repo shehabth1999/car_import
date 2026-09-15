@@ -199,11 +199,21 @@ class CarDeal(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
         return f"{self.name or '—'} · {car}"
 
     # ── change detection ────────────────────────────────────────────────────
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Read straight from __dict__: touching a deferred field here would fire
-        # a query for every row the serializer loads.
-        self._initial_stage_id = self.__dict__.get('import_stage_id')
+    #: Set in pre_save, read in post_save. Never cached in __init__: the
+    #: serializer defers columns, so a partially loaded instance would report
+    #: "no stage" and every save would look like a stage change — and message
+    #: the customer about a stage they never entered.
+    _stage_changed_from = None
+    _stage_did_change = False
+
+    def _stored_stage_id(self):
+        """The stage this deal has in the database right now."""
+        if not self.pk:
+            return None
+        return (type(self)._base_manager
+                .filter(pk=self.pk)
+                .values_list('import_stage_id', flat=True)
+                .first())
 
     @property
     def days_in_stage(self):
@@ -227,10 +237,14 @@ class CarDeal(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
 
     def pre_save(self):
         super().pre_save()
-        if self.import_stage_id and self.import_stage_id != self._initial_stage_id:
+        stored_stage_id = self._stored_stage_id()
+        self._stage_changed_from = stored_stage_id
+        self._stage_did_change = bool(self.import_stage_id) and self.import_stage_id != stored_stage_id
+
+        if self._stage_did_change:
             self.stage_entered_at = timezone.now()
-            if self._initial_stage_id:
-                self.previous_stage_id = self._initial_stage_id
+            if stored_stage_id:
+                self.previous_stage_id = stored_stage_id
             stage = self.import_stage
             if stage and stage.is_final and self.state == 'open':
                 self.state = 'done'
@@ -238,16 +252,20 @@ class CarDeal(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
     def post_save(self):
         """Log every stage move and let the notifier tell the customer."""
         super().post_save()
-        if self.import_stage_id == self._initial_stage_id:
+        if not self._stage_did_change:
             return
+
+        # Cleared first: a save inside the notifier must not log a second time.
+        from_stage_id = self._stage_changed_from
+        self._stage_did_change = False
+        self._stage_changed_from = None
 
         from car_import.services.stage_notifier import log_and_notify_stage_change
         log_and_notify_stage_change(
             deal=self,
-            from_stage_id=self._initial_stage_id,
+            from_stage_id=from_stage_id,
             to_stage_id=self.import_stage_id,
         )
-        self._initial_stage_id = self.import_stage_id
 
     # ── buttons ─────────────────────────────────────────────────────────────
 
