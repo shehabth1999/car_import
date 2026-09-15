@@ -48,6 +48,14 @@ class PartnerCarImportExtension(ModelExtension):
         help_text=_("The company photographs delivered cars; consent is taken in the contract"),
     )
 
+    # "Stop sending me updates" has to live on the customer, not on a deal: it
+    # follows them across every car they ever import.
+    stage_messages_opt_out = models.BooleanField(
+        default=False, verbose_name=_("No automatic updates"),
+        help_text=_("The customer asked not to receive the automatic stage messages. "
+                    "Outranks every other switch, including a manual send."),
+    )
+
 
 # ═══════════════════════════════════════════════════════════════════════════
 # E2 — the lead, and the button that turns it into a deal

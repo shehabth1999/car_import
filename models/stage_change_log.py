@@ -19,7 +19,11 @@ class StageChangeLog(BaseModel):
         ('sent', _("Sent")),
         ('failed', _("Failed")),
         ('skipped', _("Skipped — the stage does not notify")),
-        ('suppressed', _("Suppressed — migration or opt-out")),
+        ('suppressed', _("Suppressed — held by a switch")),
+        # Kept distinct from 'suppressed' on purpose: a suppressed message was
+        # held by US, an opted-out one was refused by the CUSTOMER, and only one
+        # of those is ever safe to release later.
+        ('opted_out', _("Not sent — the customer opted out")),
         ('awaiting_approval', _("Waiting for an agent to send")),
     ]
 

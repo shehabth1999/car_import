@@ -68,7 +68,10 @@ def log_and_notify_stage_change(deal, from_stage_id, to_stage_id):
 
     if state == 'pending':
         from car_import.tasks import notify_stage_change
+        # The stage's own delay, and then however long it takes to leave
+        # quiet hours — whichever is later.
         delay = (stage.send_delay_minutes or 0) if stage else 0
+        delay = max(delay, delay_for_quiet_hours())
         transaction.on_commit(
             lambda: notify_stage_change.apply_async((str(log.pk),), countdown=delay * 60)
         )
@@ -85,9 +88,77 @@ def _initial_notification_state(deal, stage):
         return 'skipped'
     if deal.notifications_suppressed or not messages_enabled():
         return 'suppressed'
+    if customer_opted_out(deal.partner):
+        # A customer who said "stop" outranks every other switch, including a
+        # manual "send update" — there is no business reason strong enough.
+        return 'opted_out'
     if stage.requires_agent_approval:
         return 'awaiting_approval'
     return 'pending'
+
+
+# ── quiet hours ─────────────────────────────────────────────────────────────
+#: Outside these hours a message is HELD, not dropped: it goes out at the next
+#: opening. A stage genuinely moves at 2am — a container clears customs when it
+#: clears — and the customer should still be told, just not at 2am.
+QUIET_START_KEY = 'car_import.quiet_hours_start'   # default 21 (9pm)
+QUIET_END_KEY = 'car_import.quiet_hours_end'       # default 9  (9am)
+OPT_OUT_KEY = 'car_import.stage_messages_opt_out'  # a ConfigParameter listing phone numbers
+
+
+def _config_int(key, default):
+    try:
+        from modules.base.models import ConfigParameter
+        row = ConfigParameter.objects.filter(key=key).values('value').first()
+        return int(str((row or {}).get('value')).strip())
+    except Exception:
+        return default
+
+
+def customer_opted_out(partner):
+    """True when this customer has asked not to receive stage messages.
+
+    Read from the partner first — `stage_messages_opt_out` is added by this
+    module's own extension — and from a config list as a fallback so ops can
+    stop one number immediately without waiting for a deploy.
+    """
+    if partner is None:
+        return False
+    if getattr(partner, 'stage_messages_opt_out', False):
+        return True
+    try:
+        from modules.base.models import ConfigParameter
+        row = ConfigParameter.objects.filter(key=OPT_OUT_KEY).values('value').first()
+    except Exception:
+        return False
+    listed = str((row or {}).get('value') or '')
+    phone = ''.join(ch for ch in str(getattr(partner, 'phone', '') or '') if ch.isdigit())
+    if not phone:
+        return False
+    return any(phone and phone in ''.join(c for c in part if c.isdigit())
+               for part in listed.split(',') if part.strip())
+
+
+def delay_for_quiet_hours(now=None):
+    """Minutes to wait so the message lands inside working hours. 0 when it already does."""
+    from django.utils import timezone
+
+    start = _config_int(QUIET_START_KEY, 21)
+    end = _config_int(QUIET_END_KEY, 9)
+    if start == end:
+        return 0                      # quiet hours switched off
+    moment = timezone.localtime(now or timezone.now())
+    hour = moment.hour
+
+    # The window usually wraps midnight (21:00 → 09:00); it may not.
+    quiet = (hour >= start or hour < end) if start > end else (start <= hour < end)
+    if not quiet:
+        return 0
+    target = moment.replace(hour=end, minute=0, second=0, microsecond=0)
+    if target <= moment:
+        target += timezone.timedelta(days=1) if hasattr(timezone, 'timedelta') else __import__(
+            'datetime').timedelta(days=1)
+    return max(0, int((target - moment).total_seconds() // 60))
 
 
 def _acting_user(deal):
