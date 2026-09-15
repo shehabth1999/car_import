@@ -15,8 +15,8 @@ stage_change_log_list_view = {
             "fields": [
                 {"name": "changed_at", "widget": "datetime", "string": _("When"), "width": "170"},
                 {"name": "deal", "widget": "relation", "displayField": "name", "string": _("Deal"), "width": "160"},
-                {"name": "from_stage", "widget": "relation", "displayField": "name_ar", "string": _("From"), "width": "170"},
-                {"name": "to_stage", "widget": "relation", "displayField": "name_ar", "string": _("To"), "width": "170"},
+                {"name": "from_stage", "widget": "relation", "displayField": "name", "string": _("From"), "width": "170"},
+                {"name": "to_stage", "widget": "relation", "displayField": "name", "string": _("To"), "width": "170"},
                 {"name": "notification_state", "widget": "status", "string": _("Message"), "width": "150"},
                 {"name": "channel_used", "widget": "text", "string": _("Channel"), "width": "130"},
                 {"name": "changed_by", "widget": "relation", "displayField": "name", "string": _("Moved by"), "width": "160"},

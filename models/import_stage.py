@@ -18,7 +18,7 @@ class ImportStage(BaseModel):
         max_length=64, unique=True, verbose_name=_("Code"),
         help_text=_("Stable identifier used by the stage machine, e.g. contract_reserved"),
     )
-    name_ar = models.CharField(max_length=128, verbose_name=_("Name (Arabic)"))
+    name = models.CharField(max_length=128, verbose_name=_("Stage name"))
     name_en = models.CharField(max_length=128, blank=True, verbose_name=_("Name (English)"))
     sequence = models.PositiveIntegerField(default=10, verbose_name=_("Sequence"))
     color = models.CharField(max_length=32, blank=True, verbose_name=_("Colour"))
@@ -67,4 +67,4 @@ class ImportStage(BaseModel):
         verbose_name_plural = _("Import Stages")
 
     def __str__(self):
-        return self.name_ar or self.name_en or self.code
+        return self.name or self.name_en or self.code

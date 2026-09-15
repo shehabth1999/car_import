@@ -79,7 +79,7 @@ def execute(input_data):
         if deal.vehicle_id:
             facts_lines.append('العربية: %s' % deal.vehicle)
         if deal.import_stage_id:
-            facts_lines.append('المرحلة: %s' % (deal.import_stage.name_ar or deal.import_stage.name_en))
+            facts_lines.append('المرحلة: %s' % (deal.import_stage.name or deal.import_stage.name_en))
         if deal.eta:
             facts_lines.append('الوصول المتوقع: %s' % deal.eta)
         if deal.arrival_port:

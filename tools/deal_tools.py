@@ -64,7 +64,7 @@ def _status_text(deal) -> str:
     stage = deal.import_stage
     lines = [f"العربية: {deal.vehicle}" if deal.vehicle_id else "العربية: لسه مش متحددة"]
     if stage:
-        lines.append(f"المرحلة الحالية: {stage.name_ar or stage.name_en}")
+        lines.append(f"المرحلة الحالية: {stage.name or stage.name_en}")
     if deal.vessel:
         lines.append(f"الباخرة: {deal.vessel}")
     if deal.bl_number:
@@ -115,7 +115,7 @@ def ka_get_deal_status(context, deal_reference: Optional[str] = None) -> Dict[st
             "data": {
                 "deal_reference": deal.name,
                 "state": deal.state,
-                "stage": (deal.import_stage.name_ar if deal.import_stage_id else None),
+                "stage": (deal.import_stage.name if deal.import_stage_id else None),
                 "car": str(deal.vehicle) if deal.vehicle_id else None,
                 "vessel": deal.vessel or None,
                 "bl_number": deal.bl_number or None,

@@ -113,7 +113,7 @@ def stage_placeholders(deal, stage):
     values = {
         'customer_name': getattr(partner, 'name', '') or '',
         'agent_name': getattr(deal.assigned_to, 'name', '') or '',
-        'stage_name': stage.name_ar or stage.name_en or '',
+        'stage_name': stage.name or stage.name_en or '',
         'deal_ref': deal.name or '',
         'model': f"{vehicle.make} {vehicle.model}".strip() if vehicle else '',
         'trim': getattr(vehicle, 'trim', '') or '',

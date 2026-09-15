@@ -14,7 +14,7 @@ import_stage_list_view = {
         "tree": {
             "fields": [
                 {"name": "sequence", "widget": "number", "string": _("#"), "width": "80"},
-                {"name": "name_ar", "widget": "text", "string": _("Stage (Arabic)"), "width": "260"},
+                {"name": "name", "widget": "text", "string": _("Stage name"), "width": "260"},
                 {"name": "name_en", "widget": "text", "string": _("Stage (English)"), "width": "220"},
                 {"name": "code", "widget": "text", "string": _("Code"), "width": "180"},
                 {"name": "notify_customer", "widget": "switch", "string": _("Messages the customer"), "width": "160"},
@@ -42,7 +42,7 @@ import_stage_form_view = {
                     "groups": [
                         {
                             "fields": [
-                                {"name": "name_ar", "string": _("Stage (Arabic)"), "widget": "text", "required": True},
+                                {"name": "name", "string": _("Stage name"), "widget": "text", "required": True},
                                 {"name": "name_en", "string": _("Stage (English)"), "widget": "text"},
                                 {"name": "code", "string": _("Code"), "widget": "text", "required": True},
                                 {"name": "sequence", "string": _("Order"), "widget": "number"},
