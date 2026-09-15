@@ -28,9 +28,14 @@ BUNDLE_FORMAT_VERSION = 2
 #: its LLMModel table was seeded before Claude 5 existed, so the command
 #: refused to build anything at all. The first name that resolves wins; the
 #: build reports which one it used.
+#: Haiku first, deliberately. This agent routes, reads intent and calls six
+#: tools — it does not reason its way through anything hard, because Python
+#: decided everything checkable before the model ever ran. Opus was costing
+#: real money per customer turn for work Haiku does. Move Sonnet up if quality
+#: measurably drops on the evals; do not move Opus up without a reason.
 LLM_MODEL_CANDIDATES = [
+    ('claude-haiku-4-5-20251001', 'Anthropic'),
     ('claude-sonnet-5', 'Anthropic'),
-    ('claude-opus-4-5-20251101', 'Anthropic'),
     ('claude-sonnet-4-5-20250929', 'Anthropic'),
 ]
 BACKUP_LLM_MODEL_CANDIDATES = [
