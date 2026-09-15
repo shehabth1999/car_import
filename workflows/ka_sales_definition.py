@@ -124,8 +124,31 @@ def execute(input_data):
     if 'كوريا' in text or 'korea' in text:
         warnings.append('العميل ذكر كوريا: الشركة أوروبا بس، وفرع كوريا لسه غير مؤكد — حوّل لزميل.')
 
-    if any(word in text for word in ['قسط', 'تقسيط', 'اقساط']):
-        warnings.append('سؤال عن التقسيط: قول الشروط من الأداة، وعمرك ما تحسب قيمة قسط.')
+    # Fees and instalment TERMS are published numbers the owner confirmed on
+    # 2026-09-14; an instalment AMOUNT, an account number or a transfer never
+    # are. Whether the agent may state the published ones is the client's call,
+    # still open on 2026-09-15, so it is a switch and not a prompt rewrite:
+    # set the config parameter to 1 when the owner says yes.
+    may_quote = False
+    try:
+        ConfigParameter = models['base']['ConfigParameter']
+        row = (ConfigParameter.objects
+               .filter(key='car_import.ai_may_quote_published_fees')
+               .values('value').first())
+        may_quote = bool(row) and str(row['value']).strip().lower() in ('1', 'true', 'yes', 'on')
+    except Exception:
+        may_quote = False
+
+    asks_instalments = any(word in text for word in ['قسط', 'تقسيط', 'اقساط'])
+    asks_fees = any(word in text for word in ['مصاريف', 'رسوم', 'الترخيص', 'عمولة', 'تكلفة', 'بكام'])
+
+    if asks_instalments or asks_fees:
+        if may_quote:
+            warnings.append('سؤال عن أرقام منشورة: قول اللي رجع من الأداة بالظبط ومتزوّدش عليه. '
+                            'قيمة قسط معيّنة أو أي حساب أو تحويل → حوّل لزميل.')
+        else:
+            warnings.append('سؤال عن فلوس والإدارة لسه مقالتش إن المساعد يقول الأرقام: '
+                            'حوّل لزميل من غير ما تقول أي رقم.')
 
     now = timezone.localtime()
     in_hours = now.weekday() <= 4 and 9 <= now.hour < 19
