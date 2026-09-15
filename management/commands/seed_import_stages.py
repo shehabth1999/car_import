@@ -131,6 +131,27 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(
             f"car_import: {created} stage(s) created, {updated} updated."
         ))
+
+        # The deal numbers itself through SequenceMixin, and that mixin gives up
+        # SILENTLY when no Sequence row carries its code (mixins.py:249) — the
+        # deal then saves with an empty reference and nothing says why. So the
+        # row is part of seeding the module, not something ops has to know about.
+        from modules.base.models.sequence import Sequence
+        sequence, seq_created = Sequence.objects.get_or_create(
+            code='car_import.cardeal',
+            defaults={
+                'name': 'Car deal',
+                'prefix': 'KA/%(year)s/',
+                'padding': 4,
+                'number_next': 1,
+                'number_increment': 1,
+                'implementation': 'standard',
+            },
+        )
+        self.stdout.write(
+            f"car_import: deal sequence {'created' if seq_created else 'already present'} "
+            f"({sequence.prefix}{'0' * (sequence.padding - 1)}{sequence.number_next})."
+        )
         if enable:
             self.stdout.write(self.style.WARNING(
                 "Customer messages are ON. Make sure the owner approved this wording "
