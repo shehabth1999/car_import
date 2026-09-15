@@ -59,6 +59,40 @@ def _deal_for(context, deal_reference: Optional[str] = None):
               .first())
 
 
+#: Whether the assistant may state the company's published money figures at all.
+#: The owner had not decided as of 2026-09-15, so the default is NO.
+#:
+#: Enforced HERE, in the tool, not in the prompt. A prompt rule lost this
+#: argument twice on the tenant: told "escalate without a number" in the
+#: per-turn warning and "use these tools" in the lane rules, the model used
+#: the tools and read the price list out. A tool that returns no numbers
+#: cannot be talked into it.
+FEE_DISCLOSURE_KEY = 'car_import.ai_may_quote_published_fees'
+
+
+def _may_quote_published_fees() -> bool:
+    try:
+        from modules.base.models import ConfigParameter
+        row = ConfigParameter.objects.filter(key=FEE_DISCLOSURE_KEY).values('value').first()
+    except Exception:
+        return False
+    return bool(row) and str(row['value']).strip().lower() in ('1', 'true', 'yes', 'on')
+
+
+def _quoting_refused() -> Dict[str, Any]:
+    """What a money tool returns while disclosure is switched off."""
+    return {
+        "success": False,
+        "error": "Fee disclosure is switched off for this tenant",
+        "error_type": "disclosure_off",
+        "data": {
+            "must_escalate": True,
+            "say_to_customer_ar": "الأرقام دي زميلي هو اللي يقولها لحضرتك — ثانية واحدة وهوصّلك بيه.",
+            "note": "Do NOT state any figure. Call ka_escalate_conversation_to_staff.",
+        },
+    }
+
+
 #: What the CUSTOMER is told, in Egyptian Arabic, independent of the active
 #: language. Never build customer text out of a model's choice labels: those
 #: are gettext strings resolved against the active language, and a tool runs in
@@ -312,6 +346,8 @@ def ka_get_instalment_plan_terms(
 ) -> Dict[str, Any]:
     """The confirmed instalment terms — never an amount."""
     try:
+        if not _may_quote_published_fees():
+            return _quoting_refused()
         if customer_is_initiative_holder:
             return {
                 "success": True,
@@ -350,6 +386,8 @@ def ka_get_instalment_plan_terms(
 def ka_get_fee_and_licensing_costs(context) -> Dict[str, Any]:
     """The company's confirmed fee list."""
     try:
+        if not _may_quote_published_fees():
+            return _quoting_refused()
         return {
             "success": True,
             "data": {
