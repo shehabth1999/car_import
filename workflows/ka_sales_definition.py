@@ -108,13 +108,20 @@ def execute(input_data):
         if deal.arrival_port:
             facts_lines.append('الميناء: %s' % deal.arrival_port)
         facts_lines.append('حالة الدفع المسجّلة: %s' % deal.payment_state)
-        if deal.payment_state != 'fully_paid':
-            warnings.append('الصفقة مش معلّمة مدفوعة بالكامل: لو سأل عن الجمارك، التخليص مبيبدأش '
-                            'قبل سداد المتبقي — وفي التقسيط القاعدة مختلفة، فحوّل لزميل.')
         if deal.program == 'initiative' and deal.customer_is_initiative_holder:
             warnings.append('العميل صاحب المبادرة: التقسيط مش متاح ليه.')
 
     text = message.lower()
+
+    # The unpaid-deal warning used to be raised on EVERY turn, and its own text
+    # ended with "فحوّل لزميل". The model read that as standing orders: after a
+    # colleague handed a conversation back, a plain "العربية في الميناء يعني؟"
+    # was escalated too, and the thread died. It is raised now only when the
+    # customer actually asks about the thing it is about.
+    clearance_markers = ['جمارك', 'جمركي', 'تخليص', 'إفراج', 'افراج', 'سداد', 'المتبقي', 'الباقي']
+    if deal is not None and deal.payment_state != 'fully_paid'             and any(marker in text for marker in clearance_markers):
+        warnings.append('الصفقة مش معلّمة مدفوعة بالكامل والعميل بيسأل عن التخليص: التخليص '
+                        'مبيبدأش قبل سداد المتبقي، وفي التقسيط القاعدة مختلفة — حوّل لزميل.')
     money_markers = ['رقم الحساب', 'رقم حساب', 'iban', 'لينك الدفع', 'لينك دفع', 'حولت', 'حوّلت',
                      'استرداد', 'ارجاع فلوس', 'خصم']
     if any(marker in text for marker in money_markers):
@@ -155,7 +162,7 @@ def execute(input_data):
     # money-heavy HISTORY (a colleague discussing customs, say) and escalates
     # the next harmless "وصلت فين؟" straight back, which is how a thread dies
     # after a hand-over: nothing un-escalates a conversation by itself.
-    if not warnings or all('حوّل لزميل' not in w and 'التحويل لزميل' not in w for w in warnings):
+    if not any('حوّل لزميل' in w or 'التحويل لزميل' in w for w in warnings):
         warnings.append('الرسالة دي مفيهاش أي طلب فلوس ولا حاجة تستدعي زميل: جاوب بنفسك '
                         'من الأدوات، ومتستخدمش أداة التحويل لزميل.')
 
