@@ -59,6 +59,19 @@ def _deal_for(context, deal_reference: Optional[str] = None):
               .first())
 
 
+#: What the CUSTOMER is told, in Egyptian Arabic, independent of the active
+#: language. Never build customer text out of a model's choice labels: those
+#: are gettext strings resolved against the active language, and a tool runs in
+#: Celery with no request — so the customer read "Not paid" in the middle of an
+#: Arabic sentence.
+PAYMENT_STATE_AR = {
+    'not_paid': 'لسه مش مدفوعة',
+    'deposit_paid': 'المقدم اتدفع',
+    'partially_paid': 'مدفوعة جزئياً',
+    'fully_paid': 'مدفوعة بالكامل',
+}
+
+
 def _status_text(deal) -> str:
     """What the customer may be told — never internal notes, never a cost price."""
     stage = deal.import_stage
@@ -75,7 +88,7 @@ def _status_text(deal) -> str:
         lines.append(f"الميناء: {deal.arrival_port}")
     if deal.tracking_url:
         lines.append(f"لينك التتبع: {deal.tracking_url}")
-    payment = dict(deal.PAYMENT_STATE).get(deal.payment_state)
+    payment = PAYMENT_STATE_AR.get(deal.payment_state)
     if payment:
         lines.append(f"حالة الدفع حسب المسجّل عندنا: {payment}")
     return "\n".join(lines)
