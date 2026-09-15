@@ -62,33 +62,40 @@ def _fees_from_tables():
         return None
     by_code = {row.code: row for row in rows}
 
-    def amount(code):
-        row = by_code.get(code)
+    # code in the table -> key in what the agent receives. One map, used both
+    # to build the payload AND to honour "never quote", because the two used to
+    # disagree: the drop looped over table codes ('licence_cost') while the
+    # payload was keyed by payload names ('licensing_service_egp'), so marking a
+    # fee non-quotable silently did nothing while the comment claimed it did.
+    PAYLOAD_KEY = {
+        'company_fee': 'company_fee_eur',
+        'company_fee_eur1': 'company_fee_with_eur1_eur',
+        'port_and_clearance': 'port_and_clearance_egp',
+        'powers_of_attorney': 'powers_of_attorney_usd',
+        'licensing_service': 'licensing_service_egp',
+        'protection_film': 'protection_film_egp',
+    }
+
+    def amount(row):
         if row is None or row.amount is None:
             return None
         value = float(row.amount)
         return int(value) if value == int(value) else value
 
-    film = by_code.get('protection_film')
     data = {
-        'company_fee_eur': amount('company_fee'),
-        'company_fee_with_eur1_eur': amount('company_fee_eur1'),
-        'port_and_clearance_egp': amount('port_and_clearance'),
-        'powers_of_attorney_usd': amount('powers_of_attorney'),
-        'licensing_service_egp': amount('licensing_service'),
         'confirmed_on': str(min((r.effective_from for r in rows if r.effective_from),
                                 default='') or ''),
         'source': 'fee schedule table',
     }
-    if film is not None and film.amount is not None:
-        data['protection_film_egp'] = (
-            f"{int(film.amount):,}–{int(film.amount_to):,}" if film.amount_to
-            else f"{int(film.amount):,}")
-    # A fee management marked "never quote" is removed entirely rather than
-    # sent with a flag: what is not in the payload cannot be read out.
-    for code, row in by_code.items():
-        if not row.quotable_to_customer:
-            data.pop(code, None)
+    for code, key in PAYLOAD_KEY.items():
+        row = by_code.get(code)
+        if row is None or not row.quotable_to_customer:
+            continue          # absent from the payload; it cannot be read out
+        if code == 'protection_film' and row.amount is not None:
+            data[key] = (f"{int(row.amount):,}–{int(row.amount_to):,}" if row.amount_to
+                         else f"{int(row.amount):,}")
+        else:
+            data[key] = amount(row)
     return {k: v for k, v in data.items() if v is not None}
 
 
