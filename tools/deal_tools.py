@@ -17,8 +17,12 @@ from modules.aistudio.tools import tool
 
 logger = logging.getLogger(__name__)
 
-#: Everything the client confirmed on 2026-09-14/15. Kept here, dated, so the
-#: agent quotes the company's own figures instead of a model's memory.
+#: The last-resort copy of what the client confirmed on 2026-09-14/15.
+#:
+#: These used to BE the source. They are now only what answers when the
+#: reference tables are empty — on a fresh install before
+#: `seed_reference_data` has run. Management edits the tables; nobody
+#: should have to edit Python to change a price.
 FEES = {
     'company_fee_eur': 4750,
     'company_fee_with_eur1_eur': 5250,
@@ -41,6 +45,76 @@ INSTALMENTS = {
     'not_available_when': 'the customer is the initiative holder himself',
     'confirmed_on': '2026-09-14',
 }
+
+
+
+# ───────────────────────────────────────────────────────────────────────────
+# the figures, from the tables when they exist
+# ───────────────────────────────────────────────────────────────────────────
+def _fees_from_tables():
+    """The fee schedule in force today, or None when the table is empty."""
+    try:
+        from car_import.models import FeeSchedule
+    except Exception:
+        return None
+    rows = list(FeeSchedule.in_force())
+    if not rows:
+        return None
+    by_code = {row.code: row for row in rows}
+
+    def amount(code):
+        row = by_code.get(code)
+        if row is None or row.amount is None:
+            return None
+        value = float(row.amount)
+        return int(value) if value == int(value) else value
+
+    film = by_code.get('protection_film')
+    data = {
+        'company_fee_eur': amount('company_fee'),
+        'company_fee_with_eur1_eur': amount('company_fee_eur1'),
+        'port_and_clearance_egp': amount('port_and_clearance'),
+        'powers_of_attorney_usd': amount('powers_of_attorney'),
+        'licensing_service_egp': amount('licensing_service'),
+        'confirmed_on': str(min((r.effective_from for r in rows if r.effective_from),
+                                default='') or ''),
+        'source': 'fee schedule table',
+    }
+    if film is not None and film.amount is not None:
+        data['protection_film_egp'] = (
+            f"{int(film.amount):,}–{int(film.amount_to):,}" if film.amount_to
+            else f"{int(film.amount):,}")
+    # A fee management marked "never quote" is removed entirely rather than
+    # sent with a flag: what is not in the payload cannot be read out.
+    for code, row in by_code.items():
+        if not row.quotable_to_customer:
+            data.pop(code, None)
+    return {k: v for k, v in data.items() if v is not None}
+
+
+def _instalments_from_tables():
+    """The direct-instalment plan in force today, or None."""
+    try:
+        from car_import.models import FinancingPlan
+    except Exception:
+        return None
+    plan = FinancingPlan.in_force(code='direct_instalments').first()
+    if plan is None:
+        return None
+    return {
+        'down_payment_pct': float(plan.down_payment_pct) if plan.down_payment_pct else None,
+        'terms_months': plan.term_months or [],
+        'rate_pct_per_year_flat': float(plan.rate_pct_flat) if plan.rate_pct_flat else None,
+        'first_instalment': plan.first_instalment_note,
+        'cheques': ("monthly cheques in EGP from an Egyptian bank account in the customer's own name"
+                    if plan.cheques_required else ''),
+        'covers': plan.covers,
+        'not_available_when': plan.not_available_when,
+        'available': plan.available,
+        'amount_policy': plan.amount_policy,
+        'confirmed_on': str(plan.effective_from or ''),
+        'source': 'financing plan table',
+    }
 
 
 def _deal_for(context, deal_reference: Optional[str] = None):
@@ -358,7 +432,7 @@ def ka_get_instalment_plan_terms(
                     "confirmed_on": INSTALMENTS['confirmed_on'],
                 },
             }
-        data = dict(INSTALMENTS)
+        data = _instalments_from_tables() or dict(INSTALMENTS)
         data['available'] = True
         data['bank_financing'] = (
             "عربيات مصر ممكن كمان تتمول من البنوك — البنك هو اللي بيجهّز الملف وبيكلّم العميل، "
@@ -391,7 +465,7 @@ def ka_get_fee_and_licensing_costs(context) -> Dict[str, Any]:
         return {
             "success": True,
             "data": {
-                **FEES,
+                **(_fees_from_tables() or FEES),
                 "licence_cost": "not quoted — refer the customer to the licensing office",
                 "egp_note": "any EGP figure is indicative at today's rate and carries a 1.5–2% conversion commission",
             },

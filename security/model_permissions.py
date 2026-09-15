@@ -36,6 +36,24 @@ MODEL_PERMISSIONS = [
     {'model': 'car_import.supplierlisting', 'group': 'car_import.germany_team', 'permissions': MANAGE},
     {'model': 'car_import.supplierlisting', 'group': 'car_import.management', 'permissions': FULL},
 
+    # ── the reference tables: management owns the numbers ───────────────────
+    # Sales managers may READ the deposits, customs values and price ranges —
+    # they quote from them — but nobody except management may change a figure.
+    {'model': 'car_import.importprogram', 'group': 'car_import.management', 'permissions': FULL},
+    {'model': 'car_import.taxrule', 'group': 'car_import.management', 'permissions': FULL},
+    {'model': 'car_import.eur1rule', 'group': 'car_import.management', 'permissions': FULL},
+    {'model': 'car_import.feeschedule', 'group': 'car_import.management', 'permissions': FULL},
+    {'model': 'car_import.financingplan', 'group': 'car_import.management', 'permissions': FULL},
+    {'model': 'car_import.firstownerdiscount', 'group': 'car_import.management', 'permissions': FULL},
+    {'model': 'car_import.deposittier', 'group': 'car_import.management', 'permissions': FULL},
+    {'model': 'car_import.deposittier', 'group': 'car_import.sales_manager', 'permissions': VIEW_ONLY},
+    {'model': 'car_import.customsvaluation', 'group': 'car_import.management', 'permissions': FULL},
+    {'model': 'car_import.customsvaluation', 'group': 'car_import.sales_manager', 'permissions': VIEW_ONLY},
+    {'model': 'car_import.modelpricerange', 'group': 'car_import.management', 'permissions': FULL},
+    {'model': 'car_import.modelpricerange', 'group': 'car_import.sales_manager', 'permissions': VIEW_ONLY},
+    {'model': 'car_import.fxreference', 'group': 'car_import.management', 'permissions': FULL},
+    {'model': 'car_import.fxreference', 'group': 'car_import.sales_manager', 'permissions': VIEW_ONLY},
+
     # ── the log is evidence: nobody edits it ────────────────────────────────
     {'model': 'car_import.stagechangelog', 'group': 'car_import.sales_agent', 'permissions': VIEW_ONLY},
     {'model': 'car_import.stagechangelog', 'group': 'car_import.sales_manager', 'permissions': VIEW_ONLY},

@@ -4,5 +4,15 @@ from .vehicle import Vehicle
 from .car_deal import CarDeal
 from .stage_change_log import StageChangeLog
 from .supplier_listing import SupplierListing
+from .reference_data import (
+    ImportProgram, TaxRule, Eur1Rule,
+    DepositTier, CustomsValuation, ModelPriceRange,
+    FeeSchedule, FinancingPlan, FirstOwnerDiscount, FxReference,
+)
 
-__all__ = ['ImportStage', 'Vehicle', 'CarDeal', 'StageChangeLog', 'SupplierListing']
+__all__ = [
+    'ImportStage', 'Vehicle', 'CarDeal', 'StageChangeLog', 'SupplierListing',
+    'ImportProgram', 'TaxRule', 'Eur1Rule',
+    'DepositTier', 'CustomsValuation', 'ModelPriceRange',
+    'FeeSchedule', 'FinancingPlan', 'FirstOwnerDiscount', 'FxReference',
+]
