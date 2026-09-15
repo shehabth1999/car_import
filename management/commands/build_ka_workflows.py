@@ -137,7 +137,10 @@ class Command(BaseCommand):
     def _model_id(self, LLMModel, name, provider):
         qs = LLMModel.objects.filter(name=name, is_active=True)
         if provider:
-            qs = qs.filter(provider__name=provider)
+            # iexact: providers are seeded lower-case ('anthropic', 'openai'),
+            # and an exact match on 'Anthropic' silently found nothing — the
+            # build then reported the model as missing when it was right there.
+            qs = qs.filter(provider__name__iexact=provider)
         return qs.values_list('pk', flat=True).first()
 
     def _first_model(self, LLMModel, candidates):
