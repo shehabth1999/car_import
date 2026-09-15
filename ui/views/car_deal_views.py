@@ -158,13 +158,14 @@ car_deal_form_view = {
     "priority": 10,
     "module": "car_import",
     "body": {
+        # No status ribbon here, deliberately. The header lays its stage pills
+        # and the action buttons out on ONE 30px row with overflow hidden: with
+        # fourteen Arabic stage names the pills run past 2100px, the last two
+        # stages fall off the screen and every action button is pushed to
+        # x = -26 with visibility:hidden — the buttons simply cease to exist.
+        # The stage is shown as a field below and moved with the buttons; the
+        # kanban is where the pipeline is meant to be read.
         "header": {
-            "status": {
-                "name": "import_stage",
-                "widget": "status",
-                "string": _("Stage"),
-                "readonly": True,  # stages move through the buttons, never by clicking
-            },
             "actions_list": [],
             "actions": _STAGE_ACTIONS,
         },
@@ -214,6 +215,10 @@ car_deal_form_view = {
                     "groups": [
                         {
                             "fields": [
+                                # Read-only: a stage moves through the buttons or the
+                                # kanban, so the gates in the stage machine always run.
+                                {"name": "import_stage", "string": _("Current stage"), "widget": "relation",
+                                 "displayField": "name", "readonly": True, "multiSelect": False},
                                 {"name": "stage_entered_at", "string": _("In this stage since"),
                                  "widget": "datetime", "readonly": True},
                                 {"name": "previous_stage", "string": _("Previous stage"), "widget": "relation",
