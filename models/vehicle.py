@@ -33,6 +33,13 @@ class Vehicle(BaseModel):
         ('medium', _("متوسطة")),
         ('full', _("كاملة")),
     ]
+    #: How the supplier invoices. It decides whether the 19 % German VAT can be
+    #: reclaimed on export, and therefore which price the quote is built on.
+    INVOICE_TYPE = [
+        ('gross', _("Gross — VAT shown and recoverable")),
+        ('net', _("Net — no recoverable VAT")),
+        ('unknown', _("Not known yet")),
+    ]
 
     # ── identity ────────────────────────────────────────────────────────────
     vin = models.CharField(
@@ -69,6 +76,12 @@ class Vehicle(BaseModel):
     listing_url = models.URLField(blank=True, max_length=500, verbose_name=_("Listing URL"))
     source_site = models.CharField(max_length=64, blank=True, default='mobile.de', verbose_name=_("Source"))
     dealer_name = models.CharField(max_length=128, blank=True, verbose_name=_("Dealer"))
+    supplier_invoice_type = models.CharField(
+        max_length=16, choices=INVOICE_TYPE, default='unknown', verbose_name=_("Supplier invoice"),
+        help_text=_("Gross: the invoice shows VAT and the company reclaims it on export, so the "
+                    "quote is built on the net price. Net: the price already carries no reclaimable "
+                    "VAT. The client's vendor list (2026-09-15) says which supplier is which"),
+    )
     seller_is_dealer = models.BooleanField(
         default=True, verbose_name=_("Sold by a dealer"),
         help_text=_("Private listings are already net of VAT (client, 2026-09-15)"),

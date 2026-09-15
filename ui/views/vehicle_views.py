@@ -83,6 +83,8 @@ vehicle_form_view = {
                                 {"name": "listing_url", "string": _("Listing URL"), "widget": "text"},
                                 {"name": "source_site", "string": _("Source"), "widget": "text"},
                                 {"name": "dealer_name", "string": _("Dealer"), "widget": "text"},
+                                {"name": "supplier_invoice_type", "string": _("Supplier invoice"), "widget": "select",
+                                 "help": _("Gross invoices carry VAT we reclaim on export; net ones do not")},
                                 {"name": "seller_is_dealer", "string": _("Sold by a dealer"), "widget": "switch"},
                                 {"name": "vatable", "string": _("VAT recoverable"), "widget": "switch",
                                  "help": _("MwSt. ausweisbar — these rank first in a search")},
