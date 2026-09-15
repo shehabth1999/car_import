@@ -222,8 +222,15 @@ class CarDeal(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
         return (timezone.now() - self.stage_entered_at).days
 
     # ── rules ───────────────────────────────────────────────────────────────
-    def clean(self):
-        super().clean()
+    def _check_instalments_allowed(self):
+        """Instalments are refused when the customer holds the initiative.
+
+        Enforced from ``pre_save``, not from ``clean``: Django's ``save()``
+        never calls ``clean()``, and neither does this platform's write path
+        (`modules/base/genie_serializer/write.py`), so the rule sat here doing
+        nothing — the form saved the forbidden combination without a word.
+        Raised in ``pre_save`` it becomes the HTTP 400 the form shows.
+        """
         if (self.financing_type == 'direct_instalments'
                 and self.program == 'initiative'
                 and self.customer_is_initiative_holder):
@@ -235,8 +242,13 @@ class CarDeal(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
                 )
             })
 
+    def clean(self):
+        super().clean()
+        self._check_instalments_allowed()
+
     def pre_save(self):
         super().pre_save()
+        self._check_instalments_allowed()
         stored_stage_id = self._stored_stage_id()
         self._stage_changed_from = stored_stage_id
         self._stage_did_change = bool(self.import_stage_id) and self.import_stage_id != stored_stage_id
