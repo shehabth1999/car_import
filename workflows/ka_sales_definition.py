@@ -51,12 +51,24 @@ LLM_PROVIDER_NAME = LLM_MODEL_CANDIDATES[0][1]
 BACKUP_LLM_MODEL_NAME = BACKUP_LLM_MODEL_CANDIDATES[0][0]
 BACKUP_LLM_PROVIDER_NAME = BACKUP_LLM_MODEL_CANDIDATES[0][1]
 
+#: What the agent can actually do. A tool that is registered but not listed
+#: here is a tool the agent cannot reach — six were built and stranded that way
+#: until a review caught it.
+#:
+#: `ka_log_call_outcome` is deliberately absent: it files what a PHONE call
+#: decided, which is a human's job, and handing it to a chat agent invites it to
+#: write minutes for a conversation that never happened.
 TOOL_NAMES = [
     'ka_get_deal_status',
     'ka_send_deal_status_update',
     'ka_check_import_eligibility',
     'ka_get_instalment_plan_terms',
     'ka_get_fee_and_licensing_costs',
+    'ka_get_document_checklist',
+    'ka_search_vehicle_listings',
+    'ka_search_initiative_listings',
+    'ka_register_initiative_for_sale',
+    'ka_schedule_followup',
     'ka_escalate_conversation_to_staff',
 ]
 
