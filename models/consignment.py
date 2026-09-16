@@ -160,10 +160,15 @@ class ConsignmentMandate(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin
         if not self.commission_is_owed:
             return 0
         if self.commission_fixed_egp:
-            return self.commission_fixed_egp
+            return Decimal(self.commission_fixed_egp)
         if self.commission_pct and self.sold_price_egp:
-            return (self.sold_price_egp * self.commission_pct / 100).quantize(Decimal('0.01'))
-        return 0
+            # Decimal(str(...)), not Decimal(...): a value that arrived from a
+            # form is a float by the time it reaches here, and Decimal(float)
+            # carries the binary expansion into a column with two decimal places.
+            price = Decimal(str(self.sold_price_egp))
+            pct = Decimal(str(self.commission_pct))
+            return (price * pct / Decimal(100)).quantize(Decimal('0.01'))
+        return Decimal(0)
 
     def pre_save(self):
         super().pre_save()
