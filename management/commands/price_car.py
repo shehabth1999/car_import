@@ -75,9 +75,12 @@ class Command(BaseCommand):
     # ------------------------------------------------------------------
     def _check(self, pricing):
         """The workbook's own two examples, to the cent."""
+        # The numbers are the workbook's OWN cached results, read out of the
+        # file, not re-derived by hand — sheet1!B13/B16/B19/B20 for 48,001 € and
+        # sheet2!B19/B22/B25/B26 for 30,000 €, rounded to the cent.
         cases = [
-            # gross, expected net, admin, total, deposit  (from the sheet's formulas)
-            (48001, Decimal('40337.82'), Decimal('1210.13'), Decimal('46297.95'), Decimal('11574.49')),
+            # gross, net, admin, total, deposit
+            (48001, Decimal('40336.97'), Decimal('1210.11'), Decimal('46297.08'), Decimal('11574.27')),
             (30000, Decimal('25210.08'), Decimal('-750.00'), Decimal('29210.08'), Decimal('4381.51')),
         ]
         failures = 0

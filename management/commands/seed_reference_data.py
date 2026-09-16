@@ -250,8 +250,9 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS('\nReference data seeded.'))
         self.stdout.write(
             'Deliberately NOT seeded, because the client has not confirmed them:\n'
-            '  · the down-payment formula (questions F1–F3)\n'
             '  · whether the customs figure is the amount payable or the value the rate '
             'applies to (question V1)\n'
             '  · bank financing terms\n'
-            'The pricing engine refuses rather than guesses while these are missing.')
+            'The pricing engine refuses rather than guesses while these are missing.\n'
+            'The deposit formula IS seeded now — it came with the client\'s own '
+            'calculator. Run `price_car --check` to prove it still matches.')
