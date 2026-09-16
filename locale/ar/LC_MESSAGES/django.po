@@ -760,6 +760,9 @@ msgctxt "ui/views/vehicle_views.py"
 msgid "Cars"
 msgstr "العربيات"
 
+msgid "Cars and listings"
+msgstr "العربيات والعروض"
+
 msgid "Cash"
 msgstr "كاش"
 
@@ -3000,6 +3003,9 @@ msgstr "الصفقات المفتوحة"
 msgid "Opening a deal on a programme that needs management"
 msgstr "فتح صفقة على برنامج يتطلب موافقة الإدارة"
 
+msgid "Operations"
+msgstr "العمليات"
+
 msgid "Optional extra"
 msgstr "إضافة اختيارية"
 
@@ -3663,6 +3669,9 @@ msgstr "تاريخ الإبحار"
 msgctxt "ui/views/car_deal_views.py"
 msgid "Sailed on"
 msgstr "تاريخ الإبحار"
+
+msgid "Sales"
+msgstr "المبيعات"
 
 msgid "Sales agent"
 msgstr "مندوب المبيعات"
