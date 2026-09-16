@@ -17,6 +17,10 @@ constraints apply here unchanged:
    `lead.ad_touches` — the reverse join fans out and inflates every sum.
 3. **Priority 30, not 10.** Priority 10 with a null module collides with
    `crm_dashboard`'s own key and the registry deletes the base view.
+4. **A new section cannot be `append`ed to `sections`.** A bare key is looked
+   up as an element *type*, never as a key, so the target is silently "not
+   found" (`ui_view.py:_find_target_elements`). Only a dotted path resolves a
+   key, hence `after sections.4`: insert as a sibling of the last core section.
 
 Scoped to the car-import leads (`ka_program` set, an extension field) so the
 tenant's other funnels do not pile into these charts.
@@ -43,10 +47,9 @@ crm_dashboard_car_import_batch = {
     "module": "car_import",
     "inheritance_operations": [
         {
-            "operation": "append",
-            "target": "sections",
-            "content": [
-                {
+            "operation": "after",
+            "target": "sections.4",
+            "content": {
                     "name": "car_import_funnel",
                     "title": _("Car import — the funnel"),
                     "subtitle": "Only leads on a car-import programme",
@@ -99,8 +102,7 @@ crm_dashboard_car_import_batch = {
                                 {"field": "utm_campaign", "operator": "is_not_null"},
                                 {"field": "stage__is_won", "operator": "eq", "value": True}]}}]},
                     ],
-                },
-            ],
+            },
         }
     ],
 }

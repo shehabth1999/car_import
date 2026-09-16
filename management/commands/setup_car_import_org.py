@@ -72,6 +72,7 @@ class Command(BaseCommand):
     # ------------------------------------------------------------------
     def _from_csv(self, User, Group, path, dry_run):
         import csv
+        from django.core.exceptions import ValidationError
         from django.core.management.base import CommandError
         from django.db import transaction
         try:
@@ -102,7 +103,14 @@ class Command(BaseCommand):
                 if user is None:
                     # No password on purpose: nobody types a colleague's password
                     # into a spreadsheet. The reset link is how they get in.
-                    user = User.objects.create_user(email, None, name=name)
+                    # The seat entitlement can refuse here (5/5 on the test
+                    # tenant); that is a row to report, not a reason to stop.
+                    try:
+                        with transaction.atomic():
+                            user = User.objects.create_user(email, None, name=name)
+                    except ValidationError as exc:
+                        problems.append((line_no, email, '; '.join(exc.messages)))
+                        continue
                     created = True
                 user.groups.add(group)
                 landed.append((line_no, email, technical_name,
