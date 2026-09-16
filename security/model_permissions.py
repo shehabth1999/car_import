@@ -71,6 +71,17 @@ MODEL_PERMISSIONS = [
     {'model': 'car_import.quoteline', 'group': 'car_import.operations', 'permissions': VIEW_ONLY},
     {'model': 'car_import.quoteline', 'group': 'car_import.management', 'permissions': FULL},
 
+    # ── chat wizards ────────────────────────────────────────────────────────
+    # Transient rows behind the chat-header actions. Whoever may act may
+    # open the wizard; the action it runs enforces the real rules.
+    {'model': 'car_import.qualifycustomer', 'group': 'car_import.sales_agent', 'permissions': MANAGE},
+    {'model': 'car_import.qualifycustomer', 'group': 'car_import.sales_manager', 'permissions': MANAGE},
+    {'model': 'car_import.qualifycustomer', 'group': 'car_import.management', 'permissions': FULL},
+    {'model': 'car_import.setstage', 'group': 'car_import.sales_agent', 'permissions': MANAGE},
+    {'model': 'car_import.setstage', 'group': 'car_import.sales_manager', 'permissions': MANAGE},
+    {'model': 'car_import.setstage', 'group': 'car_import.operations', 'permissions': MANAGE},
+    {'model': 'car_import.setstage', 'group': 'car_import.management', 'permissions': FULL},
+
     # ── contracts ───────────────────────────────────────────────────────────
     # An agent fills and generates one; nobody deletes one, because a generated
     # contract is evidence of what was agreed.

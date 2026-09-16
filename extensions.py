@@ -146,3 +146,125 @@ try:
                                             verbose_name=_("Contract article"))
 except Exception:  # pragma: no cover - support is optional in the first release
     logger.info("car_import: support module not installed, skipping the ticket extension")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# The chat header: act on the customer of the open conversation
+# ─────────────────────────────────────────────────────────────────────────────
+class ConversationCarImportExtension(ModelExtension):
+    """Four actions in the chat header, all `type: server` on purpose.
+
+    A menu-type button opens static schema, and static schema cannot know
+    whose conversation is on screen. Running the action first is the only way
+    the form arrives with this customer already in it — which is the whole
+    point of a button in the chat. Each action opens an existing form or
+    wizard and stops; the forms and their own actions do the work, so the
+    kill switch, the opt-out, the approvals and the stage rules all still
+    apply. Menu patch: `ui/menu_items/chat_actions.py`.
+    """
+
+    _inherit = 'chat.conversation'
+    _depends = ['chat', 'car_import']
+
+    @action
+    def action_open_or_create_deal(queryset):
+        """Open the customer's open deal; if they have none, the create form
+        pre-filled with the customer, their lead and its programme."""
+        from django.utils.translation import gettext as _t
+
+        from car_import.services import chat_actions as ca
+
+        partner = ca.partner_of(queryset.first() if hasattr(queryset, 'first') else queryset)
+        if partner is None:
+            return ca.no_customer()
+        deal = ca.open_deal_for(partner)
+        if deal is not None:
+            return {'status': True, 'open_mode': 'slideover', 'data': {
+                'menu_item_key': 'car_import_menu_deals', 'view_type': 'form', 'id': deal.pk,
+                'type': 'action', 'title': deal.name or _t("Deal")}}
+        lead = ca.lead_for(partner)
+        defaults = {'partner': ca.ref(partner)}
+        if lead is not None:
+            defaults['lead'] = ca.ref(lead)
+            if getattr(lead, 'ka_program', None):
+                defaults['program'] = lead.ka_program
+        return {'status': True, 'open_mode': 'slideover', 'data': {
+            'menu_item_key': 'car_import_menu_deals', 'view_type': 'form', 'id': None,
+            'context': {'default_fields': defaults}, 'type': 'action',
+            'title': _t("New deal for %(name)s") % {'name': partner.name}}}
+
+    @action
+    def action_new_quote(queryset):
+        """A quotation for this customer, on their open deal when there is one."""
+        from django.utils.translation import gettext as _t
+
+        from car_import.services import chat_actions as ca
+
+        partner = ca.partner_of(queryset.first() if hasattr(queryset, 'first') else queryset)
+        if partner is None:
+            return ca.no_customer()
+        deal = ca.open_deal_for(partner)
+        defaults = {'partner': ca.ref(partner)}
+        if deal is not None:
+            defaults['deal'] = ca.ref(deal)
+            if getattr(deal, 'vehicle_id', None):
+                defaults['vehicle'] = ca.ref(deal.vehicle)
+        return {'status': True, 'open_mode': 'slideover', 'data': {
+            'menu_item_key': 'car_import_menu_quotes', 'view_type': 'form', 'id': None,
+            'context': {'default_fields': defaults}, 'type': 'action',
+            'title': _t("Quotation for %(name)s") % {'name': partner.name}}}
+
+    @action
+    def action_qualify_customer(queryset):
+        """The qualification wizard, pre-filled with what the lead already says;
+        Save runs QualifyCustomer.action_apply."""
+        from django.utils.translation import gettext as _t
+
+        from car_import.services import chat_actions as ca
+
+        partner = ca.partner_of(queryset.first() if hasattr(queryset, 'first') else queryset)
+        if partner is None:
+            return ca.no_customer()
+        lead = ca.lead_for(partner)
+        defaults = {'partner': ca.ref(partner),
+                    'residence_country': getattr(partner, 'residence_country', None),
+                    'is_expat': bool(getattr(partner, 'is_expat', False))}
+        if lead is not None:
+            for wizard_field, lead_field in (
+                    ('program', 'ka_program'), ('initiative_type', 'ka_initiative_type'),
+                    ('model_wanted', 'ka_model_wanted'), ('model_year_wanted', 'ka_model_year_wanted'),
+                    ('trim_wanted', 'ka_trim_wanted'), ('colour_wanted', 'ka_colour_wanted'),
+                    ('condition_wanted', 'ka_condition_wanted'), ('budget_eur', 'ka_budget_eur'),
+                    ('funds_ready_on', 'ka_funds_ready_on')):
+                value = getattr(lead, lead_field, None)
+                if value not in (None, ''):
+                    defaults[wizard_field] = str(value) if hasattr(value, 'isoformat') else value
+        return {'status': True, 'open_mode': 'slideover', 'data': {
+            'view_key': 'car_import_qualify_form_view', 'view_type': 'form', 'id': None,
+            'action_name': 'action_apply', 'model': 'car_import.qualifycustomer',
+            'selected_ids': [],
+            'context': {'default_fields': {k: v for k, v in defaults.items() if v is not None}},
+            'type': 'action', 'title': _t("Qualify %(name)s") % {'name': partner.name}}}
+
+    @action
+    def action_set_stage_from_chat(queryset):
+        """The existing Set-stage wizard, on the customer's open deal. Save runs
+        CarDeal.action_set_stage(deal, form) — the same path as the deal form."""
+        from django.utils.translation import gettext as _t
+
+        from car_import.services import chat_actions as ca
+
+        partner = ca.partner_of(queryset.first() if hasattr(queryset, 'first') else queryset)
+        if partner is None:
+            return ca.no_customer()
+        deal = ca.open_deal_for(partner)
+        if deal is None:
+            return {'status': False, 'open_mode': 'message', 'data': {},
+                    'message': _t("%(name)s has no open deal to move.") % {'name': partner.name}}
+        return {'status': True, 'open_mode': 'slideover', 'data': {
+            'view_key': 'car_import_set_stage_form_view', 'view_type': 'form', 'id': None,
+            'action_name': 'action_set_stage', 'model': 'car_import.cardeal',
+            'selected_ids': [deal.pk],
+            'context': {'default_fields': {}},
+            'type': 'action',
+            'title': _t("Set stage — %(deal)s") % {'deal': deal.name}}}
