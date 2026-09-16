@@ -84,7 +84,8 @@ def quote(gross_price_eur, *, eur1=False, shipping_type=None, port='alexandria',
             f'Configuration → Pricing bands — the boundaries may have a gap.')
 
     shipping = _fee(SHIPPING_FEE, 4750)
-    admin = band.admin_fee_for(net)
+    admin_before_discount = band.admin_fee_for(net)
+    admin = admin_before_discount
     discount = Decimal(admin_fee_discount_eur or 0)
     if discount:
         # The owner asked for this: "ممكن يبقى في خصم على المصاريف الادارية".
@@ -120,7 +121,11 @@ def quote(gross_price_eur, *, eur1=False, shipping_type=None, port='alexandria',
         {'code': 'net', 'label_ar': 'صافي سعر العربية', 'amount': net, 'currency': 'EUR'},
         {'code': 'shipping', 'label_ar': 'مصاريف الشحن', 'amount': _money(shipping),
          'currency': 'EUR'},
-        {'code': 'admin', 'label_ar': 'مصاريف إدارية', 'amount': _money(admin),
+        # The fee BEFORE any discount. The discount is its own line below, so
+        # the lines add up to the total; showing the reduced fee and the
+        # discount together subtracts it twice on the page and leaves a quote
+        # whose own rows disagree with its own bottom line.
+        {'code': 'admin', 'label_ar': 'مصاريف إدارية', 'amount': _money(admin_before_discount),
          'currency': 'EUR'},
     ]
     if discount:
@@ -158,6 +163,7 @@ def quote(gross_price_eur, *, eur1=False, shipping_type=None, port='alexandria',
         'egp_due_on_arrival': egp_total,
         'port': port_key,
         'admin_fee_eur': _money(admin),
+        'admin_fee_before_discount_eur': _money(admin_before_discount),
         'admin_fee_discount_eur': _money(discount),
         'notes_ar': [
             'السيارة فابريكة من الداخل والخارج.',

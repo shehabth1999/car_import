@@ -105,6 +105,23 @@ class Command(BaseCommand):
                     f'total {got["total_eur"]:>10,.2f}  deposit {got["deposit_eur"]:>9,.2f} '
                     f'({got["deposit_pct"]:g}%)  ✓'))
 
+        # The invariant the workbook cannot test, because the workbook has no
+        # discount: the rows a customer reads must add up to the total they are
+        # asked to pay. This caught a real bug — a discounted admin fee shown
+        # next to its own discount line, subtracting it twice on the page.
+        loaded = pricing.quote(62000, eur1=True, shipping_type='container',
+                               port='port_said', collect_from_showroom=True,
+                               admin_fee_discount_eur=400)
+        summed = sum((line['amount'] for line in loaded['lines_eur']
+                      if line['code'] not in ('gross', 'vat')), Decimal('0'))
+        if summed != loaded['total_eur']:
+            failures += 1
+            self.stdout.write(self.style.ERROR(
+                f'  lines add up to {summed} but the total says {loaded["total_eur"]}'))
+        else:
+            self.stdout.write(self.style.SUCCESS(
+                f'  a loaded quote\'s rows add up to its total ({summed:,.2f} €)  ✓'))
+
         if failures:
             raise CommandError(f'{failures} case(s) disagree with the client\'s workbook.')
         self.stdout.write(self.style.SUCCESS(
