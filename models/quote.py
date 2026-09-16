@@ -104,42 +104,58 @@ class Quote(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
                     "promise a rate"))
 
     # ── what the calculator answered, frozen ────────────────────────────────
+    # Every field from here down is `editable=False`, which in this platform
+    # means "render it, never write it from a payload"
+    # (`genie_serializer/model_map.py:_is_read_only`). Two reasons, one of them
+    # discovered the hard way:
+    #
+    # 1. the engine owns these numbers. A `readonly` flag in the view dict only
+    #    greys the input — the form still posts the value back, and the write
+    #    path would happily take it;
+    # 2. posting them back is not harmless. The form sends a decimal as a JSON
+    #    float, and Django's DecimalField turns a float into a Decimal through
+    #    `Context(prec=max_digits).create_decimal_from_float`, which pads
+    #    40336.97 out to 40336.9700000 — seven decimal places where the column
+    #    allows two. The save then fails with "Enter a number with no more than
+    #    2 decimal places" on a figure the user never touched. Whole-numbered
+    #    floats survive, so it only breaks on the amounts that have cents,
+    #    which is most of them.
     band = models.ForeignKey('car_import.PricingBand', null=True, blank=True,
                              on_delete=models.SET_NULL, related_name='quotes',
-                             verbose_name=_("Band"))
-    band_label = models.CharField(max_length=120, blank=True, verbose_name=_("Band used"))
+                             verbose_name=_("Band"), editable=False)
+    band_label = models.CharField(max_length=120, blank=True, verbose_name=_("Band used"), editable=False)
     net_eur = models.DecimalField(max_digits=12, decimal_places=2, default=0,
-                                  verbose_name=_("Net price (EUR)"))
+                                  verbose_name=_("Net price (EUR)"), editable=False)
     vat_reclaimable_eur = models.DecimalField(max_digits=12, decimal_places=2, default=0,
-                                              verbose_name=_("VAT reclaimed (EUR)"))
+                                              verbose_name=_("VAT reclaimed (EUR)"), editable=False)
     shipping_eur = models.DecimalField(max_digits=12, decimal_places=2, default=0,
-                                       verbose_name=_("Shipping (EUR)"))
+                                       verbose_name=_("Shipping (EUR)"), editable=False)
     admin_fee_before_discount_eur = models.DecimalField(max_digits=12, decimal_places=2, default=0,
-                                                        verbose_name=_("Admin fee (EUR)"))
+                                                        verbose_name=_("Admin fee (EUR)"), editable=False)
     admin_fee_eur = models.DecimalField(max_digits=12, decimal_places=2, default=0,
-                                        verbose_name=_("Admin fee after discount (EUR)"))
+                                        verbose_name=_("Admin fee after discount (EUR)"), editable=False)
     eur1_eur = models.DecimalField(max_digits=12, decimal_places=2, default=0,
-                                   verbose_name=_("EUR 1 (EUR)"))
+                                   verbose_name=_("EUR 1 (EUR)"), editable=False)
     shipping_extra_eur = models.DecimalField(max_digits=12, decimal_places=2, default=0,
-                                             verbose_name=_("Shipping option (EUR)"))
+                                             verbose_name=_("Shipping option (EUR)"), editable=False)
     total_eur = models.DecimalField(max_digits=12, decimal_places=2, default=0,
-                                    verbose_name=_("Total selling price (EUR)"))
+                                    verbose_name=_("Total selling price (EUR)"), editable=False)
     deposit_pct = models.DecimalField(max_digits=5, decimal_places=2, default=0,
-                                      verbose_name=_("Deposit %"))
+                                      verbose_name=_("Deposit %"), editable=False)
     deposit_eur = models.DecimalField(max_digits=12, decimal_places=2, default=0,
-                                      verbose_name=_("Deposit (EUR)"))
+                                      verbose_name=_("Deposit (EUR)"), editable=False)
     balance_eur = models.DecimalField(max_digits=12, decimal_places=2, default=0,
-                                      verbose_name=_("Balance (EUR)"))
+                                      verbose_name=_("Balance (EUR)"), editable=False)
     port_fee_egp = models.DecimalField(max_digits=12, decimal_places=2, default=0,
-                                       verbose_name=_("Port fees (EGP)"))
+                                       verbose_name=_("Port fees (EGP)"), editable=False)
     showroom_fee_egp = models.DecimalField(max_digits=12, decimal_places=2, default=0,
-                                           verbose_name=_("Showroom collection (EGP)"))
+                                           verbose_name=_("Showroom collection (EGP)"), editable=False)
     egp_due_on_arrival = models.DecimalField(max_digits=12, decimal_places=2, default=0,
-                                             verbose_name=_("Due on arrival (EGP)"))
+                                             verbose_name=_("Due on arrival (EGP)"), editable=False)
     total_egp_indicative = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True,
-                                               verbose_name=_("Indicative total (EGP)"))
-    calculated_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Calculated at"))
-    pricing_error = models.CharField(max_length=255, blank=True, verbose_name=_("Why there is no price"))
+                                               verbose_name=_("Indicative total (EGP)"), editable=False)
+    calculated_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Calculated at"), editable=False)
+    pricing_error = models.CharField(max_length=255, blank=True, verbose_name=_("Why there is no price"), editable=False)
 
     # ── what the customer actually paid ─────────────────────────────────────
     # The owner's point, in their own words: "ساعات العميل بيجي يدفع فلوس أكثر
@@ -147,12 +163,12 @@ class Quote(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
     # amount somebody types, not a status somebody picks.
     paid_eur = models.DecimalField(max_digits=12, decimal_places=2, default=0,
                                    verbose_name=_("Paid so far (EUR)"))
-    deposit_covered = models.BooleanField(default=False, verbose_name=_("Deposit covered"))
-    fully_paid = models.BooleanField(default=False, verbose_name=_("Paid in full"))
+    deposit_covered = models.BooleanField(default=False, verbose_name=_("Deposit covered"), editable=False)
+    fully_paid = models.BooleanField(default=False, verbose_name=_("Paid in full"), editable=False)
     remaining_eur = models.DecimalField(max_digits=12, decimal_places=2, default=0,
-                                        verbose_name=_("Still owed (EUR)"))
+                                        verbose_name=_("Still owed (EUR)"), editable=False)
     overpaid_eur = models.DecimalField(max_digits=12, decimal_places=2, default=0,
-                                       verbose_name=_("Overpaid (EUR)"))
+                                       verbose_name=_("Overpaid (EUR)"), editable=False)
 
     notes = models.TextField(blank=True, verbose_name=_("Notes"))
     sent_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Sent at"))
@@ -349,7 +365,7 @@ class Quote(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
                 'data': {}, 'on_success': {'type': 'refresh'}}
 
 
-class QuoteLine(BaseModel):
+class QuoteLine(BaseModel, editable=False):
     """One row of the offer, exactly as the customer saw it."""
 
     all_objects = models.Manager()
