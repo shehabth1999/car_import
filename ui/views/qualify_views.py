@@ -10,8 +10,9 @@ car_import_qualify_form_view = {
     "priority": 10,
     "module": "car_import",
     "body": {
-        "sheet": {
-            "groups": [
+        # sheet → sections → groups → fields: a group straight under the sheet
+        # is accepted by the sync and drawn as nothing.
+        "sheet": {"sections": [{"title": "", "groups": [
                 {"title": _("Customer"), "fields": [
                     {"name": "partner", "string": _("Customer"), "widget": "relation",
                      "displayField": "name", "readonly": True, "required": True},
@@ -33,7 +34,7 @@ car_import_qualify_form_view = {
                     {"name": "is_expat", "string": _("Egyptian abroad"), "widget": "switch"},
                     {"name": "note", "string": _("Note"), "widget": "text"},
                 ]},
-            ],
+            ]}],
         },
     },
 }

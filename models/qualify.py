@@ -45,7 +45,7 @@ class QualifyCustomer(TransientModel):
     def action_apply(queryset, form):
         """Write the answers onto the customer's latest lead (creating one if
         they have none) and onto the contact, then leave a note in the thread."""
-        from django.utils.translation import gettext as _t
+        from django.utils.translation import gettext as _
 
         from car_import.services import chat_actions
 
@@ -75,13 +75,13 @@ class QualifyCustomer(TransientModel):
             partner.save(update_fields=contact_written)
 
         summary = chat_actions.qualification_summary(form)
-        chat_actions.note(partner, _t("Qualified from the chat: %(summary)s") % {'summary': summary},
+        chat_actions.note(partner, _("Qualified from the chat: %(summary)s") % {'summary': summary},
                           extra=form.note)
         if lead is None:
             return {'status': True, 'open_mode': 'message',
-                    'message': _t("Saved on the contact. No lead exists for this customer, so the "
+                    'message': _("Saved on the contact. No lead exists for this customer, so the "
                                   "programme and the car wanted were not stored — open a lead first."),
                     'data': {}, 'on_success': {'type': 'refresh'}}
         return {'status': True, 'open_mode': 'message',
-                'message': _t("Qualification saved: %(summary)s") % {'summary': summary},
+                'message': _("Qualification saved: %(summary)s") % {'summary': summary},
                 'data': {}, 'on_success': {'type': 'refresh'}}

@@ -38,7 +38,7 @@ menu_dict = {
     "car_import_chat_actions": {
         "_inherit": "chat_main_menu_omnichannel",
         "inheritance_operations": [
-            _entry("action_open_or_create_deal", _("Car deal"), "Handshake", _OPS, "primary"),
+            _entry("action_open_or_create_deal", _("Car deal"), "Car", _OPS, "primary"),
             _entry("action_new_quote", _("New quotation"), "Calculator", _SALES),
             _entry("action_qualify_customer", _("Qualify customer"), "ClipboardCheck", _SALES),
             _entry("action_set_stage_from_chat", _("Set stage…"), "ListOrdered", _OPS),

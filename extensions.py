@@ -170,7 +170,7 @@ class ConversationCarImportExtension(ModelExtension):
     def action_open_or_create_deal(queryset):
         """Open the customer's open deal; if they have none, the create form
         pre-filled with the customer, their lead and its programme."""
-        from django.utils.translation import gettext as _t
+        from django.utils.translation import gettext as _
 
         from car_import.services import chat_actions as ca
 
@@ -181,7 +181,7 @@ class ConversationCarImportExtension(ModelExtension):
         if deal is not None:
             return {'status': True, 'open_mode': 'slideover', 'data': {
                 'menu_item_key': 'car_import_menu_deals', 'view_type': 'form', 'id': deal.pk,
-                'type': 'action', 'title': deal.name or _t("Deal")}}
+                'type': 'action', 'title': deal.name or _("Deal")}}
         lead = ca.lead_for(partner)
         defaults = {'partner': ca.ref(partner)}
         if lead is not None:
@@ -191,12 +191,12 @@ class ConversationCarImportExtension(ModelExtension):
         return {'status': True, 'open_mode': 'slideover', 'data': {
             'menu_item_key': 'car_import_menu_deals', 'view_type': 'form', 'id': None,
             'context': {'default_fields': defaults}, 'type': 'action',
-            'title': _t("New deal for %(name)s") % {'name': partner.name}}}
+            'title': _("New deal for %(name)s") % {'name': partner.name}}}
 
     @action
     def action_new_quote(queryset):
         """A quotation for this customer, on their open deal when there is one."""
-        from django.utils.translation import gettext as _t
+        from django.utils.translation import gettext as _
 
         from car_import.services import chat_actions as ca
 
@@ -212,13 +212,13 @@ class ConversationCarImportExtension(ModelExtension):
         return {'status': True, 'open_mode': 'slideover', 'data': {
             'menu_item_key': 'car_import_menu_quotes', 'view_type': 'form', 'id': None,
             'context': {'default_fields': defaults}, 'type': 'action',
-            'title': _t("Quotation for %(name)s") % {'name': partner.name}}}
+            'title': _("Quotation for %(name)s") % {'name': partner.name}}}
 
     @action
     def action_qualify_customer(queryset):
         """The qualification wizard, pre-filled with what the lead already says;
         Save runs QualifyCustomer.action_apply."""
-        from django.utils.translation import gettext as _t
+        from django.utils.translation import gettext as _
 
         from car_import.services import chat_actions as ca
 
@@ -244,13 +244,13 @@ class ConversationCarImportExtension(ModelExtension):
             'action_name': 'action_apply', 'model': 'car_import.qualifycustomer',
             'selected_ids': [],
             'context': {'default_fields': {k: v for k, v in defaults.items() if v is not None}},
-            'type': 'action', 'title': _t("Qualify %(name)s") % {'name': partner.name}}}
+            'type': 'action', 'title': _("Qualify %(name)s") % {'name': partner.name}}}
 
     @action
     def action_set_stage_from_chat(queryset):
         """The existing Set-stage wizard, on the customer's open deal. Save runs
         CarDeal.action_set_stage(deal, form) — the same path as the deal form."""
-        from django.utils.translation import gettext as _t
+        from django.utils.translation import gettext as _
 
         from car_import.services import chat_actions as ca
 
@@ -260,11 +260,11 @@ class ConversationCarImportExtension(ModelExtension):
         deal = ca.open_deal_for(partner)
         if deal is None:
             return {'status': False, 'open_mode': 'message', 'data': {},
-                    'message': _t("%(name)s has no open deal to move.") % {'name': partner.name}}
+                    'message': _("%(name)s has no open deal to move.") % {'name': partner.name}}
         return {'status': True, 'open_mode': 'slideover', 'data': {
             'view_key': 'car_import_set_stage_form_view', 'view_type': 'form', 'id': None,
             'action_name': 'action_set_stage', 'model': 'car_import.cardeal',
             'selected_ids': [deal.pk],
             'context': {'default_fields': {}},
             'type': 'action',
-            'title': _t("Set stage — %(deal)s") % {'deal': deal.name}}}
+            'title': _("Set stage — %(deal)s") % {'deal': deal.name}}}
