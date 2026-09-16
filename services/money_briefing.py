@@ -63,6 +63,16 @@ def build(partner, topic=None, reason=''):
         lines.extend(f'   {label}: {value}' for label, value in fees)
         lines.append('')
 
+    for collision in _collisions(fees):
+        # This IS the "اقتراح لمطابقة الارقام" the client asked for. Two rows
+        # carrying the same money under different names is not a display bug to
+        # hide — it is the question somebody has to answer, and the agent about
+        # to quote one of them is the right person to be asked.
+        lines.append(f'❗ نفس الرقم ({collision["value"]}) مكتوب تحت اسمين: '
+                     + ' / '.join(collision['labels']))
+        lines.append('   أنهي واحد الصح؟ لو الاتنين نفس الحاجة، لازم واحد يتقفل.')
+        lines.append('')
+
     if instalments:
         lines.append('— شروط التقسيط المعتمدة:')
         lines.extend(f'   {label}: {value}' for label, value in instalments)
@@ -117,6 +127,22 @@ def _fees():
             continue
         out.append((row.name or row.code, f'{row.amount:,.0f} {row.currency or ""}'.strip()))
     return out
+
+
+def _collisions(fees):
+    """Fees that carry the same amount under different names.
+
+    The old fee schedule and the calculator's own fees now live in one table,
+    and two of them collide: 4,750 € is both "the company fee" and "shipping",
+    55,000 EGP is both "port and clearance" and "Alexandria port". Until the
+    client says which name is right, the honest thing is to put the collision
+    in front of the person about to quote one of them.
+    """
+    by_value = {}
+    for label, value in fees:
+        by_value.setdefault(value, []).append(label)
+    return [{'value': value, 'labels': labels}
+            for value, labels in by_value.items() if len(labels) > 1]
 
 
 def _instalments():

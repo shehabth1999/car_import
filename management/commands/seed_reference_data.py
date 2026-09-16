@@ -65,9 +65,12 @@ FEES = [
 FINANCING = [
     {'code': 'direct_instalments', 'name': 'تقسيط الشركة', 'down_payment_pct': 50,
      'term_months': [12, 24], 'rate_pct_flat': 27, 'cheques_required': True,
-     'first_instalment_note': 'One month after delivery',
-     'covers': 'Everything to the customer’s door except licensing',
-     'not_available_when': 'The customer is the initiative holder himself'},
+     # Arabic, because these strings are read by Arabic-speaking agents on an
+     # internal briefing screen — an English sentence dropped into the middle
+     # of an Arabic paragraph is a sentence people skip.
+     'first_instalment_note': 'أول قسط بعد التسليم بشهر',
+     'covers': 'كل حاجة لحد باب العميل ما عدا الترخيص',
+     'not_available_when': 'العميل هو صاحب المبادرة نفسه'},
     {'code': 'bank_financing', 'name': 'تمويل بنكي', 'available': False,
      'notes': 'For cars already in Egypt. Terms not yet supplied by the client.'},
     {'code': 'cash', 'name': 'كاش', 'down_payment_pct': 100, 'term_months': []},
