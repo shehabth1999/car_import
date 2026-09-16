@@ -243,6 +243,22 @@ class Command(BaseCommand):
                     made += bool(m)
             counts['document requirements'] = f'{made} new'
 
+            # The showroom's winter hours, confirmed by the client 2026-09-16:
+            # 9am to 9pm. They happen to match what the quiet-hours code always
+            # defaulted to — written down anyway, because a default nobody
+            # recorded is a default the next person changes by accident, and
+            # this one decides whether a customer's phone lights up at 3am.
+            from modules.base.models import ConfigParameter
+            for key, value, note in (
+                ('car_import.quiet_hours_start', '21',
+                 'Showroom closes at 9pm (winter hours, client 2026-09-16)'),
+                ('car_import.quiet_hours_end', '9',
+                 'Showroom opens at 9am (winter hours, client 2026-09-16)'),
+            ):
+                ConfigParameter.objects.update_or_create(
+                    key=key, defaults={'value': value, 'description': note})
+            counts['quiet hours'] = '09:00 – 21:00 (client, 2026-09-16)'
+
         for label, value in counts.items():
             self.stdout.write(f'  {label}: {value}')
 

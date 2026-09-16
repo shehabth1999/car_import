@@ -101,6 +101,11 @@ def _initial_notification_state(deal, stage):
 #: Outside these hours a message is HELD, not dropped: it goes out at the next
 #: opening. A stage genuinely moves at 2am — a container clears customs when it
 #: clears — and the customer should still be told, just not at 2am.
+# 21:00 → 09:00. These were a guess when they were written; the client
+# confirmed on 2026-09-16 that the showroom's winter hours are 9am to 9pm, so
+# the guess happens to be the answer. Seeded explicitly by
+# `seed_reference_data` all the same — a default nobody wrote down is a
+# default the next person changes by accident.
 QUIET_START_KEY = 'car_import.quiet_hours_start'   # default 21 (9pm)
 QUIET_END_KEY = 'car_import.quiet_hours_end'       # default 9  (9am)
 OPT_OUT_KEY = 'car_import.stage_messages_opt_out'  # a ConfigParameter listing phone numbers
@@ -156,8 +161,9 @@ def delay_for_quiet_hours(now=None):
         return 0
     target = moment.replace(hour=end, minute=0, second=0, microsecond=0)
     if target <= moment:
-        target += timezone.timedelta(days=1) if hasattr(timezone, 'timedelta') else __import__(
-            'datetime').timedelta(days=1)
+        # `django.utils.timezone.timedelta` was removed in Django 5.0; the old
+        # hasattr dance around it only ever hid that fact.
+        target += timedelta(days=1)
     return max(0, int((target - moment).total_seconds() // 60))
 
 
