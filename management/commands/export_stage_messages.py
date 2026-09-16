@@ -92,8 +92,13 @@ class Command(BaseCommand):
                 off += 1
             cards.append(_card(index, stage, rendered, will_send))
 
-        html = _page(cards, len(stages), on, off,
-                     stage_notifier.messages_enabled(), language)
+        # "Is anything reaching my customers right now?" is the reviewer's
+        # first question, and the honest answer is per-stage, not the global
+        # kill switch: that switch defaults to ON, while every stage ships with
+        # `notify_customer=False`. Reading the switch alone would print a
+        # reassurance that was false, or withhold one that was true.
+        live = any(stage.notify_customer for stage in stages)
+        html = _page(cards, len(stages), on, off, live, language)
         stamp = timezone.now().strftime('%Y%m%d%H%M%S')
         path = default_storage.save(f'car_import/review/stage-messages-{language}-{stamp}.html',
                                     ContentFile(html.encode('utf-8')))
@@ -139,8 +144,8 @@ def _card(index, stage, rendered, will_send):
 </article>"""
 
 
-def _page(cards, total, on, off, kill_switch_on, language):
-    warning = '' if kill_switch_on else (
+def _page(cards, total, on, off, live, language):
+    warning = '' if live else (
         '<div class="banner">🔒 كل الرسايل دلوقتي <b>مقفولة</b> على النظام. '
         'مفيش حاجة بتتبعت لأي عميل لحد ما حضرتك توافق.</div>')
 
