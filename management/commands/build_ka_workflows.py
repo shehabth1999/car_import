@@ -81,6 +81,7 @@ class Command(BaseCommand):
             if node['node_id'] == 'sales_agent':
                 config['llm_model_id'] = model_id
                 config['backup_llm_model_id'] = backup_id
+                config = self._attach_knowledge(config)
                 config['selected_tools'] = [
                     {'tool_id': tool_id, 'ask_human': False, 'store': True}
                     for tool_id in tools.values() if tool_id
@@ -129,6 +130,33 @@ class Command(BaseCommand):
         if owner is None:
             raise CommandError("No superuser to own the workflow — pass --owner <user_id>")
         return owner
+
+    def _attach_knowledge(self, config):
+        """Point the retriever at the approved-answers collection, or drop it.
+
+        A node that names a collection which is not indexed is a node whose
+        every turn fails on the retriever. Missing is better than broken, and
+        the build says which one it did.
+        """
+        from modules.aistudio.models import Collection
+
+        from car_import.workflows import ka_sales_definition as definition
+
+        block = config.get('rag_retriever')
+        if not block:
+            return config
+        row = Collection.objects.filter(name=definition.KNOWLEDGE_COLLECTION_NAME,
+                                        is_indexed=True).first()
+        if row is None:
+            self.stdout.write(self.style.WARNING(
+                f"Knowledge collection '{definition.KNOWLEDGE_COLLECTION_NAME}' is not indexed — "
+                "run `build_ka_knowledge` and re-run. The agent is built WITHOUT the retriever."))
+            config.pop('rag_retriever', None)
+            return config
+        for entry in block.get('collections', []):
+            entry['collection_id'] = row.pk
+        self.stdout.write(f"Knowledge: '{row.name}' (id {row.pk})")
+        return config
 
     def _tool_ids(self, ToolDefinition, names):
         rows = dict(ToolDefinition.objects.filter(name__in=names, is_active=True).values_list('name', 'pk'))

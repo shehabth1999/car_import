@@ -74,6 +74,11 @@ TOOL_NAMES = [
     'ka_file_customer_document',
 ]
 
+#: The approved-answers collection `build_ka_knowledge` indexes. Resolved by
+#: name at build time; the node carries the id. A tenant without it gets an
+#: agent with no retriever rather than a broken one.
+KNOWLEDGE_COLLECTION_NAME = 'KA — الإجابات المعتمدة'
+
 ERROR_MESSAGE = "بعتذر لحضرتك، هحوّل حضرتك لزميلي يكمل مع حضرتك دلوقتي."
 
 # --------------------------------------------------------------------------- #
@@ -304,6 +309,16 @@ def nodes(voice='aya', system_text=None):
                     {'tool_id': None, 'ask_human': False, 'store': True} for _ in TOOL_NAMES
                 ],
                 'update_state': [{'key': 'current_lane', 'value_template': 'sales'}],
+                # The approved answers, searched as a tool. `collection_id` is
+                # filled by build_ka_workflows; the block is dropped when the
+                # collection is not indexed on this tenant.
+                'rag_retriever': {
+                    'enabled': True,
+                    'collections': [{'collection_id': None, 'search_type': 'mmr', 'k': 3,
+                                     'tool_description': 'ابحث في الإجابات والسياسات المعتمدة من الشركة: '
+                                                         'الإجراءات، المستندات، المدد، البرامج وشروطها. '
+                                                         'مفيش أرقام فيها — الأرقام من الأدوات التانية.'}],
+                },
             },
             'x_position': 640, 'y_position': -40,
             'width': 260, 'height': 120, 'color': '', 'enabled': True,
@@ -331,6 +346,9 @@ def reference_manifest(workflow_key='wf_1'):
         {'workflow_key': workflow_key, 'node_id': 'sales_agent', 'reference_kind': 'llm_model',
          'config_path': 'backup_llm_model_id', 'index': None, 'target_key': None,
          'target_name': BACKUP_LLM_MODEL_NAME, 'target_provider': BACKUP_LLM_PROVIDER_NAME},
+        {'workflow_key': workflow_key, 'node_id': 'sales_agent', 'reference_kind': 'collection',
+         'config_path': 'rag_retriever.collections', 'index': 0, 'target_key': 'collection_id',
+         'target_name': KNOWLEDGE_COLLECTION_NAME},
     ]
     for index, tool_name in enumerate(TOOL_NAMES):
         entries.append({
