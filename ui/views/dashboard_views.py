@@ -43,7 +43,9 @@ car_import_dashboard_view = {
     "key": "car_import_dashboard_view",
     "name": _("Car import dashboard"),
     "model": "car_import.cardeal",
-    "menu_item": "car_import_menu_dashboard",
+    # No menu item: /dashboard/ lists every active dashboard view as a tab on
+    # its own (`modules/dashboard/views.py:dashboard`), and the menu entry only
+    # ever showed the deal list under a dashboard title.
     "view_type": "dashboard",
     "priority": 10,
     "module": "car_import",

@@ -967,4 +967,8 @@ CATALOG = {
     'Won': 'مكسوب',
     'Won deals by agent': 'الصفقات المكسوبة حسب المندوب',
     'Won deals by campaign': 'الصفقات المكسوبة حسب الحملة',
+    # menu groups (three-level menu)
+    "Sales": "المبيعات",
+    "Cars and listings": "العربيات والعروض",
+    "Operations": "العمليات",
 }
