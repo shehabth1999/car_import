@@ -9,7 +9,7 @@ from .documents import DocumentRequirement, DealDocument
 from .initiative import Initiative
 from .listings import ShowroomListing, InitiativeListing
 from .pricing import PricingBand
-from .quote import Quote, QuoteLine
+from .quote import Quote, QuoteLine, QuoteOption
 from .contract import Contract, ContractTemplate
 from .approval import ApprovalPolicy, ApprovalRequest
 from .contract import ContractIssuer, ContractSignatory
@@ -24,7 +24,7 @@ from .reference_data import (
 __all__ = [
     'ImportStage', 'Vehicle', 'CarDeal', 'StageChangeLog', 'SupplierListing',
     'DocumentRequirement', 'DealDocument', 'Initiative', 'CallRecording',
-    'ShowroomListing', 'InitiativeListing', 'PricingBand', 'Quote', 'QuoteLine', 'Contract', 'ContractTemplate', 'ApprovalPolicy', 'ApprovalRequest', 'ContractIssuer', 'ContractSignatory', 'SetStage', 'ConsignmentMandate',
+    'ShowroomListing', 'InitiativeListing', 'PricingBand', 'Quote', 'QuoteLine', 'QuoteOption', 'Contract', 'ContractTemplate', 'ApprovalPolicy', 'ApprovalRequest', 'ContractIssuer', 'ContractSignatory', 'SetStage', 'ConsignmentMandate',
     'ImportProgram', 'TaxRule', 'Eur1Rule',
     'DepositTier', 'CustomsValuation', 'ModelPriceRange',
     'FeeSchedule', 'FinancingPlan', 'FirstOwnerDiscount', 'FxReference',

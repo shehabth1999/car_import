@@ -186,6 +186,37 @@ class Quote(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
         return f"{self.name or '—'} · {self.total_eur:,.0f} €"
 
     # ── the calculation ─────────────────────────────────────────────────────
+    def adopt_accepted_option(self):
+        """Price every candidate, and copy the chosen one's figures up.
+
+        The quotation's own headline numbers are the accepted candidate's —
+        which is what the offer document, the contract prefill and the
+        escalation briefing all read. One accepted option per quote: two would
+        mean nobody can say which car was sold.
+        """
+        options = list(self.options.all()) if self.pk else []
+        if not options:
+            return False
+
+        accepted = [o for o in options if o.is_accepted]
+        if len(accepted) > 1:
+            raise ValidationError(_("Only one candidate car can be the chosen one."))
+        chosen = accepted[0] if accepted else (options[0] if len(options) == 1 else None)
+
+        for option in options:
+            option.recalculate()
+            option.save()
+        if chosen is None:
+            return False
+
+        # The inputs, not just the results — pressing Recalculate on the quote
+        # afterwards has to reproduce the same numbers from the same answers.
+        for field in ('gross_price_eur', 'with_eur1', 'shipping_type', 'port',
+                      'collect_from_showroom', 'admin_fee_discount_eur', 'vat_rate_pct'):
+            setattr(self, field, getattr(chosen, field))
+        self.vehicle_id = chosen.vehicle_id or self.vehicle_id
+        return True
+
     def recalculate(self, save_lines=True):
         """Re-run the calculator and freeze the answer onto this row."""
         from car_import.services import pricing
@@ -288,6 +319,11 @@ class Quote(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
                     reason=_("Discount on the admin fee for %(customer)s")
                     % {'customer': getattr(self.partner, 'name', '') or '—'},
                     user=getattr(getattr(self, 'env', None), 'user', None))
+
+        # Candidates first: if this quotation carries several cars, its own
+        # figures are the chosen car's, and choosing is what the agent does on
+        # the option rows rather than by retyping a price up here.
+        self.adopt_accepted_option()
 
         # Price first, then judge the result. Checking `total_eur` before the
         # calculator runs would reject a quote that is being created and
@@ -476,6 +512,12 @@ class QuoteLine(BaseModel):
 
     quote = models.ForeignKey(Quote, on_delete=models.CASCADE, related_name='lines',
                               verbose_name=_("Quotation"))
+    #: Null on the rows that describe the quotation's own accepted figures,
+    #: which is every row on a single-car quote. Set when a line belongs to one
+    #: candidate among several.
+    option = models.ForeignKey('car_import.QuoteOption', null=True, blank=True,
+                               on_delete=models.CASCADE, related_name='lines',
+                               verbose_name=_("Candidate car"))
     sequence = models.PositiveIntegerField(default=10, verbose_name=_("#"))
     code = models.CharField(max_length=32, verbose_name=_("Code"))
     label = models.CharField(max_length=190, verbose_name=_("Description"))
@@ -490,3 +532,117 @@ class QuoteLine(BaseModel):
 
     def __str__(self):
         return f"{self.label} — {self.amount:,.2f} {self.currency}"
+
+
+class QuoteOption(BaseModel):
+    """One candidate car on a quotation, with its own whole price stack.
+
+    The plan's shape, and the one the client's own WhatsApp history shows:
+    *"agents send 2–8 links at a time"*. A customer asks for a C200; the agent
+    comes back with five cars at five prices, and the customer picks one. Until
+    now that produced five unrelated quotations and no record that they were
+    ever alternatives to each other.
+
+    Each option carries the entire stack rather than a reference to a shared
+    one, because the options genuinely differ: a cheaper car can fall in a
+    band with a bigger deposit percentage, and that is exactly the comparison
+    the customer is making. Storing the stack per option is also what makes an
+    old quotation reproducible — the same reason the quotation freezes its own
+    figures.
+
+    The accepted option's figures are copied up onto the `Quote`, which is what
+    the offer document, the contract prefill and the escalation briefing read.
+    One accepted option per quote, enforced on save: two would mean nobody can
+    say which car was sold.
+    """
+
+    quote = models.ForeignKey(Quote, on_delete=models.CASCADE, related_name='options',
+                              verbose_name=_("Quotation"))
+    sequence = models.PositiveIntegerField(default=10, verbose_name=_("#"))
+    label = models.CharField(max_length=190, blank=True, verbose_name=_("Label"))
+    vehicle = models.ForeignKey('car_import.Vehicle', null=True, blank=True,
+                                on_delete=models.SET_NULL, related_name='quote_options',
+                                verbose_name=_("Car"))
+    listing_url = models.URLField(max_length=500, blank=True, verbose_name=_("Advert link"))
+    is_accepted = models.BooleanField(default=False, verbose_name=_("The customer chose this one"))
+
+    # ── the same inputs the calculator takes ────────────────────────────────
+    gross_price_eur = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True,
+                                          verbose_name=_("Price with VAT (EUR)"))
+    with_eur1 = models.BooleanField(default=False, verbose_name=_("EUR 1 certificate"))
+    shipping_type = models.CharField(max_length=16, choices=Quote.SHIPPING_TYPE, blank=True,
+                                     default='', verbose_name=_("Shipping"))
+    port = models.CharField(max_length=16, choices=Quote.PORT, default='alexandria',
+                            verbose_name=_("Port of arrival"))
+    collect_from_showroom = models.BooleanField(default=False,
+                                                verbose_name=_("Collected from the showroom"))
+    admin_fee_discount_eur = models.DecimalField(max_digits=12, decimal_places=2, default=0,
+                                                 verbose_name=_("Discount on the admin fee (EUR)"))
+    vat_rate_pct = models.DecimalField(max_digits=5, decimal_places=2, default=19,
+                                       verbose_name=_("VAT %"))
+
+    # ── and the same frozen answers, per car ────────────────────────────────
+    band_label = models.CharField(max_length=120, blank=True, verbose_name=_("Band used"),
+                                  editable=False)
+    net_eur = models.DecimalField(max_digits=12, decimal_places=2, default=0,
+                                  verbose_name=_("Net (EUR)"), editable=False)
+    total_eur = models.DecimalField(max_digits=12, decimal_places=2, default=0,
+                                    verbose_name=_("Total (EUR)"), editable=False)
+    deposit_pct = models.DecimalField(max_digits=5, decimal_places=2, default=0,
+                                      verbose_name=_("Deposit %"), editable=False)
+    deposit_eur = models.DecimalField(max_digits=12, decimal_places=2, default=0,
+                                      verbose_name=_("Deposit (EUR)"), editable=False)
+    balance_eur = models.DecimalField(max_digits=12, decimal_places=2, default=0,
+                                      verbose_name=_("Balance (EUR)"), editable=False)
+    egp_due_on_arrival = models.DecimalField(max_digits=12, decimal_places=2, default=0,
+                                             verbose_name=_("Due on arrival (EGP)"),
+                                             editable=False)
+    pricing_error = models.CharField(max_length=255, blank=True,
+                                     verbose_name=_("Why there is no price"), editable=False)
+    calculated_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Calculated at"),
+                                         editable=False)
+
+    class Meta:
+        verbose_name = _("Candidate car")
+        verbose_name_plural = _("Candidate cars")
+        ordering = ['sequence', 'id']
+
+    def __str__(self):
+        car = self.label or (str(self.vehicle) if self.vehicle_id else '—')
+        return f'{car} · {self.total_eur:,.0f} €'
+
+    def recalculate(self, on=None):
+        """Price this candidate. Returns the engine's result, or None."""
+        from car_import.services import pricing
+
+        self.pricing_error = ''
+        if not self.gross_price_eur:
+            self._zero()
+            return None
+        try:
+            result = pricing.quote(
+                self.gross_price_eur, eur1=self.with_eur1,
+                shipping_type=self.shipping_type or None, port=self.port,
+                collect_from_showroom=self.collect_from_showroom,
+                admin_fee_discount_eur=self.admin_fee_discount_eur,
+                vat_rate=self.vat_rate_pct, fx_rate_egp=self.quote.fx_rate_egp, on=on)
+        except pricing.PricingError as exc:
+            self._zero()
+            self.pricing_error = str(exc)
+            return None
+
+        self.band_label = result['band']
+        self.net_eur = result['net_eur']
+        self.total_eur = result['total_eur']
+        self.deposit_pct = Decimal(str(result['deposit_pct']))
+        self.deposit_eur = result['deposit_eur']
+        self.balance_eur = result['balance_eur']
+        self.egp_due_on_arrival = result['egp_due_on_arrival']
+        self.calculated_at = timezone.now()
+        return result
+
+    def _zero(self):
+        for field in ('net_eur', 'total_eur', 'deposit_pct', 'deposit_eur',
+                      'balance_eur', 'egp_due_on_arrival'):
+            setattr(self, field, Decimal(0))
+        self.band_label = ''

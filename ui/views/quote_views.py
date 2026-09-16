@@ -169,6 +169,43 @@ car_quote_form_view = {
                     ],
                 },
                 {
+                    # The plan's shape, and the client's own habit: an agent
+                    # answers "do you have a C200?" with five links at five
+                    # prices. Each row carries its own whole stack, because a
+                    # cheaper car can land in a band with a BIGGER deposit
+                    # percentage — which is exactly the comparison the customer
+                    # is making.
+                    "title": _("Candidate cars — tick the one the customer chose"),
+                    "groups": [{"fullWidth": True, "fields": [
+                        {"name": "options", "string": "", "widget": "list",
+                         "required": False, "minRows": 0, "maxRows": 12,
+                         "createable": True, "deleteable": True, "selectable": False,
+                         "editable": True,
+                         "listConfig": {"fields": [
+                             {"name": "options.sequence", "widget": "number", "string": _("#")},
+                             {"name": "options.label", "widget": "text", "string": _("Car")},
+                             {"name": "options.listing_url", "widget": "text",
+                              "string": _("Advert link")},
+                             {"name": "options.gross_price_eur", "widget": "number",
+                              "string": _("With VAT €"), "required": True},
+                             {"name": "options.with_eur1", "widget": "switch",
+                              "string": _("EUR 1")},
+                             {"name": "options.shipping_type", "widget": "select",
+                              "string": _("Shipping")},
+                             {"name": "options.port", "widget": "select", "string": _("Port")},
+                             {"name": "options.total_eur", "widget": "number",
+                              "string": _("Total €"), "readonly": True},
+                             {"name": "options.deposit_pct", "widget": "number",
+                              "string": _("Dep. %"), "readonly": True},
+                             {"name": "options.deposit_eur", "widget": "number",
+                              "string": _("Deposit €"), "readonly": True},
+                             {"name": "options.is_accepted", "widget": "switch",
+                              "string": _("Chosen")},
+                         ]},
+                         },
+                    ]}],
+                },
+                {
                     "title": _("The price, as the customer sees it"),
                     "groups": [
                         {"fields": [
