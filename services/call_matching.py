@@ -25,12 +25,18 @@ logger = logging.getLogger(__name__)
 #: Long enough to be a phone number, short enough not to swallow a timestamp.
 PHONE_PATTERN = re.compile(r'(?:\+|00)?\d[\d\s\-]{7,17}\d')
 #: 20260916_143005, 2026-09-16 14:30, 16-09-2026 …
+#:
+#: Every pattern demands a plausible year (19xx/20xx) and refuses to start or
+#: end mid-number. Without that, '201012345678_20260914_101532' — a phone
+#: number followed by a timestamp — matched '12345678_202609' as a date,
+#: failed to parse it, and reported no timestamp at all.
 TIMESTAMP_PATTERNS = [
-    ('%Y%m%d_%H%M%S', re.compile(r'(\d{8}_\d{6})')),
-    ('%Y%m%d%H%M%S', re.compile(r'(\d{14})')),
-    ('%Y-%m-%d_%H-%M-%S', re.compile(r'(\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2})')),
-    ('%Y-%m-%d %H:%M:%S', re.compile(r'(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})')),
-    ('%Y-%m-%d', re.compile(r'(\d{4}-\d{2}-\d{2})')),
+    ('%Y%m%d_%H%M%S', re.compile(r'(?<!\d)((?:19|20)\d{6}_\d{6})(?!\d)')),
+    ('%Y%m%d%H%M%S', re.compile(r'(?<!\d)((?:19|20)\d{12})(?!\d)')),
+    ('%Y-%m-%d_%H-%M-%S', re.compile(r'((?:19|20)\d{2}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2})')),
+    ('%Y-%m-%d %H:%M:%S', re.compile(r'((?:19|20)\d{2}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})')),
+    ('%Y-%m-%d', re.compile(r'((?:19|20)\d{2}-\d{2}-\d{2})')),
+    ('%Y%m%d', re.compile(r'(?<!\d)((?:19|20)\d{6})(?!\d)')),
 ]
 
 
@@ -61,13 +67,13 @@ def recorded_at_from_name(file_name):
     """The call time as written in the file name, if there is one."""
     text = str(file_name or '')
     for fmt, pattern in TIMESTAMP_PATTERNS:
-        match = pattern.search(text)
-        if not match:
-            continue
-        try:
-            return datetime.strptime(match.group(1), fmt)
-        except ValueError:
-            continue
+        # Every occurrence, not just the first: a file name can carry a number
+        # that looks like a date before the one that is a date.
+        for match in pattern.finditer(text):
+            try:
+                return datetime.strptime(match.group(1), fmt)
+            except ValueError:
+                continue
     return None
 
 
