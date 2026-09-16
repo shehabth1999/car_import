@@ -34,6 +34,12 @@ msgctxt "ui/views/reference_views.py"
 msgid "#"
 msgstr "#"
 
+msgid "%(car)s is built in %(country)s"
+msgstr "%(car)s مصنّعة في %(country)s"
+
+msgid "%(customer)s on %(programme)s"
+msgstr "%(customer)s على برنامج %(programme)s"
+
 msgctxt "ui/views/vehicle_views.py"
 msgid "17 characters — never shortened"
 msgstr "17 حرف — لا يُختصر أبداً"
@@ -209,8 +215,16 @@ msgctxt "ui/views/car_deal_views.py"
 msgid "Agreed amount"
 msgstr "المبلغ المتفق عليه"
 
+msgctxt "ui/views/dashboard_views.py"
+msgid "Agreed amounts on open deals, per agent"
+msgstr "المبالغ المتفق عليها في الصفقات المفتوحة، لكل مندوب"
+
 msgid "Agreed to appear in content"
 msgstr "وافق على الظهور في المحتوى"
+
+msgctxt "ui/views/dashboard_views.py"
+msgid "Agreed value by stage (€)"
+msgstr "القيمة المتفق عليها حسب المرحلة (€)"
 
 msgid "Alexandria"
 msgstr "الإسكندرية"
@@ -221,6 +235,10 @@ msgstr "كل الشيكات استُلمت"
 msgctxt "ui/views/car_deal_views.py"
 msgid "All cheques received"
 msgstr "كل الشيكات استُلمت"
+
+msgctxt "ui/views/dashboard_views.py"
+msgid "All time"
+msgstr "كل الفترات"
 
 msgid "Amount"
 msgstr "المبلغ"
@@ -291,6 +309,10 @@ msgid "Approval requests"
 msgstr "طلبات الموافقة"
 
 msgctxt "ui/views/approval_views.py"
+msgid "Approval requests"
+msgstr "طلبات الموافقة"
+
+msgctxt "ui/views/dashboard_views.py"
 msgid "Approval requests"
 msgstr "طلبات الموافقة"
 
@@ -593,8 +615,16 @@ msgctxt "ui/views/dashboard_views.py"
 msgid "Calls to review"
 msgstr "مكالمات للمراجعة"
 
+msgctxt "ui/views/car_deal_views.py"
+msgid "Came from"
+msgstr "جاء من"
+
 msgid "Came from the built-in simulator, not Dropbox"
 msgstr "جاي من المحاكي الداخلي، مش من Dropbox"
+
+msgctxt "ui/views/crm_dashboard_patch.py"
+msgid "Campaign"
+msgstr "الحملة"
 
 msgid "Can be filled"
 msgstr "قابل للتعبئة"
@@ -697,6 +727,10 @@ msgstr "استيراد العربيات"
 msgctxt "ui/views/dashboard_views.py"
 msgid "Car import dashboard"
 msgstr "لوحة استيراد العربيات"
+
+msgctxt "ui/views/crm_dashboard_patch.py"
+msgid "Car import — the funnel"
+msgstr "استيراد السيارات — القمع البيعي"
 
 msgid "Car record"
 msgstr "سجل العربية"
@@ -817,6 +851,10 @@ msgstr "الكود"
 msgctxt "ui/views/reference_views.py"
 msgid "Code"
 msgstr "الكود"
+
+msgctxt "ui/views/dashboard_views.py"
+msgid "Collected (€)"
+msgstr "المحصّل (€)"
 
 msgid "Collected from the showroom"
 msgstr "استلام من المعرض"
@@ -1101,6 +1139,10 @@ msgstr "دولة الإقامة"
 msgid "Coupé"
 msgstr "كوبيه"
 
+msgctxt "ui/views/dashboard_views.py"
+msgid "Created"
+msgstr "تاريخ الإنشاء"
+
 msgid "Created %(count)d car deal(s)"
 msgstr "تم إنشاء %(count)d صفقة"
 
@@ -1153,6 +1195,10 @@ msgctxt "ui/views/contract_views.py"
 msgid "Customer"
 msgstr "العميل"
 
+msgctxt "ui/views/dashboard_views.py"
+msgid "Customer"
+msgstr "العميل"
+
 msgctxt "ui/views/quote_views.py"
 msgid "Customer"
 msgstr "العميل"
@@ -1176,6 +1222,10 @@ msgid "Customer number"
 msgstr "رقم العميل"
 
 msgctxt "ui/views/call_views.py"
+msgid "Customer number"
+msgstr "رقم العميل"
+
+msgctxt "ui/views/dashboard_views.py"
 msgid "Customer number"
 msgstr "رقم العميل"
 
@@ -1228,6 +1278,10 @@ msgctxt "ui/views/contract_views.py"
 msgid "Deal"
 msgstr "الصفقة"
 
+msgctxt "ui/views/dashboard_views.py"
+msgid "Deal"
+msgstr "الصفقة"
+
 msgctxt "ui/views/document_views.py"
 msgid "Deal"
 msgstr "الصفقة"
@@ -1269,8 +1323,20 @@ msgid "Deals"
 msgstr "الصفقات"
 
 msgctxt "ui/views/dashboard_views.py"
+msgid "Deals by programme"
+msgstr "الصفقات حسب البرنامج"
+
+msgctxt "ui/views/dashboard_views.py"
+msgid "Deals by stage"
+msgstr "الصفقات حسب المرحلة"
+
+msgctxt "ui/views/dashboard_views.py"
 msgid "Deals per agent"
 msgstr "الصفقات لكل مندوب"
+
+msgctxt "ui/views/dashboard_views.py"
+msgid "Deals per agent, by stage"
+msgstr "الصفقات لكل مندوب، حسب المرحلة"
 
 msgid "Decided at"
 msgstr "تاريخ القرار"
@@ -1405,6 +1471,10 @@ msgctxt "ui/views/listing_views.py"
 msgid "Description"
 msgstr "الوصف"
 
+msgctxt "ui/views/dashboard_views.py"
+msgid "Did the customer hear from us?"
+msgstr "هل وصلت رسائلنا للعميل؟"
+
 msgctxt "ui/views/vehicle_views.py"
 msgid "Digital cluster"
 msgstr "عداد ديجيتال"
@@ -1442,6 +1512,10 @@ msgid "Document"
 msgstr "المستند"
 
 msgctxt "ui/views/contract_views.py"
+msgid "Document"
+msgstr "المستند"
+
+msgctxt "ui/views/dashboard_views.py"
 msgid "Document"
 msgstr "المستند"
 
@@ -2151,6 +2225,14 @@ msgctxt "ui/views/quote_views.py"
 msgid "Largest"
 msgstr "الأكبر"
 
+msgctxt "ui/views/dashboard_views.py"
+msgid "Last 30 days"
+msgstr "آخر 30 يوم"
+
+msgctxt "ui/views/dashboard_views.py"
+msgid "Last 90 days"
+msgstr "آخر 90 يوم"
+
 msgid "Last seen"
 msgstr "آخر ظهور"
 
@@ -2168,6 +2250,18 @@ msgstr "العميل المحتمل"
 msgctxt "ui/views/car_deal_views.py"
 msgid "Lead"
 msgstr "العميل المحتمل"
+
+msgctxt "ui/views/crm_dashboard_patch.py"
+msgid "Leads by campaign"
+msgstr "العملاء المحتملون حسب الحملة"
+
+msgctxt "ui/views/crm_dashboard_patch.py"
+msgid "Leads by programme"
+msgstr "العملاء المحتملون حسب البرنامج"
+
+msgctxt "ui/views/crm_dashboard_patch.py"
+msgid "Leads by stage"
+msgstr "العملاء المحتملون حسب المرحلة"
 
 msgctxt "ui/views/vehicle_views.py"
 msgid "Leather seats"
@@ -2293,12 +2387,20 @@ msgctxt "ui/views/car_deal_views.py"
 msgid "Marked as due"
 msgstr "المسجّل كمستحق"
 
+msgctxt "ui/views/dashboard_views.py"
+msgid "Marked as due on open deals"
+msgstr "المسجّل كمستحق على الصفقات المفتوحة"
+
 msgid "Marked as paid"
 msgstr "المسجّل كمدفوع"
 
 msgctxt "ui/views/car_deal_views.py"
 msgid "Marked as paid"
 msgstr "المسجّل كمدفوع"
+
+msgctxt "ui/views/dashboard_views.py"
+msgid "Marked as paid, against everything agreed"
+msgstr "المسجّل كمدفوع، مقابل كل المتفق عليه"
 
 msgid "Marked at"
 msgstr "وقت التسجيل"
@@ -2335,6 +2437,10 @@ msgctxt "ui/views/call_views.py"
 msgid "Match"
 msgstr "المطابقة"
 
+msgid "Match note"
+msgstr "ملاحظة المطابقة"
+
+msgctxt "ui/views/dashboard_views.py"
 msgid "Match note"
 msgstr "ملاحظة المطابقة"
 
@@ -2419,6 +2525,10 @@ msgctxt "ui/views/car_deal_views.py"
 msgid "Messages held"
 msgstr "الرسائل موقوفة"
 
+msgctxt "ui/views/dashboard_views.py"
+msgid "Messages that failed"
+msgstr "رسائل فشل إرسالها"
+
 msgctxt "ui/views/import_stage_views.py"
 msgid "Messages the customer"
 msgstr "بترسل للعميل"
@@ -2486,6 +2596,10 @@ msgstr "التعديلات المستخدمة (الحد الأقصى 1)"
 
 msgid "Modified"
 msgstr "معدّلة"
+
+msgctxt "ui/views/dashboard_views.py"
+msgid "Money"
+msgstr "الأموال"
 
 msgctxt "ui/views/car_deal_views.py"
 msgid "Move to next stage"
@@ -2609,6 +2723,9 @@ msgstr "الخصم المتفاوض عليه (يورو)"
 msgctxt "ui/views/vehicle_views.py"
 msgid "Negotiated discount (EUR)"
 msgstr "الخصم المتفاوض عليه (يورو)"
+
+msgid "Negotiated discount on %(car)s"
+msgstr "خصم متفاوض عليه على %(car)s"
 
 msgid "Net (EUR)"
 msgstr "الصافي (يورو)"
@@ -2880,6 +2997,9 @@ msgctxt "ui/views/dashboard_views.py"
 msgid "Open deals"
 msgstr "الصفقات المفتوحة"
 
+msgid "Opening a deal on a programme that needs management"
+msgstr "فتح صفقة على برنامج يتطلب موافقة الإدارة"
+
 msgid "Optional extra"
 msgstr "إضافة اختيارية"
 
@@ -2921,6 +3041,10 @@ msgstr "صادر"
 msgid "Outside Europe"
 msgstr "خارج أوروبا"
 
+msgctxt "ui/views/dashboard_views.py"
+msgid "Overpaid"
+msgstr "دفع زيادة"
+
 msgctxt "ui/views/quote_views.py"
 msgid "Overpaid"
 msgstr "دفع زيادة"
@@ -2931,6 +3055,10 @@ msgstr "المدفوع زيادة (يورو)"
 msgctxt "ui/views/quote_views.py"
 msgid "Overpaid (€)"
 msgstr "المدفوع زيادة (€)"
+
+msgctxt "ui/views/dashboard_views.py"
+msgid "Overpaid €"
+msgstr "الزيادة المدفوعة €"
 
 msgctxt "ui/views/quote_views.py"
 msgid "Owed €"
@@ -2954,12 +3082,20 @@ msgctxt "ui/views/document_views.py"
 msgid "Paid on"
 msgstr "تاريخ الدفع"
 
+msgctxt "ui/views/crm_dashboard_patch.py"
+msgid "Paid or organic"
+msgstr "من إعلان أم بشكل طبيعي"
+
 msgid "Paid so far (EUR)"
 msgstr "المدفوع حتى الآن (يورو)"
 
 msgctxt "ui/views/quote_views.py"
 msgid "Paid so far (€)"
 msgstr "المدفوع حتى الآن (€)"
+
+msgctxt "ui/views/dashboard_views.py"
+msgid "Paid €"
+msgstr "المدفوع €"
 
 msgctxt "ui/views/quote_views.py"
 msgid "Paid €"
@@ -3048,6 +3184,10 @@ msgctxt "ui/views/car_deal_views.py"
 msgid "Payment plan"
 msgstr "خطة الدفع"
 
+msgctxt "ui/views/dashboard_views.py"
+msgid "Payment state"
+msgstr "حالة السداد"
+
 msgid "Pending"
 msgstr "قيد الانتظار"
 
@@ -3072,6 +3212,10 @@ msgstr "الصور والمستندات"
 msgctxt "ui/views/dashboard_views.py"
 msgid "Pipeline by stage"
 msgstr "المسار حسب المرحلة"
+
+msgctxt "ui/views/dashboard_views.py"
+msgid "Pipeline value (€)"
+msgstr "قيمة الصفقات الجارية (€)"
 
 msgctxt "ui/views/car_deal_views.py"
 msgid "Plan"
@@ -3236,6 +3380,9 @@ msgstr "فيلم الحماية"
 msgid "Protection film fitted"
 msgstr "تم تركيب فيلم الحماية"
 
+msgid "Publish %(pair)s at %(rate)s"
+msgstr "نشر سعر %(pair)s عند %(rate)s"
+
 msgid "Published"
 msgstr "منشورة"
 
@@ -3284,6 +3431,10 @@ msgstr "عروض الأسعار"
 msgctxt "ui/views/quote_views.py"
 msgid "Quotations"
 msgstr "عروض الأسعار"
+
+msgctxt "ui/views/dashboard_views.py"
+msgid "Quotations per month"
+msgstr "عروض الأسعار شهرياً"
 
 msgid "Rate"
 msgstr "السعر"
@@ -3368,6 +3519,10 @@ msgstr "مستلم، لم يُراجع"
 msgid "Recorded at"
 msgstr "وقت التسجيل"
 
+msgctxt "ui/views/dashboard_views.py"
+msgid "Recorded at"
+msgstr "وقت التسجيل"
+
 msgid "Recording"
 msgstr "التسجيل"
 
@@ -3383,6 +3538,10 @@ msgid "Reference"
 msgstr "المرجع"
 
 msgctxt "ui/views/consignment_views.py"
+msgid "Reference"
+msgstr "المرجع"
+
+msgctxt "ui/views/dashboard_views.py"
 msgid "Reference"
 msgstr "المرجع"
 
@@ -3476,6 +3635,10 @@ msgstr "محجوزة لـ"
 
 msgid "Residencies that qualify"
 msgstr "الإقامات المؤهلة"
+
+msgctxt "ui/views/crm_dashboard_patch.py"
+msgid "Revenue"
+msgstr "الإيراد"
 
 msgid "Rule"
 msgstr "القاعدة"
@@ -3773,6 +3936,10 @@ msgstr "بيعت أو اتشالت"
 msgid "Source"
 msgstr "المصدر"
 
+msgctxt "ui/views/crm_dashboard_patch.py"
+msgid "Source"
+msgstr "المصدر"
+
 msgctxt "ui/views/reference_views.py"
 msgid "Source"
 msgstr "المصدر"
@@ -3850,6 +4017,10 @@ msgstr "عادي"
 msgid "State"
 msgstr "الحالة"
 
+msgctxt "ui/views/dashboard_views.py"
+msgid "State"
+msgstr "الحالة"
+
 msgctxt "ui/views/document_views.py"
 msgid "State"
 msgstr "الحالة"
@@ -3901,6 +4072,10 @@ msgstr "لسه ناقص: %(names)s"
 
 msgid "Still owed (EUR)"
 msgstr "الباقي المستحق (يورو)"
+
+msgctxt "ui/views/dashboard_views.py"
+msgid "Still owed (€)"
+msgstr "الباقي المستحق (€)"
 
 msgctxt "ui/views/quote_views.py"
 msgid "Still owed (€)"
@@ -4135,6 +4310,10 @@ msgid "The offer was sent to the customer."
 msgstr "تم إرسال العرض للعميل."
 
 msgctxt "ui/views/dashboard_views.py"
+msgid "The pipeline"
+msgstr "الصفقات الجارية"
+
+msgctxt "ui/views/dashboard_views.py"
 msgid "The pipeline, what is stuck, and what the customer was told"
 msgstr "المسار، وإيه اللي واقف، وإيه اللي اتقال للعميل"
 
@@ -4220,6 +4399,10 @@ msgstr "الرقم ده هو"
 msgctxt "ui/views/reference_views.py"
 msgid "This number is"
 msgstr "الرقم ده هو"
+
+msgctxt "ui/views/dashboard_views.py"
+msgid "This year"
+msgstr "هذه السنة"
 
 msgid "Tier"
 msgstr "الفئة"
@@ -4307,6 +4490,10 @@ msgid "Total selling price (€)"
 msgstr "إجمالي سعر البيع (€)"
 
 msgctxt "ui/views/contract_views.py"
+msgid "Total €"
+msgstr "الإجمالي €"
+
+msgctxt "ui/views/dashboard_views.py"
 msgid "Total €"
 msgstr "الإجمالي €"
 
@@ -4550,6 +4737,10 @@ msgid "Waiting for an agent to send"
 msgstr "في انتظار المندوب يبعت"
 
 msgctxt "ui/views/dashboard_views.py"
+msgid "Waiting for management"
+msgstr "في انتظار الإدارة"
+
+msgctxt "ui/views/dashboard_views.py"
 msgid "Waiting on paperwork"
 msgstr "في انتظار الأوراق"
 
@@ -4750,6 +4941,18 @@ msgstr "شامل الضريبة €"
 
 msgid "Withdrawn"
 msgstr "مسحوبة"
+
+msgctxt "ui/views/crm_dashboard_patch.py"
+msgid "Won"
+msgstr "مكسوب"
+
+msgctxt "ui/views/crm_dashboard_patch.py"
+msgid "Won deals by agent"
+msgstr "الصفقات المكسوبة حسب المندوب"
+
+msgctxt "ui/views/crm_dashboard_patch.py"
+msgid "Won deals by campaign"
+msgstr "الصفقات المكسوبة حسب الحملة"
 
 msgctxt "ui/views/reference_views.py"
 msgid "Year"
