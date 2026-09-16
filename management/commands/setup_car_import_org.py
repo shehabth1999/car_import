@@ -115,7 +115,26 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING('\nNo Branch model on this instance; skipped.'))
             return
         self.stdout.write(self.style.NOTICE('\nBranches'))
+        # A branch belongs to a company — Branch.save() runs full_clean and
+        # refuses a null one. Use the tenant's own company rather than inventing
+        # one: standing up a legal entity has tax and contract consequences and
+        # is not a decision a setup command should take.
+        company = None
+        try:
+            from modules.base.models import Company
+            company = Company.objects.order_by('id').first()
+        except Exception:
+            pass
+        if company is None:
+            self.stdout.write(self.style.ERROR(
+                '  No company on this instance — create one first, then re-run. '
+                'A branch cannot exist without one.'))
+            return
+
         for code, name, note in BRANCHES:
-            row, created = Branch.objects.get_or_create(
-                name=name, defaults={'code': code} if hasattr(Branch, 'code') else {})
-            self.stdout.write(f'  {name}: {"created" if created else "already there"}  — {note}')
+            values = {'company': company}
+            if hasattr(Branch, 'code'):
+                values['code'] = code
+            row, created = Branch.objects.get_or_create(name=name, defaults=values)
+            self.stdout.write(f'  {name}: {"created" if created else "already there"}  '
+                              f'(company: {company.name})  — {note}')
