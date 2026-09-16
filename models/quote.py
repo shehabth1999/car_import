@@ -171,7 +171,7 @@ class Quote(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
                                        verbose_name=_("Overpaid (EUR)"), editable=False)
 
     notes = models.TextField(blank=True, verbose_name=_("Notes"))
-    sent_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Sent at"))
+    sent_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Sent at"), editable=False)
 
     class Meta:
         verbose_name = _("Quotation")
@@ -365,7 +365,7 @@ class Quote(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
                 'data': {}, 'on_success': {'type': 'refresh'}}
 
 
-class QuoteLine(BaseModel, editable=False):
+class QuoteLine(BaseModel):
     """One row of the offer, exactly as the customer saw it."""
 
     all_objects = models.Manager()
