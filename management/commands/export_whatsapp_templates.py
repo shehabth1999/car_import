@@ -12,8 +12,10 @@ cosmetic — Meta rejects things the stage text does happily:
 * **a body may not begin or end with a placeholder.** `shipped_bl` ends with
   `{tracking_url}`, which is an instant rejection. Rewritten with a closing
   sentence rather than by dropping the link;
-* **two placeholders may not touch.** `{model} {model_year}` is fine (a space
-  between them); `{a}{b}` is not;
+* **two placeholders may not touch**, and a space between them does not count
+  as separation — Meta rejects `{{1}} {{2}}`. Two stage messages said
+  `{model} {model_year}`, so the stages now carry a single `{car_full}` that
+  renders identically ("Mercedes-Benz C200 2024");
 * **every variable needs a sample value**, and the sample is what a reviewer
   reads — so these are real: a real vessel name, a real-looking B/L, a date;
 * **UTILITY, not MARKETING.** A shipping update is a utility message. One
@@ -39,6 +41,7 @@ from django.utils.html import escape
 VARIABLES = {
     'customer_name': ('اسم العميل', 'أحمد محمد'),
     'model': ('الماركة والموديل', 'Mercedes-Benz C200'),
+    'car_full': ('العربية كاملة', 'Mercedes-Benz C200 2024'),
     'model_year': ('سنة الموديل', '2024'),
     'vessel': ('اسم الباخرة', 'MSC Rania'),
     'bl_number': ('رقم بوليصة الشحن', 'MSCU7761234'),

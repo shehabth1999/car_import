@@ -20,7 +20,7 @@ STAGES = [
     {
         'code': 'contract_reserved', 'sequence': 10,
         'name': 'التعاقد والحجز', 'name_en': 'Contract and reservation',
-        'fallback_text_ar': 'أهلاً {customer_name} 👋 تم التعاقد وحجز {model} {model_year} باسم حضرتك. '
+        'fallback_text_ar': 'أهلاً {customer_name} 👋 تم التعاقد وحجز {car_full} باسم حضرتك. '
                             'هنبدأ إجراءات الشراء ونطمّن حضرتك خطوة بخطوة.',
     },
     {
@@ -32,7 +32,7 @@ STAGES = [
     {
         'code': 'purchased', 'sequence': 30,
         'name': 'شراء السيارة والتعاقد مع المورد', 'name_en': 'Car purchased from the supplier',
-        'fallback_text_ar': 'مبروك يا {customer_name} 🎉 تم شراء {model} {model_year} رسمياً من المورد. '
+        'fallback_text_ar': 'مبروك يا {customer_name} 🎉 تم شراء {car_full} رسمياً من المورد. '
                             'الخطوة الجاية استلامها وفحصها.',
     },
     {

@@ -44,8 +44,10 @@ class ImportStage(BaseModel):
     fallback_text_ar = models.TextField(
         blank=True, verbose_name=_("Message text (Arabic)"),
         help_text=_("Used inside the WhatsApp window and on every other channel. "
-                    "Placeholders: {customer_name} {model} {model_year} {vin} {stage_name} "
-                    "{port} {vessel} {eta} {bl_number} {tracking_url} {deal_ref}"),
+                    "Placeholders: {customer_name} {car_full} {model} {model_year} {vin} "
+                    "{stage_name} {port} {vessel} {eta} {bl_number} {tracking_url} {deal_ref}. "
+                    "Prefer {car_full} over {model} {model_year}: a WhatsApp template may "
+                    "not put two placeholders next to each other, even with a space"),
     )
     fallback_text_en = models.TextField(blank=True, verbose_name=_("Message text (English)"))
     send_delay_minutes = models.PositiveIntegerField(

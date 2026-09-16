@@ -187,6 +187,12 @@ def stage_placeholders(deal, stage):
         'stage_name': stage.name or stage.name_en or '',
         'deal_ref': deal.name or '',
         'model': f"{vehicle.make} {vehicle.model}".strip() if vehicle else '',
+        # One placeholder for "the car", because WhatsApp templates may not put
+        # two variables next to each other — `{model} {model_year}` is rejected
+        # by Meta even with a space between them. Renders identically.
+        'car_full': ' '.join(p for p in (
+            f"{vehicle.make} {vehicle.model}".strip() if vehicle else '',
+            str(getattr(vehicle, 'model_year', '') or '') if vehicle else '') if p),
         'trim': getattr(vehicle, 'trim', '') or '',
         'model_year': str(getattr(vehicle, 'model_year', '') or ''),
         'colour': getattr(vehicle, 'colour_exterior', '') or '',
