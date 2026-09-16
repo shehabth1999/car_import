@@ -275,6 +275,20 @@ class Quote(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
         if self.paid_eur and self.paid_eur < 0:
             raise ValidationError({'paid_eur': _("A payment cannot be negative.")})
 
+        # The client's own rule, and the one this screen used to ignore: *any*
+        # discount on the company's fees is management's to give, not an
+        # agent's. It raises rather than warning — the discount is not saved
+        # until somebody with the authority has said yes, in a row with their
+        # name on it.
+        if self.admin_fee_discount_eur:
+            from .approval import require
+            require('fee_discount', self.admin_fee_discount_eur,
+                    deal=self.deal, quote=self if self.pk else None,
+                    partner=self.partner, field='admin_fee_discount_eur',
+                    reason=_("Discount on the admin fee for %(customer)s")
+                    % {'customer': getattr(self.partner, 'name', '') or '—'},
+                    user=getattr(getattr(self, 'env', None), 'user', None))
+
         # Price first, then judge the result. Checking `total_eur` before the
         # calculator runs would reject a quote that is being created and
         # accepted in the same save — which is exactly what happens when a
@@ -445,6 +459,7 @@ class Quote(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
                 deal = quote.deal
                 deal.amount_agreed = quote.total_eur
                 deal.currency_note = 'EUR'
+                deal.accepted_quote = quote
                 deal.save()
             accepted += 1
         message = _("Accepted %(count)d quotation(s)") % {'count': accepted}

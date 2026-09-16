@@ -2,6 +2,7 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+from modules.base.fields import AttachmentForeignKeyField, AttachmentManyToManyField
 from modules.base.models.base import BaseModel
 
 #: Options that move a car from the medium tier to the full tier.
@@ -48,11 +49,32 @@ class Vehicle(BaseModel):
         ('unknown', _("Not known yet")),
     ]
 
+    BODY = [
+        ('sedan', _("Saloon")),
+        ('suv', _("SUV")),
+        ('coupe', _("Coupé")),
+        ('hatchback', _("Hatchback")),
+        ('estate', _("Estate")),
+        ('convertible', _("Convertible")),
+        ('van', _("Van")),
+    ]
+
     # ── identity ────────────────────────────────────────────────────────────
     vin = models.CharField(
         max_length=17, blank=True, db_index=True, verbose_name=_("VIN"),
         help_text=_("17 characters, never shortened"),
     )
+    #: The German order reference. It is printed on the contract — clause 2 asks
+    #: for "كونفيجريشن رقم" — and on a factory order it is the only identifier
+    #: that exists before a VIN does. It belongs to the car, not to the piece of
+    #: paper: the same number has to appear on the contract, the annex and the
+    #: supplier's confirmation, and they have to agree.
+    configuration_number = models.CharField(
+        max_length=64, blank=True, db_index=True, verbose_name=_("Configuration number"),
+        help_text=_("The supplier's order reference, printed on the contract"),
+    )
+    internal_reference = models.CharField(max_length=64, blank=True,
+                                          verbose_name=_("Internal reference"))
     make = models.CharField(max_length=64, verbose_name=_("Make"))
     model = models.CharField(max_length=128, verbose_name=_("Model"))
     trim = models.CharField(max_length=128, blank=True, verbose_name=_("Trim"))
@@ -112,6 +134,45 @@ class Vehicle(BaseModel):
     tier_override = models.CharField(
         max_length=16, choices=TIER, blank=True, verbose_name=_("Tier override"),
         help_text=_("Set only when the deposit sheet disagrees with the option count"),
+    )
+
+    # ── specification, as the annex prints it ───────────────────────────────
+    body = models.CharField(max_length=16, choices=BODY, blank=True, verbose_name=_("Body"))
+    upholstery = models.CharField(max_length=64, blank=True, verbose_name=_("Upholstery"))
+    euro_norm = models.CharField(max_length=16, blank=True, verbose_name=_("EURO norm"))
+    built_for_market = models.CharField(
+        max_length=64, blank=True, verbose_name=_("Built for market"),
+        help_text=_("Not the same as where it was built — EUR 1 turns on this one"),
+    )
+    export_port = models.CharField(max_length=64, blank=True, verbose_name=_("Export port"))
+    inspection_report = models.TextField(blank=True, verbose_name=_("Inspection report"))
+    negotiated_discount_eur = models.DecimalField(
+        max_digits=12, decimal_places=2, null=True, blank=True,
+        verbose_name=_("Negotiated discount (EUR)"),
+        help_text=_("What was talked off the advertised price. Cost data — the "
+                    "sales agents do not see it"),
+    )
+
+    # ── media ───────────────────────────────────────────────────────────────
+    # Stage 6 sends the customer photos and a walk-around video from the Berlin
+    # showroom. Until now the stage could send media and the car had nowhere to
+    # keep it, so the only copy lived in a WhatsApp thread.
+    photos = AttachmentManyToManyField(
+        upload_to='car_import/vehicles/photos', allowed_types=['image'],
+        verbose_name=_("Photos"), blank=True,
+    )
+    walkaround_video = AttachmentForeignKeyField(
+        upload_to='car_import/vehicles/video', allowed_types=['video'],
+        verbose_name=_("Walk-around video"),
+    )
+    car_card = AttachmentForeignKeyField(
+        upload_to='car_import/vehicles/cards', allowed_types=['pdf', 'image', 'document'],
+        verbose_name=_("Car card"),
+    )
+    vin_option_list = AttachmentForeignKeyField(
+        upload_to='car_import/vehicles/options', allowed_types=['pdf', 'document', 'image'],
+        verbose_name=_("VIN option list"),
+        help_text=_("The factory list the supplier sends against the VIN"),
     )
 
     notes = models.TextField(blank=True, verbose_name=_("Notes"))

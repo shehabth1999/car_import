@@ -135,6 +135,24 @@ CALCULATOR_FEES = [
 ]
 
 
+# The client's approval matrix (process map §6), as rows. The column heading in
+# their own document is "Never decided by an agent or the AI", and until this
+# existed the matrix described a company the software did not implement.
+# `None` as a threshold means "always", which is how most of them are worded:
+# ANY discount on the company fees, ANY non-standard schedule.
+APPROVALS = [
+    ('car_discount', 'خصم على سعر العربية أكتر من 500 يورو', 500, 'EUR'),
+    ('fee_discount', 'أي خصم على مصاريف الشركة', None, 'EUR'),
+    ('payment_schedule', 'أي جدول سداد غير القياسي', None, 'EUR'),
+    ('cancellation', 'الإلغاء والاسترداد والتسوية (البند السابع)', None, 'EUR'),
+    ('fx_rate', 'سعر التحويل وعمولته 1.5–2%', None, 'EGP'),
+    ('bank_details', 'إعطاء بيانات الحساب البنكي', None, 'EUR'),
+    ('complaint', 'شكوى حالة أو مواصفة ناقصة أو ضرر', None, 'EUR'),
+    ('sourcing_outside_eu', 'الشراء من خارج ألمانيا أو الاتحاد الأوروبي', None, 'EUR'),
+    ('contract_signature', 'التوقيع على العقد', None, 'EUR'),
+]
+
+
 class Command(BaseCommand):
     help = "Seed the confirmed programmes, tax bands, fees, financing plans and EUR 1 rule"
 
@@ -258,6 +276,40 @@ class Command(BaseCommand):
                 ConfigParameter.objects.update_or_create(
                     key=key, defaults={'value': value, 'description': note})
             counts['quiet hours'] = '09:00 – 21:00 (client, 2026-09-16)'
+
+            from car_import.models import ApprovalPolicy
+            for subject, name, threshold, currency in APPROVALS:
+                ApprovalPolicy.objects.update_or_create(
+                    subject=subject,
+                    defaults={'name': name, 'threshold_amount': threshold,
+                              'currency': currency, 'approver_group': 'car_import.management',
+                              'is_active': True, 'effective_from': CONFIRMED,
+                              'source_note': "the client's approval matrix"})
+            counts['approval rules'] = len(APPROVALS)
+
+            # K&T's legal identity, taken from the contracts they sent rather
+            # than asked for again — every value below is printed in their own
+            # templates. The signatory is a separate row because he changes.
+            from car_import.models import ContractIssuer, ContractSignatory
+            issuer, _made = ContractIssuer.objects.update_or_create(
+                code='kt',
+                defaults={
+                    'name': 'شركة كيه آند تي (K&T) لبيع السيارات لحساب الغير',
+                    'name_en': 'K&T Company for car sales on behalf of third parties',
+                    'commercial_register': '230794',
+                    'chamber': 'غرفة القاهرة التجارية',
+                    'tax_card': '368-740-761',
+                    'represents': 'مجموعة شركات خالد أوتوموبيل المحدودة',
+                    'legal_rep_name': 'خالد صابر عبد الرحمن عبد الله',
+                    'legal_rep_national_id': '27912030100833',
+                    'email': 'Info@khaledautomobile.de',
+                    'is_default': True,
+                })
+            ContractSignatory.objects.update_or_create(
+                issuer=issuer, name='احمد فايز جميل نايف',
+                defaults={'national_id': '29008138800679',
+                          'title': 'المفوض بالتوقيع', 'is_default': True})
+            counts['contract issuer'] = 'K&T + 1 signatory'
 
         for label, value in counts.items():
             self.stdout.write(f'  {label}: {value}')

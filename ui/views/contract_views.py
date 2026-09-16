@@ -21,6 +21,36 @@ _CONTRACT_ACTIONS = [
         "view_type": ["form", "list"],
     },
     {
+        "name": "action_send_contract",
+        "string": _("Send to the customer"),
+        "icon": "Send",
+        "type": "server",
+        "as": "button",
+        "variant": "secondary",
+        "view_type": ["form"],
+        # It puts a contract in front of a customer. Nobody presses it twice by
+        # accident.
+        "confirm_required": True,
+    },
+    {
+        "name": "action_print_annex2",
+        "string": _("Annex 2 — specification"),
+        "icon": "ClipboardList",
+        "type": "server",
+        "as": "dropdown",
+        "view_type": ["form"],
+    },
+    {
+        "name": "action_void",
+        "string": _("Void"),
+        "icon": "Ban",
+        "type": "server",
+        "as": "dropdown",
+        "variant": "danger",
+        "view_type": ["form", "list"],
+        "confirm_required": True,
+    },
+    {
         "name": "action_mark_signed",
         "string": _("Customer signed"),
         "icon": "PenLine",
@@ -93,6 +123,13 @@ car_contract_form_view = {
                              "displayField": "name", "multiSelect": False},
                             {"name": "contract_date", "string": _("Contract date"),
                              "widget": "date"},
+                            {"name": "issuer", "string": _("Issued by"), "widget": "relation",
+                             "displayField": "name", "multiSelect": False},
+                            # Selectable per contract, because signatories change
+                            # and a contract naming somebody who did not sign it
+                            # is a contract with a hole in it.
+                            {"name": "signatory", "string": _("Signed for the company by"),
+                             "widget": "relation", "displayField": "name", "multiSelect": False},
                         ]},
                     ],
                 },
@@ -187,6 +224,12 @@ car_contract_form_view = {
                              "widget": "relation", "displayField": "name", "readonly": True,
                              "multiSelect": False},
                             {"name": "signed_on", "string": _("Signed on"), "widget": "date"},
+                            {"name": "signed_document", "string": _("Signed copy"),
+                             "widget": "file"},
+                            {"name": "sent_at", "string": _("Sent at"), "widget": "datetime",
+                             "readonly": True},
+                            {"name": "void_reason", "string": _("Why it was voided"),
+                             "widget": "text"},
                         ]},
                     ],
                 },
@@ -254,6 +297,95 @@ car_contract_template_form_view = {
                     {"name": "notes", "string": _("Notes"), "widget": "textarea"},
                 ]},
             ]},
+        ]},
+    },
+}
+
+
+car_contract_issuer_list_view = {
+    "key": "car_import_contract_issuer_list_view",
+    "name": _("Contract issuers"),
+    "model": "car_import.contractissuer",
+    "menu_item": "car_import_menu_contract_issuers",
+    "view_type": "list",
+    "priority": 10,
+    "module": "car_import",
+    "body": {"tree": {"fields": [
+        {"name": "code", "widget": "text", "string": _("Code"), "width": "110"},
+        {"name": "name", "widget": "text", "string": _("Company"), "width": "320"},
+        {"name": "commercial_register", "widget": "text", "string": _("Register"), "width": "140"},
+        {"name": "tax_card", "widget": "text", "string": _("Tax card"), "width": "150"},
+        {"name": "legal_rep_name", "widget": "text", "string": _("Legal representative"),
+         "width": "230"},
+        {"name": "is_default", "widget": "switch", "string": _("Default"), "width": "110"},
+    ]}},
+}
+
+
+car_contract_issuer_form_view = {
+    "key": "car_import_contract_issuer_form_view",
+    "name": _("Contract issuer"),
+    "model": "car_import.contractissuer",
+    "menu_item": "car_import_menu_contract_issuers",
+    "view_type": "form",
+    "priority": 10,
+    "module": "car_import",
+    "body": {
+        "header": {"actions_list": [], "actions": []},
+        "sheet": {"sections": [
+            {"title": _("As the contract prints it"), "groups": [
+                {"fields": [
+                    {"name": "code", "string": _("Code"), "widget": "text", "required": True},
+                    {"name": "name", "string": _("Company name"), "widget": "text",
+                     "required": True},
+                    {"name": "name_en", "string": _("Company name (English)"), "widget": "text"},
+                    {"name": "represents", "string": _("Marketing agent for"), "widget": "text"},
+                ]},
+                {"fields": [
+                    {"name": "commercial_register", "string": _("Commercial register"),
+                     "widget": "text"},
+                    {"name": "chamber", "string": _("Chamber of commerce"), "widget": "text"},
+                    {"name": "tax_card", "string": _("Tax card"), "widget": "text"},
+                    {"name": "is_default", "string": _("Use by default"), "widget": "switch"},
+                ]},
+            ]},
+            {"title": _("Who represents it"), "groups": [
+                {"fields": [
+                    {"name": "legal_rep_name", "string": _("Legal representative"),
+                     "widget": "text"},
+                    {"name": "legal_rep_national_id", "string": _("Their national ID"),
+                     "widget": "text"},
+                ]},
+                {"fields": [
+                    {"name": "email", "string": _("Notice email (clause 10)"), "widget": "text"},
+                    {"name": "address", "string": _("Address"), "widget": "text"},
+                ]},
+            ]},
+            {
+                # The list the whole model exists for. Signatories change, and a
+                # contract naming somebody who did not sign it is a contract
+                # with a hole in it.
+                "title": _("Authorised signatories"),
+                "groups": [{"fullWidth": True, "fields": [
+                    {"name": "signatories", "string": "", "widget": "list",
+                     "required": False, "minRows": 0, "maxRows": 20,
+                     "createable": True, "deleteable": True, "selectable": False,
+                     "editable": True,
+                     "listConfig": {"fields": [
+                         {"name": "signatories.name", "widget": "text", "string": _("Name"),
+                          "required": True},
+                         {"name": "signatories.national_id", "widget": "text",
+                          "string": _("National ID")},
+                         {"name": "signatories.title", "widget": "text", "string": _("Capacity")},
+                         {"name": "signatories.authorised_from", "widget": "date",
+                          "string": _("From")},
+                         {"name": "signatories.authorised_to", "widget": "date",
+                          "string": _("Until")},
+                         {"name": "signatories.is_default", "widget": "switch",
+                          "string": _("Signs by default")},
+                     ]}},
+                ]}],
+            },
         ]},
     },
 }

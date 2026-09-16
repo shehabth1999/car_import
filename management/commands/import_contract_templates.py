@@ -103,6 +103,20 @@ RULE_GROUPS = [
 #: disagree — the Arabic says 2026 and the English says 2025. Tokenising both
 #: means the generated contract cannot carry that contradiction forward.
 LITERALS = [
+    # The company's own clause. These are not blanks — they are printed names,
+    # which is exactly the problem: the authorised signatory changes, and until
+    # now changing him meant editing a .docx. Tokenising them turns the clause
+    # into data without touching a word of the lawyer's wording.
+    ('بصفتها الوكيل التسويقي الوحيد', [
+        ('خالد صابر عبد الرحمن عبد الله', 'issuer_legal_rep'),
+        ('27912030100833', 'issuer_legal_rep_id'),
+        ('احمد فايز جميل نايف', 'signatory_name'),
+        ('29008138800679', 'signatory_national_id'),
+    ]),
+    ('sole marketing agent', [
+        ('27912030100833', 'issuer_legal_rep_id'),
+        ('29008138800679', 'signatory_national_id'),
+    ]),
     ('أنه في يوم', [('2026', 'contract_year')]),
     ('On this day', [('2026', 'contract_year'), ('2025', 'contract_year')]),
     ('شراء سيارة', [('2026', 'car_model_year'), ('2025', 'car_model_year')]),

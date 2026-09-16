@@ -50,6 +50,9 @@ class CarDeal(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
         ('first_owner', _("First owner")),
         ('showroom', _("Showroom car in Egypt")),
         ('shipping_only', _("Shipping only")),
+        # L6. It was one of the client's six revenue lines and the only one with
+        # no route through this system at all.
+        ('consignment', _("Consignment (وساطة)")),
     ]
     PAYMENT_STATE = [
         ('not_paid', _("Not paid")),
@@ -87,6 +90,16 @@ class CarDeal(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
         related_name='car_deals', verbose_name=_("Car"),
     )
     program = models.CharField(max_length=24, choices=PROGRAM, default='initiative', verbose_name=_("Programme"))
+    #: The plan's "Subject" row. The initiative knew about the deal and the
+    #: deal did not know about the initiative, which meant the contract clause
+    #: "shipped in the name of" — `initiative.holder` on a provided initiative,
+    #: the customer otherwise — could not be answered from the deal at all.
+    initiative = models.ForeignKey(
+        'car_import.Initiative', null=True, blank=True, on_delete=models.SET_NULL,
+        related_name='deals', verbose_name=_("Initiative"))
+    accepted_quote = models.ForeignKey(
+        'car_import.Quote', null=True, blank=True, on_delete=models.SET_NULL,
+        related_name='accepted_on', verbose_name=_("Accepted quotation"))
     customer_is_initiative_holder = models.BooleanField(
         default=False, verbose_name=_("The customer holds the initiative"),
         help_text=_("Customs clearance happens in the customer's name, so the company has "
@@ -222,6 +235,30 @@ class CarDeal(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
         return (timezone.now() - self.stage_entered_at).days
 
     # ── rules ───────────────────────────────────────────────────────────────
+    def _check_approvals(self):
+        """Cancellation and a non-standard schedule are management's calls.
+
+        Straight from the client's approval matrix. The rule was written down
+        in their process map and enforced nowhere, which meant the matrix
+        described a company the software did not implement.
+        """
+        from .approval import require
+
+        user = getattr(getattr(self, 'env', None), 'user', None)
+        stored = type(self)._base_manager.filter(pk=self.pk).values(
+            'state', 'financing_type').first() if self.pk else None
+
+        if self.state == 'cancelled' and (stored or {}).get('state') != 'cancelled':
+            require('cancellation', self.amount_paid_marked, deal=self,
+                    partner=self.partner, field='state',
+                    reason=self.cancel_reason or _("Cancelling this deal"), user=user)
+
+        if (self.financing_type == 'direct_instalments'
+                and (stored or {}).get('financing_type') != 'direct_instalments'):
+            require('payment_schedule', self.amount_agreed, deal=self,
+                    partner=self.partner, field='financing_type',
+                    reason=_("Instalments instead of the standard schedule"), user=user)
+
     def _check_instalments_allowed(self):
         """Instalments are refused when the customer holds the initiative.
 
@@ -249,6 +286,7 @@ class CarDeal(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
     def pre_save(self):
         super().pre_save()
         self._check_instalments_allowed()
+        self._check_approvals()
         stored_stage_id = self._stored_stage_id()
         self._stage_changed_from = stored_stage_id
         self._stage_did_change = bool(self.import_stage_id) and self.import_stage_id != stored_stage_id
@@ -408,6 +446,45 @@ class CarDeal(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
             'data': {},
             'on_success': {'type': 'refresh'},
         }
+
+    @action
+    def action_set_stage(queryset, form):
+        """Jump to any stage, or move back, with a reason — and normally no message.
+
+        Separate from "next stage" on purpose, and the distinction is the whole
+        feature: moving a deal back because ops mis-clicked must not tell the
+        customer their car has un-shipped. So this sets the stage directly,
+        suppressing the customer message unless somebody deliberately asks for
+        it, and the reason lands in the change log and the chatter.
+        """
+        from car_import.models import StageChangeLog
+
+        moved = 0
+        for deal in queryset:
+            previous_id = deal.import_stage_id
+            if previous_id == form.import_stage_id:
+                continue
+            # `notifications_suppressed` is what post_save reads to decide
+            # whether the customer hears about a stage move, so the switch is
+            # flipped around the save rather than re-implementing the rule.
+            was_suppressed = deal.notifications_suppressed
+            deal.notifications_suppressed = was_suppressed or not form.notify_customer
+            deal.previous_stage_id = previous_id
+            deal.import_stage = form.import_stage
+            deal.save()
+            deal.notifications_suppressed = was_suppressed
+            deal.save(update_fields=['notifications_suppressed'])
+
+            StageChangeLog.objects.filter(
+                deal=deal, to_stage_id=form.import_stage_id
+            ).order_by('-id').update(reason=form.reason)
+            deal.message_post(body=_(
+                "Stage set by hand to %(stage)s. Reason: %(reason)s")
+                % {'stage': str(form.import_stage), 'reason': form.reason})
+            moved += 1
+
+        return {'status': True, 'open_mode': 'message', 'data': {},
+                'message': _("Moved %(count)d deal(s)") % {'count': moved}}
 
     @action
     def action_hold(queryset):

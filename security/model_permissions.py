@@ -88,6 +88,41 @@ MODEL_PERMISSIONS = [
     {'model': 'car_import.contracttemplate', 'group': 'car_import.management',
      'permissions': FULL},
 
+    # ── approvals ───────────────────────────────────────────────────────────
+    # The rules are policy: management writes them. Everyone reads their own
+    # queue — an agent whose save was blocked has to be able to see that the
+    # request exists — and only management may decide one, which is the whole
+    # point of the matrix.
+    {'model': 'car_import.approvalpolicy', 'group': 'car_import.management', 'permissions': FULL},
+    {'model': 'car_import.approvalpolicy', 'group': 'car_import.sales_manager',
+     'permissions': VIEW_ONLY},
+    {'model': 'car_import.approvalrequest', 'group': 'car_import.sales_agent',
+     'permissions': [1, 1, 0, 0]},
+    {'model': 'car_import.approvalrequest', 'group': 'car_import.sales_manager',
+     'permissions': [1, 1, 0, 0]},
+    {'model': 'car_import.approvalrequest', 'group': 'car_import.operations',
+     'permissions': VIEW_ONLY},
+    {'model': 'car_import.approvalrequest', 'group': 'car_import.management', 'permissions': FULL},
+
+    # ── the company's own legal identity ────────────────────────────────────
+    {'model': 'car_import.contractissuer', 'group': 'car_import.management', 'permissions': FULL},
+    {'model': 'car_import.contractissuer', 'group': 'car_import.sales_manager',
+     'permissions': VIEW_ONLY},
+    {'model': 'car_import.contractsignatory', 'group': 'car_import.management',
+     'permissions': FULL},
+    {'model': 'car_import.contractsignatory', 'group': 'car_import.sales_manager',
+     'permissions': VIEW_ONLY},
+
+    # ── consignment (L6) ────────────────────────────────────────────────────
+    {'model': 'car_import.consignmentmandate', 'group': 'car_import.sales_agent',
+     'permissions': MANAGE},
+    {'model': 'car_import.consignmentmandate', 'group': 'car_import.sales_manager',
+     'permissions': MANAGE},
+    {'model': 'car_import.consignmentmandate', 'group': 'car_import.showroom',
+     'permissions': MANAGE},
+    {'model': 'car_import.consignmentmandate', 'group': 'car_import.management',
+     'permissions': FULL},
+
     # ── paperwork ───────────────────────────────────────────────────────────
     {'model': 'car_import.documentrequirement', 'group': 'car_import.management', 'permissions': FULL},
     {'model': 'car_import.documentrequirement', 'group': 'car_import.operations', 'permissions': MANAGE},

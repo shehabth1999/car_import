@@ -50,6 +50,15 @@ vehicle_form_view = {
                                 {"name": "production_month", "string": _("Production month"), "widget": "text"},
                                 {"name": "vin", "string": _("VIN"), "widget": "text",
                                  "help": _("17 characters — never shortened")},
+                                # On a factory order this is the only identifier
+                                # that exists before a VIN does, and the contract
+                                # prints it. It has to live on the car so the
+                                # contract, the annex and the supplier's
+                                # confirmation cannot disagree about it.
+                                {"name": "configuration_number", "string": _("Configuration number"),
+                                 "widget": "text"},
+                                {"name": "internal_reference", "string": _("Internal reference"),
+                                 "widget": "text"},
                             ],
                         },
                         {
@@ -64,6 +73,9 @@ vehicle_form_view = {
                                 {"name": "mileage_km", "string": _("Odometer (km)"), "widget": "number"},
                                 {"name": "condition", "string": _("Condition"), "widget": "select"},
                                 {"name": "accident_free", "string": _("Accident-free (فابريكة)"), "widget": "switch"},
+                                {"name": "body", "string": _("Body"), "widget": "select"},
+                                {"name": "upholstery", "string": _("Upholstery"), "widget": "text"},
+                                {"name": "euro_norm", "string": _("EURO norm"), "widget": "text"},
                             ],
                         },
                     ],
@@ -95,6 +107,23 @@ vehicle_form_view = {
                     ],
                 },
                 {
+                    "title": _("Where it came from"),
+                    "groups": [
+                        {"fields": [
+                            {"name": "built_for_market", "string": _("Built for market"),
+                             "widget": "text",
+                             "help": _("Not the same as where it was built — EUR 1 turns on this")},
+                            {"name": "export_port", "string": _("Export port"), "widget": "text"},
+                        ]},
+                        {"fields": [
+                            # Cost data. The agents' group has no view permission
+                            # on the supplier listing for the same reason.
+                            {"name": "negotiated_discount_eur",
+                             "string": _("Negotiated discount (EUR)"), "widget": "number"},
+                        ]},
+                    ],
+                },
+                {
                     "title": _("Options that decide the deposit tier"),
                     "groups": [
                         {
@@ -113,6 +142,26 @@ vehicle_form_view = {
                                  "help": _("Any 3 of the 6 options make the car كاملة — set this only to disagree")},
                             ],
                         },
+                    ],
+                },
+                {
+                    # Stage 6 sends these to the customer. Until now the stage
+                    # could send media and the car had nowhere to keep it, so the
+                    # only copy of a walk-around video lived in a WhatsApp thread.
+                    "title": _("Photos and documents"),
+                    "groups": [
+                        {"fields": [
+                            {"name": "photos", "string": _("Photos"), "widget": "file"},
+                            {"name": "walkaround_video", "string": _("Walk-around video"),
+                             "widget": "file"},
+                        ]},
+                        {"fields": [
+                            {"name": "car_card", "string": _("Car card"), "widget": "file"},
+                            {"name": "vin_option_list", "string": _("VIN option list"),
+                             "widget": "file"},
+                            {"name": "inspection_report", "string": _("Inspection report"),
+                             "widget": "textarea"},
+                        ]},
                     ],
                 },
                 {

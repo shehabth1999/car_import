@@ -73,6 +73,29 @@ menu_dict = {
                 "allowed_groups": ["car_import.sales_agent", "car_import.sales_manager",
                                    "car_import.operations", "car_import.management"],
             },
+            "car_import_menu_consignment": {
+                "name": _("Consignment mandates"),
+                "icon": "Handshake",
+                "module": "car_import",
+                "model": "car_import.consignmentmandate",
+                "view_types": "list,form",
+                "sequence": 24,
+                "allowed_groups": ["car_import.sales_agent", "car_import.sales_manager",
+                                   "car_import.showroom", "car_import.management"],
+            },
+            "car_import_menu_approval_requests": {
+                "name": _("Approval requests"),
+                "icon": "ShieldCheck",
+                "module": "car_import",
+                "model": "car_import.approvalrequest",
+                "view_types": "list,form",
+                "sequence": 31,
+                # Everyone sees the queue — an agent needs to know their own
+                # request is waiting. Only management can decide one, which the
+                # model permissions enforce.
+                "allowed_groups": ["car_import.sales_agent", "car_import.sales_manager",
+                                   "car_import.operations", "car_import.management"],
+            },
             "car_import_menu_deal_documents": {
                 "name": _("Documents"),
                 "icon": "FileCheck",
@@ -186,6 +209,24 @@ menu_dict = {
                         "view_types": "list,form",
                         "sequence": 26,
                         # The lawyer's wording. Management only.
+                        "allowed_groups": ["car_import.management"],
+                    },
+                    "car_import_menu_approval_policies": {
+                        "name": _("Approval rules"),
+                        "icon": "ShieldAlert",
+                        "module": "car_import",
+                        "model": "car_import.approvalpolicy",
+                        "view_types": "list,form",
+                        "sequence": 24,
+                        "allowed_groups": ["car_import.management"],
+                    },
+                    "car_import_menu_contract_issuers": {
+                        "name": _("Contract issuer and signatories"),
+                        "icon": "Stamp",
+                        "module": "car_import",
+                        "model": "car_import.contractissuer",
+                        "view_types": "list,form",
+                        "sequence": 27,
                         "allowed_groups": ["car_import.management"],
                     },
                     "car_import_menu_fees": {

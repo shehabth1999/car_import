@@ -167,6 +167,20 @@ class Command(BaseCommand):
                 'implementation': 'standard',
             },
         )
+        mandate_seq, mandate_created = Sequence.objects.get_or_create(
+            code='car_import.consignment',
+            defaults={
+                'name': 'Consignment mandate',
+                'prefix': 'WK/%(year)s/',
+                'padding': 4,
+                'number_next': 1,
+                'number_increment': 1,
+                'implementation': 'standard',
+            },
+        )
+        self.stdout.write(
+            f"car_import: consignment sequence {'created' if mandate_created else 'already present'}."
+        )
         self.stdout.write(
             f"car_import: quote sequence {'created' if quote_created else 'already present'} "
             f"({quote_seq.prefix}{'0' * (quote_seq.padding - 1)}{quote_seq.number_next})."

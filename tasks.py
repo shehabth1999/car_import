@@ -211,6 +211,17 @@ ESCALATION_AUDIENCE = [
 ]
 
 
+def _users_in_groups(groups):
+    """Active users in any of these groups. Empty is a real answer."""
+    try:
+        from modules.base.models.user import User
+        return list(User.objects.filter(groups__technical_name__in=groups,
+                                        is_active=True).distinct())
+    except Exception:
+        logger.exception('car_import: could not resolve %s', groups)
+        return []
+
+
 def _sales_team_users():
     """The first group in the chain that actually has somebody in it."""
     try:

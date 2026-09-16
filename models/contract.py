@@ -18,10 +18,90 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from modules.base.decorators import action
+from modules.base.fields import AttachmentForeignKeyField
 from modules.base.models.base import BaseModel
 from modules.base.models.managers import BranchAwareManager
 from modules.base.models.mixins import BranchMixin
 from modules.notifications.models.mixins import FullChatterMixin
+
+
+class ContractIssuer(BaseModel):
+    """K&T's legal identity, as the contract prints it.
+
+    It lives here rather than inside the Word file because **the signatory
+    changes**. Today the templates carry one authorised signatory's name and
+    national ID as literal text, so the day somebody else signs, the contract
+    has to be edited by whoever owns the .docx — and the version that goes out
+    in the meantime names a person who did not sign it.
+
+    The register and tax-card numbers are here for the opposite reason: they
+    never change, and having them in one row means a contract, an offer sheet
+    and a power of attorney cannot disagree about them.
+    """
+
+    code = models.CharField(max_length=32, unique=True, default='kt',
+                            verbose_name=_("Code"))
+    name = models.CharField(max_length=190, verbose_name=_("Company name"))
+    name_en = models.CharField(max_length=190, blank=True, verbose_name=_("Company name (English)"))
+    commercial_register = models.CharField(max_length=64, blank=True,
+                                           verbose_name=_("Commercial register"))
+    chamber = models.CharField(max_length=128, blank=True, verbose_name=_("Chamber of commerce"))
+    tax_card = models.CharField(max_length=64, blank=True, verbose_name=_("Tax card"))
+    represents = models.CharField(max_length=190, blank=True,
+                                  verbose_name=_("Marketing agent for"))
+    legal_rep_name = models.CharField(max_length=190, blank=True,
+                                      verbose_name=_("Legal representative"))
+    legal_rep_national_id = models.CharField(max_length=32, blank=True,
+                                             verbose_name=_("Their national ID"))
+    email = models.EmailField(blank=True, verbose_name=_("Notice email"))
+    address = models.CharField(max_length=255, blank=True, verbose_name=_("Address"))
+    is_default = models.BooleanField(default=True, verbose_name=_("Use by default"))
+
+    class Meta:
+        verbose_name = _("Contract issuer")
+        verbose_name_plural = _("Contract issuers")
+        ordering = ['code']
+
+    def __str__(self):
+        return self.name or self.code
+
+    @classmethod
+    def default(cls):
+        return (cls.objects.filter(is_default=True).order_by('code').first()
+                or cls.objects.order_by('code').first())
+
+
+class ContractSignatory(BaseModel):
+    """Somebody authorised to sign, and the dates they were authorised for.
+
+    Dated on purpose. "Who could sign in March?" is a question that gets asked
+    exactly once, by a lawyer, about a contract that is already disputed.
+    """
+
+    issuer = models.ForeignKey(ContractIssuer, on_delete=models.CASCADE,
+                               related_name='signatories', verbose_name=_("Issuer"))
+    name = models.CharField(max_length=190, verbose_name=_("Name"))
+    national_id = models.CharField(max_length=32, blank=True, verbose_name=_("National ID"))
+    title = models.CharField(max_length=128, blank=True, verbose_name=_("Capacity"))
+    authorised_from = models.DateField(null=True, blank=True, verbose_name=_("Authorised from"))
+    authorised_to = models.DateField(null=True, blank=True, verbose_name=_("Authorised until"))
+    is_default = models.BooleanField(default=False, verbose_name=_("Signs by default"))
+
+    class Meta:
+        verbose_name = _("Authorised signatory")
+        verbose_name_plural = _("Authorised signatories")
+        ordering = ['-is_default', 'name']
+
+    def __str__(self):
+        return self.name
+
+    @classmethod
+    def in_force(cls, issuer=None, on=None):
+        from django.db.models import Q
+        when = on or timezone.localdate()
+        rows = cls.objects.filter(issuer=issuer) if issuer else cls.objects.all()
+        return (rows.filter(Q(authorised_from__isnull=True) | Q(authorised_from__lte=when))
+                .filter(Q(authorised_to__isnull=True) | Q(authorised_to__gte=when)))
 
 
 class ContractTemplate(BaseModel):
@@ -81,6 +161,11 @@ class Contract(BaseModel, BranchMixin, FullChatterMixin):
     quote = models.ForeignKey('car_import.Quote', null=True, blank=True,
                               on_delete=models.SET_NULL, related_name='contracts',
                               verbose_name=_("Quotation"))
+    issuer = models.ForeignKey(ContractIssuer, null=True, blank=True, on_delete=models.SET_NULL,
+                               related_name='contracts', verbose_name=_("Issued by"))
+    signatory = models.ForeignKey(ContractSignatory, null=True, blank=True,
+                                  on_delete=models.SET_NULL, related_name='contracts',
+                                  verbose_name=_("Signed for the company by"))
     state = models.CharField(max_length=16, choices=STATE, default='draft',
                              verbose_name=_("Status"))
 
@@ -133,6 +218,14 @@ class Contract(BaseModel, BranchMixin, FullChatterMixin):
                                      on_delete=models.SET_NULL, related_name='+',
                                      verbose_name=_("Generated by"), editable=False)
     signed_on = models.DateField(null=True, blank=True, verbose_name=_("Signed on"))
+    #: The copy that came back with a signature on it. A generated file proves
+    #: what we offered; only this proves what they agreed to.
+    signed_document = AttachmentForeignKeyField(
+        upload_to='car_import/contracts/signed', allowed_types=['pdf', 'image', 'document'],
+        verbose_name=_("Signed copy"))
+    sent_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Sent at"),
+                                   editable=False)
+    void_reason = models.CharField(max_length=255, blank=True, verbose_name=_("Why it was voided"))
     notes = models.TextField(blank=True, verbose_name=_("Notes"))
 
     class Meta:
@@ -154,7 +247,22 @@ class Contract(BaseModel, BranchMixin, FullChatterMixin):
     def values(self):
         """Every token the template can ask for, as text ready to print."""
         date = self.contract_date or timezone.localdate()
+        issuer = self.issuer or ContractIssuer.default()
+        signatory = self.signatory or (
+            ContractSignatory.in_force(issuer, on=date).order_by('-is_default').first()
+            if issuer else None)
         return {
+            # The company side, from a row rather than from the Word file — the
+            # signatory changes, and a contract naming somebody who did not sign
+            # it is a contract with a hole in it.
+            'issuer_name': getattr(issuer, 'name', '') or '',
+            'issuer_register': getattr(issuer, 'commercial_register', '') or '',
+            'issuer_tax_card': getattr(issuer, 'tax_card', '') or '',
+            'issuer_legal_rep': getattr(issuer, 'legal_rep_name', '') or '',
+            'issuer_legal_rep_id': getattr(issuer, 'legal_rep_national_id', '') or '',
+            'issuer_email': getattr(issuer, 'email', '') or '',
+            'signatory_name': getattr(signatory, 'name', '') or '',
+            'signatory_national_id': getattr(signatory, 'national_id', '') or '',
             'contract_day': f'{date.day:02d}',
             'contract_month': f'{date.month:02d}',
             'contract_year': str(date.year),
@@ -189,7 +297,14 @@ class Contract(BaseModel, BranchMixin, FullChatterMixin):
 
         self.customer_name = self.customer_name or (getattr(partner, 'name', '') or '')
         self.customer_email = self.customer_email or (getattr(partner, 'email', '') or '')
-        self.shipping_name = self.shipping_name or self.customer_name
+        # Clause: "وشحنها باسم السيد/…". On a provided initiative the car ships
+        # in the HOLDER's name, not the buyer's — that is the whole mechanism of
+        # the L5 line, and getting it wrong puts the wrong person on a customs
+        # document.
+        holder = getattr(getattr(deal, 'initiative', None), 'holder', None)
+        self.shipping_name = (self.shipping_name
+                              or (getattr(holder, 'name', '') if holder else '')
+                              or self.customer_name)
         if vehicle is not None:
             self.car_model = self.car_model or f'{vehicle.make} {vehicle.model}'.strip()
             self.car_trim = self.car_trim or (vehicle.trim or '')
@@ -210,6 +325,11 @@ class Contract(BaseModel, BranchMixin, FullChatterMixin):
             value = getattr(deal, source, None)
             if value:
                 setattr(self, field, value)
+        if self.issuer_id is None:
+            self.issuer = ContractIssuer.default()
+        if self.signatory_id is None and self.issuer_id:
+            self.signatory = (ContractSignatory.in_force(self.issuer)
+                              .order_by('-is_default').first())
         if self.template_id is None:
             self.template = (ContractTemplate.objects
                              .filter(is_fillable=True)
@@ -281,10 +401,107 @@ class Contract(BaseModel, BranchMixin, FullChatterMixin):
                 'data': {}, 'on_success': {'type': 'refresh'}}
 
     @action
+    def action_send_contract(queryset):
+        """Send the generated contract to the customer on their own channel.
+
+        Behind a confirmation and the same kill switch as every other outbound
+        message. A contract is the most consequential thing this system can put
+        in front of a customer, so nothing sends it on a schedule or a trigger.
+        """
+        from car_import.services import stage_notifier
+
+        if not stage_notifier.messages_enabled():
+            return {'status': False, 'open_mode': 'message', 'data': {},
+                    'message': _("Customer messages are switched off.")}
+
+        sent, refused = 0, []
+        for contract in queryset:
+            label = contract.deal.name if contract.deal_id else contract.pk
+            partner = getattr(contract.deal, 'partner', None)
+            if not contract.document:
+                refused.append(f'{label}: {_("generate it first")}')
+                continue
+            if partner is None:
+                refused.append(f'{label}: {_("no customer on this deal")}')
+                continue
+            try:
+                from modules.chat.services.omnichannel_send_service import OmnichannelSendService
+                result = OmnichannelSendService().send_and_broadcast(
+                    partner, {'url': contract.document.url},
+                    message_type='document',
+                    filename=contract.document.name.rsplit('/', 1)[-1],
+                    caption=_("عقد الاستيراد — برجاء المراجعة والتوقيع")) or {}
+            except Exception as exc:  # noqa: BLE001 — the reason belongs on screen
+                refused.append(f'{label}: {exc}')
+                continue
+            if result.get('success') is False or result.get('status') is False:
+                refused.append(f'{label}: {result.get("error") or "send failed"}')
+                continue
+            contract.sent_at = timezone.now()
+            contract.save()
+            contract.message_post(body=_("The contract was sent to the customer."))
+            sent += 1
+
+        message = _("Sent %(count)d contract(s)") % {'count': sent}
+        if refused:
+            message += "\n" + "\n".join(refused)
+        return {'status': bool(sent), 'open_mode': 'message', 'message': message,
+                'data': {}, 'on_success': {'type': 'refresh'}}
+
+    @action
+    def action_void(queryset):
+        """Void a contract instead of deleting it.
+
+        Nothing is ever deleted here. A voided contract is the evidence that a
+        version existed and was withdrawn, which is exactly the question asked
+        when two copies of a contract turn up with different numbers on them.
+        """
+        voided = 0
+        for contract in queryset:
+            if contract.state == 'cancelled':
+                continue
+            contract.state = 'cancelled'
+            contract.save()
+            contract.message_post(body=_("Contract voided. The file is kept."))
+            voided += 1
+        return {'status': bool(voided), 'open_mode': 'message',
+                'message': _("Voided %(count)d contract(s)") % {'count': voided},
+                'data': {}, 'on_success': {'type': 'refresh'}}
+
+    @action
+    def action_print_annex2(queryset):
+        """Annex 2 — the vehicle specification, as a printable page."""
+        from django.core.files.base import ContentFile
+        from django.core.files.storage import default_storage
+
+        from car_import.services import contract_annex
+
+        contract = queryset.first() if hasattr(queryset, 'first') else list(queryset)[0]
+        if contract is None or contract.deal_id is None:
+            return {'status': False, 'open_mode': 'message', 'data': {},
+                    'message': _("Select a contract first.")}
+        vehicle = getattr(contract.deal, 'vehicle', None)
+        if vehicle is None:
+            return {'status': False, 'open_mode': 'message', 'data': {},
+                    'message': _("This deal has no car, so there is nothing to specify.")}
+
+        html = contract_annex.as_html(contract, vehicle)
+        reference = (contract.deal.name or f'contract-{contract.pk}').replace('/', '-')
+        stamp = timezone.now().strftime('%Y%m%d%H%M%S')
+        path = default_storage.save(f'car_import/annexes/{reference}-annex2-{stamp}.html',
+                                    ContentFile(html.encode('utf-8')))
+        return {'status': True, 'open_mode': 'pdf',
+                'message': _("Annex 2 is ready."),
+                'data': {'pdf_url': default_storage.url(path),
+                         'filename': f'{reference}-annex2.html'}}
+
+    @action
     def action_mark_signed(queryset):
         """Record that the customer signed."""
         signed = 0
         for contract in queryset:
+            # A signature needs a document to be on. Marking a contract signed
+            # with nothing generated records an agreement to nothing.
             if not contract.document:
                 continue
             contract.state = 'signed'

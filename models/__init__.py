@@ -11,6 +11,10 @@ from .listings import ShowroomListing, InitiativeListing
 from .pricing import PricingBand
 from .quote import Quote, QuoteLine
 from .contract import Contract, ContractTemplate
+from .approval import ApprovalPolicy, ApprovalRequest
+from .contract import ContractIssuer, ContractSignatory
+from .set_stage import SetStage
+from .consignment import ConsignmentMandate
 from .reference_data import (
     ImportProgram, TaxRule, Eur1Rule,
     DepositTier, CustomsValuation, ModelPriceRange,
@@ -20,7 +24,7 @@ from .reference_data import (
 __all__ = [
     'ImportStage', 'Vehicle', 'CarDeal', 'StageChangeLog', 'SupplierListing',
     'DocumentRequirement', 'DealDocument', 'Initiative', 'CallRecording',
-    'ShowroomListing', 'InitiativeListing', 'PricingBand', 'Quote', 'QuoteLine', 'Contract', 'ContractTemplate',
+    'ShowroomListing', 'InitiativeListing', 'PricingBand', 'Quote', 'QuoteLine', 'Contract', 'ContractTemplate', 'ApprovalPolicy', 'ApprovalRequest', 'ContractIssuer', 'ContractSignatory', 'SetStage', 'ConsignmentMandate',
     'ImportProgram', 'TaxRule', 'Eur1Rule',
     'DepositTier', 'CustomsValuation', 'ModelPriceRange',
     'FeeSchedule', 'FinancingPlan', 'FirstOwnerDiscount', 'FxReference',
