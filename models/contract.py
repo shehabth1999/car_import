@@ -1,0 +1,304 @@
+# -*- coding: utf-8 -*-
+"""Contracts: the lawyer's document, filled from the deal.
+
+Two models, and the split matters. A **template** is the lawyer's file with
+named blanks — it changes rarely, and when it does a lawyer changed it. A
+**contract** is one filled copy for one deal, and once it is generated it is
+evidence: the file is kept, not regenerated, because the customer is holding a
+printout of the version that existed on the day they signed.
+
+That is the same rule the quotation follows, for the same reason. Regenerating
+a document from today's data is how a company ends up unable to prove what it
+agreed to.
+"""
+from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.db import models
+from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
+
+from modules.base.decorators import action
+from modules.base.models.base import BaseModel
+from modules.base.models.managers import BranchAwareManager
+from modules.base.models.mixins import BranchMixin
+from modules.notifications.models.mixins import FullChatterMixin
+
+
+class ContractTemplate(BaseModel):
+    """One of the client's contracts, with its blanks turned into fields."""
+
+    PROGRAM = [
+        ('personal', _("Personal import")),
+        ('initiative', _("Initiative")),
+        ('commercial', _("Commercial import")),
+        ('any', _("Any programme")),
+    ]
+
+    code = models.CharField(max_length=64, unique=True, verbose_name=_("Code"))
+    name = models.CharField(max_length=190, verbose_name=_("Name"))
+    program = models.CharField(max_length=24, choices=PROGRAM, default='any',
+                               verbose_name=_("Programme"))
+    docx = models.FileField(upload_to='car_import/contract_templates/',
+                            verbose_name=_("Template file"))
+    source_filename = models.CharField(max_length=255, blank=True,
+                                       verbose_name=_("Original filename"))
+    #: False for the copies the lawyer sent as reference rather than as the
+    #: fill-in master. They are kept because "why does this clause differ?" is
+    #: a question somebody asks eventually.
+    is_fillable = models.BooleanField(default=True, verbose_name=_("Can be filled"))
+    tokens = models.JSONField(default=list, blank=True, verbose_name=_("Fields in this template"))
+    notes = models.TextField(blank=True, verbose_name=_("Notes"))
+
+    class Meta:
+        verbose_name = _("Contract template")
+        verbose_name_plural = _("Contract templates")
+        ordering = ['program', 'code']
+
+    def __str__(self):
+        return self.name or self.code
+
+
+class Contract(BaseModel, BranchMixin, FullChatterMixin):
+    """One filled contract for one deal."""
+
+    objects = BranchAwareManager()
+    all_objects = models.Manager()
+
+    _mail_track = {'state': None}
+
+    STATE = [
+        ('draft', _("Draft")),
+        ('generated', _("Generated")),
+        ('signed', _("Signed")),
+        ('cancelled', _("Cancelled")),
+    ]
+
+    deal = models.ForeignKey('car_import.CarDeal', on_delete=models.CASCADE,
+                             related_name='contracts', verbose_name=_("Deal"))
+    template = models.ForeignKey(ContractTemplate, null=True, blank=True,
+                                 on_delete=models.SET_NULL, related_name='contracts',
+                                 verbose_name=_("Template"))
+    quote = models.ForeignKey('car_import.Quote', null=True, blank=True,
+                              on_delete=models.SET_NULL, related_name='contracts',
+                              verbose_name=_("Quotation"))
+    state = models.CharField(max_length=16, choices=STATE, default='draft',
+                             verbose_name=_("Status"))
+
+    contract_date = models.DateField(default=timezone.localdate, verbose_name=_("Contract date"))
+    # What the customer's ID says, which is not always what the CRM record says
+    # — and the contract has to match the ID, not the nickname in the chat.
+    customer_name = models.CharField(max_length=190, blank=True,
+                                     verbose_name=_("Name as on the ID"))
+    customer_national_id = models.CharField(max_length=32, blank=True,
+                                            verbose_name=_("National ID number"))
+    customer_address = models.CharField(max_length=255, blank=True, verbose_name=_("Address"))
+    customer_email = models.EmailField(blank=True, verbose_name=_("Email"))
+    shipping_name = models.CharField(
+        max_length=190, blank=True, verbose_name=_("Ships in the name of"),
+        help_text=_("Usually the customer. On the initiative route it may be the "
+                    "initiative holder instead"))
+
+    car_model = models.CharField(max_length=128, blank=True, verbose_name=_("Model"))
+    car_trim = models.CharField(max_length=128, blank=True, verbose_name=_("Trim"))
+    car_model_year = models.CharField(max_length=8, blank=True, verbose_name=_("Model year"))
+    car_configuration = models.CharField(max_length=128, blank=True,
+                                         verbose_name=_("Configuration number"))
+
+    total_eur = models.DecimalField(max_digits=12, decimal_places=2, default=0,
+                                    verbose_name=_("Total contract value (EUR)"))
+    down_payment_eur = models.DecimalField(max_digits=12, decimal_places=2, default=0,
+                                           verbose_name=_("Received at signing (EUR)"))
+    bank_transfer_eur = models.DecimalField(max_digits=12, decimal_places=2, default=0,
+                                            verbose_name=_("Bank transfer (EUR)"))
+    cash_on_bl_eur = models.DecimalField(max_digits=12, decimal_places=2, default=0,
+                                         verbose_name=_("Cash on bill of lading (EUR)"))
+    deposit_pct = models.DecimalField(max_digits=5, decimal_places=2, default=0,
+                                      verbose_name=_("Deposit %"))
+
+    instalment_1_date = models.DateField(null=True, blank=True, verbose_name=_("Payment 1 — date"))
+    instalment_1_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0,
+                                              verbose_name=_("Payment 1 — amount"))
+    instalment_2_date = models.DateField(null=True, blank=True, verbose_name=_("Payment 2 — date"))
+    instalment_2_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0,
+                                              verbose_name=_("Payment 2 — amount"))
+    instalment_3_date = models.DateField(null=True, blank=True, verbose_name=_("Payment 3 — date"))
+    instalment_3_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0,
+                                              verbose_name=_("Payment 3 — amount"))
+
+    document = models.FileField(upload_to='car_import/contracts/', blank=True,
+                                verbose_name=_("Generated contract"), editable=False)
+    generated_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Generated at"),
+                                        editable=False)
+    generated_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
+                                     on_delete=models.SET_NULL, related_name='+',
+                                     verbose_name=_("Generated by"), editable=False)
+    signed_on = models.DateField(null=True, blank=True, verbose_name=_("Signed on"))
+    notes = models.TextField(blank=True, verbose_name=_("Notes"))
+
+    class Meta:
+        verbose_name = _("Contract")
+        verbose_name_plural = _("Contracts")
+        ordering = ['-id']
+
+    def __str__(self):
+        return f'{self.deal.name if self.deal_id else "—"} · {self.get_state_display()}'
+
+    # ── the fields the template asks for ────────────────────────────────────
+    #: Without these the document is not a contract, it is a form with gaps.
+    #: `generate()` refuses rather than producing one.
+    REQUIRED_TOKENS = (
+        'customer_name', 'customer_national_id',
+        'car_model', 'contract_total_eur', 'deposit_pct',
+    )
+
+    def values(self):
+        """Every token the template can ask for, as text ready to print."""
+        date = self.contract_date or timezone.localdate()
+        return {
+            'contract_day': f'{date.day:02d}',
+            'contract_month': f'{date.month:02d}',
+            'contract_year': str(date.year),
+            'customer_name': self.customer_name,
+            'customer_national_id': self.customer_national_id,
+            'customer_address': self.customer_address,
+            'customer_email': self.customer_email,
+            'shipping_name': self.shipping_name or self.customer_name,
+            'car_model': self.car_model,
+            'car_trim': self.car_trim,
+            'car_model_year': self.car_model_year,
+            'car_configuration': self.car_configuration,
+            'contract_total_eur': _amount(self.total_eur),
+            'contract_down_payment_eur': _amount(self.down_payment_eur),
+            'contract_balance_eur': _amount(self.total_eur - self.down_payment_eur),
+            'contract_bank_transfer_eur': _amount(self.bank_transfer_eur),
+            'contract_cash_on_bl_eur': _amount(self.cash_on_bl_eur),
+            'deposit_pct': f'{float(self.deposit_pct):g}',
+            'instalment_1_date': _date(self.instalment_1_date),
+            'instalment_2_date': _date(self.instalment_2_date),
+            'instalment_3_date': _date(self.instalment_3_date),
+            'instalment_1_amount': _amount(self.instalment_1_amount),
+            'instalment_2_amount': _amount(self.instalment_2_amount),
+            'instalment_3_amount': _amount(self.instalment_3_amount),
+        }
+
+    def prefill_from_deal(self):
+        """Copy what the deal and its accepted quotation already know."""
+        deal = self.deal
+        partner = getattr(deal, 'partner', None)
+        vehicle = getattr(deal, 'vehicle', None)
+
+        self.customer_name = self.customer_name or (getattr(partner, 'name', '') or '')
+        self.customer_email = self.customer_email or (getattr(partner, 'email', '') or '')
+        self.shipping_name = self.shipping_name or self.customer_name
+        if vehicle is not None:
+            self.car_model = self.car_model or f'{vehicle.make} {vehicle.model}'.strip()
+            self.car_trim = self.car_trim or (vehicle.trim or '')
+            self.car_model_year = self.car_model_year or str(vehicle.model_year or '')
+
+        quote = self.quote or deal.quotes.filter(state='accepted').order_by('-id').first()
+        if quote is not None:
+            self.quote = quote
+            self.total_eur = self.total_eur or quote.total_eur
+            self.deposit_pct = self.deposit_pct or quote.deposit_pct
+            self.down_payment_eur = self.down_payment_eur or quote.deposit_eur
+        # The deal's own contract figures win when somebody typed them: they are
+        # what the accountant agreed, and a quotation is only an offer.
+        for field, source in (('total_eur', 'contract_total_eur'),
+                              ('down_payment_eur', 'contract_down_payment_eur'),
+                              ('bank_transfer_eur', 'contract_bank_transfer_eur'),
+                              ('cash_on_bl_eur', 'contract_cash_on_bl_eur')):
+            value = getattr(deal, source, None)
+            if value:
+                setattr(self, field, value)
+        if self.template_id is None:
+            self.template = (ContractTemplate.objects
+                             .filter(is_fillable=True)
+                             .filter(models.Q(program=deal.program) | models.Q(program='any'))
+                             .order_by('program').first())
+
+    def pre_create(self):
+        super().pre_create()
+        self.prefill_from_deal()
+
+    def pre_save(self):
+        super().pre_save()
+        total = self.total_eur or 0
+        parts = (self.down_payment_eur or 0) + (self.bank_transfer_eur or 0) \
+            + (self.cash_on_bl_eur or 0)
+        # A contract whose three payment lines do not add up to its own total is
+        # the argument that happens six weeks later, in writing, with a lawyer.
+        if total and parts and parts != total:
+            raise ValidationError({'cash_on_bl_eur': _(
+                "The payments (%(parts)s €) do not add up to the contract total "
+                "(%(total)s €).") % {'parts': f'{parts:,.2f}', 'total': f'{total:,.2f}'}})
+
+    # ── producing the document ──────────────────────────────────────────────
+    def generate(self, user=None):
+        from django.core.files.base import ContentFile
+
+        from car_import.services import contract_docx
+
+        if self.template_id is None or not self.template.docx:
+            raise ValidationError(_("No contract template is set for this programme. "
+                                    "Import them with `import_contract_templates`."))
+        self.template.docx.open('rb')
+        try:
+            source = self.template.docx.read()
+        finally:
+            self.template.docx.close()
+
+        filled, leftover = contract_docx.fill(source, self.values(),
+                                              required=self.REQUIRED_TOKENS)
+        reference = (self.deal.name or f'deal-{self.deal_id}').replace('/', '-')
+        stamp = timezone.now().strftime('%Y%m%d%H%M%S')
+        self.document.save(f'{reference}-{stamp}.docx', ContentFile(filled), save=False)
+        self.generated_at = timezone.now()
+        self.generated_by = user
+        self.state = 'generated'
+        self.save()
+        return leftover
+
+    @action
+    def action_generate_contract(queryset):
+        """Fill the template and attach the document."""
+        made, refused = 0, []
+        for contract in queryset:
+            try:
+                leftover = contract.generate(user=getattr(contract, 'env', None)
+                                             and contract.env.user or None)
+            except Exception as exc:  # noqa: BLE001 — the reason belongs on screen
+                refused.append(f'{contract.deal.name if contract.deal_id else contract.pk}: {exc}')
+                continue
+            made += 1
+            if leftover:
+                contract.message_post(body=_(
+                    "Generated with these fields left blank: %(fields)s")
+                    % {'fields': ', '.join(leftover)})
+        message = _("Generated %(count)d contract(s)") % {'count': made}
+        if refused:
+            message += "\n" + "\n".join(refused)
+        return {'status': bool(made), 'open_mode': 'message', 'message': message,
+                'data': {}, 'on_success': {'type': 'refresh'}}
+
+    @action
+    def action_mark_signed(queryset):
+        """Record that the customer signed."""
+        signed = 0
+        for contract in queryset:
+            if not contract.document:
+                continue
+            contract.state = 'signed'
+            contract.signed_on = timezone.localdate()
+            contract.save()
+            signed += 1
+        return {'status': bool(signed), 'open_mode': 'message',
+                'message': _("Marked %(count)d contract(s) as signed") % {'count': signed},
+                'data': {}, 'on_success': {'type': 'refresh'}}
+
+
+def _amount(value):
+    return f'{(value or 0):,.2f}'
+
+
+def _date(value):
+    return value.strftime('%d / %m / %Y') if value else ''

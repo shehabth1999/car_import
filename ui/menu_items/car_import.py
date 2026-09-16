@@ -63,6 +63,16 @@ menu_dict = {
                 "allowed_groups": ["car_import.sales_manager", "car_import.germany_team",
                                    "car_import.management"],
             },
+            "car_import_menu_contracts": {
+                "name": _("Contracts"),
+                "icon": "FileText",
+                "module": "car_import",
+                "model": "car_import.contract",
+                "view_types": "list,form",
+                "sequence": 26,
+                "allowed_groups": ["car_import.sales_agent", "car_import.sales_manager",
+                                   "car_import.operations", "car_import.management"],
+            },
             "car_import_menu_deal_documents": {
                 "name": _("Documents"),
                 "icon": "FileCheck",
@@ -167,6 +177,16 @@ menu_dict = {
                         "view_types": "list,form",
                         "sequence": 25,
                         "allowed_groups": ["car_import.management", "car_import.sales_manager"],
+                    },
+                    "car_import_menu_contract_templates": {
+                        "name": _("Contract templates"),
+                        "icon": "FileStack",
+                        "module": "car_import",
+                        "model": "car_import.contracttemplate",
+                        "view_types": "list,form",
+                        "sequence": 26,
+                        # The lawyer's wording. Management only.
+                        "allowed_groups": ["car_import.management"],
                     },
                     "car_import_menu_fees": {
                         "name": _("Fee schedule"),

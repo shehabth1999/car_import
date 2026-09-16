@@ -71,6 +71,23 @@ MODEL_PERMISSIONS = [
     {'model': 'car_import.quoteline', 'group': 'car_import.operations', 'permissions': VIEW_ONLY},
     {'model': 'car_import.quoteline', 'group': 'car_import.management', 'permissions': FULL},
 
+    # ── contracts ───────────────────────────────────────────────────────────
+    # An agent fills and generates one; nobody deletes one, because a generated
+    # contract is evidence of what was agreed.
+    {'model': 'car_import.contract', 'group': 'car_import.sales_agent', 'permissions': MANAGE},
+    {'model': 'car_import.contract', 'group': 'car_import.sales_manager', 'permissions': MANAGE},
+    {'model': 'car_import.contract', 'group': 'car_import.operations', 'permissions': MANAGE},
+    {'model': 'car_import.contract', 'group': 'car_import.management', 'permissions': FULL},
+    # The lawyer's wording: everybody reads it, only management replaces it.
+    {'model': 'car_import.contracttemplate', 'group': 'car_import.sales_agent',
+     'permissions': VIEW_ONLY},
+    {'model': 'car_import.contracttemplate', 'group': 'car_import.sales_manager',
+     'permissions': VIEW_ONLY},
+    {'model': 'car_import.contracttemplate', 'group': 'car_import.operations',
+     'permissions': VIEW_ONLY},
+    {'model': 'car_import.contracttemplate', 'group': 'car_import.management',
+     'permissions': FULL},
+
     # ── paperwork ───────────────────────────────────────────────────────────
     {'model': 'car_import.documentrequirement', 'group': 'car_import.management', 'permissions': FULL},
     {'model': 'car_import.documentrequirement', 'group': 'car_import.operations', 'permissions': MANAGE},
