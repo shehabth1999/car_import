@@ -44,14 +44,16 @@ def _raise_activity(log):
     user = deal.assigned_to
     if user is None:
         return
-    try:
-        deal.schedule_activity(
-            user=user,
-            summary=str(log.to_stage) if log.to_stage else 'Stage message',
-            note=f"The customer was not told about this stage: {log.error}",
-        )
-    except Exception:  # noqa: BLE001 - never let the notifier die on the reminder
-        logger.exception("car_import: could not raise an activity for stage log %s", log.pk)
+    # `services.reminders.remind`, which calls the API that exists. The old
+    # `deal.schedule_activity(...)` did not, and the except below turned every
+    # failed customer message into a log line nobody was reminded about.
+    from car_import.services import reminders
+    reminders.remind(
+        deal,
+        summary=str(log.to_stage) if log.to_stage else 'Stage message',
+        note=f"العميل ما اتبلغش بالمرحلة دي: {log.error}",
+        user=user,
+    )
 
 
 # ───────────────────────────────────────────────────────────────────────────

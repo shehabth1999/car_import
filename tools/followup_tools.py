@@ -17,9 +17,11 @@ from modules.aistudio.tools import tool
 
 logger = logging.getLogger(__name__)
 
-#: How long silence has to last before a nudge is due, by stage of the funnel.
+#: How long silence has to last before a nudge is due. The automatic
+#: cadence — 2, 5 and 10 days, then lost — lives in `crm.FollowupRule`
+#: (seeded by `seed_ka_followups`); this is only the default for a reminder
+#: the assistant asks for by hand.
 DEFAULT_NUDGE_DAYS = 3
-MAX_NUDGES = 3
 
 
 @tool(
@@ -72,20 +74,21 @@ def ka_schedule_followup(context, reason: str, in_days: int = DEFAULT_NUDGE_DAYS
             return {"success": True, "data": {"scheduled": True, "due": str(due),
                                               "attached_to": "contact", "reason": reason}}
 
-        note = f'Follow up on {due}: {reason}'
+        note = f'متابعة يوم {due}: {reason}'
         if what_to_say:
-            note += f'\nOpen with: {what_to_say}'
-        try:
-            deal.schedule_activity(user=deal.assigned_to, summary='Follow up', note=note,
-                                   date_deadline=due)
-        except Exception:
-            # Never let a reminder failure break the conversation; the note is
-            # still worth having on the record.
-            logger.exception('car_import: could not schedule the activity, logging instead')
+            note += f'\nابدأ بـ: {what_to_say}'
+        # `reminders.remind` calls the API that exists. This used to call
+        # `deal.schedule_activity(...)`, which does not, swallow the error and
+        # report success — so every follow-up the assistant ever "scheduled"
+        # was a chatter note nobody was reminded of.
+        from car_import.services import reminders
+        activity = reminders.remind(deal, summary='متابعة مع العميل', note=note, due=due)
+        if activity is None:
             deal.message_post(body=note)
 
-        return {"success": True, "data": {"scheduled": True, "due": str(due),
-                                          "attached_to": deal.name, "reason": reason}}
+        return {"success": True, "data": {"scheduled": activity is not None, "due": str(due),
+                                          "attached_to": deal.name, "reason": reason,
+                                          "reminder": "activity" if activity else "note only"}}
     except Exception as e:
         logger.exception("ka_schedule_followup failed")
         return {"success": False, "error": str(e), "error_type": "unknown"}
