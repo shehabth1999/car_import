@@ -59,6 +59,8 @@ uv run python manage.py install car_import                      # migrates the 4
 uv run python manage.py showmigrations car_import               # 0001, 0002 both [X]
 uv run python manage.py sync_schema --status                    # nothing pending FOR car_import
 uv run python manage.py sync_all                                # views, menus, groups, permissions, actions, tools
+uv run python manage.py sync_access_conditions                  # ⚠ sync_all does NOT do this
+uv run python manage.py setup_car_import_org --report           # groups must not be empty
 uv run python manage.py check_ka_install                        # must print "clean"
 ```
 
@@ -67,6 +69,20 @@ for its own process, migrates, and applies the model extensions — on
 `khaled_test` that was 4 tables plus 21 fields on the contact and the lead, in
 one command. A separate `sync_schema --from-module car_import` is belt and
 braces; run it if `--status` still lists car_import.
+
+**Two commands `sync_all` will not run for you.**
+
+`sync_all` has its access-conditions step commented out (`sync_all.py:127`), so
+the row-level rules — the ones the brief makes a contractual obligation — deploy
+as dead code until `sync_access_conditions` is run explicitly. It was found that
+way on the first tenant: the rules were in the repo, on the server, and not in
+the database.
+
+And a security model needs people in it. `setup_car_import_org --report` names
+every empty group, because six groups with nobody in them means every permission
+and every access rule applies to nobody. Assign with
+`--assign person@example.com=sales_agent`, and `--branches` creates K&T, the
+GmbH and the showroom against the tenant's existing company.
 
 `sync_schema --status` will very likely report **one** pending change that is
 not ours (`contenttypes.contenttype.name` from `modules.base`). It was pending
