@@ -117,3 +117,118 @@ def review_and_log(deal, text, allowed_figures=None):
         except Exception:
             logger.exception('car_import: could not log a supervisor note')
     return problems
+
+
+# ── the outbound gate ────────────────────────────────────────────────────────
+#: What the customer reads when a reply is stopped. The same sentence the
+#: escalation tool sends, so a blocked reply and a deliberate hand-over look
+#: identical from the customer's side — which they should: both mean a human
+#: is now on it.
+HOLDING_TEXT = "تمام يا فندم 🙏 هحوّل حضرتك لزميلي وهو هيرد على حضرتك حالاً."
+
+
+def figures_from_tool_messages(conversation, since):
+    """Every number the tools returned in this turn.
+
+    The engine does not hand tool results back in a structured way, but every
+    tool call and its result are written to the thread as `tool_call` / `tool`
+    messages (all our tools are `store: True`). Reading those since the turn
+    began is the honest source of "which figures may this reply contain".
+    """
+    if conversation is None or since is None:
+        return []
+    try:
+        from modules.chat.models import Message
+        rows = Message.objects.filter(conversation=conversation, type='tool',
+                                      created_at__gte=since).values_list('content', flat=True)
+    except Exception:
+        logger.exception('car_import: could not read this turn\'s tool results')
+        return []
+    figures = []
+    for content in rows:
+        for match in re.finditer(r'\d[\d.,]{1,}', str(content or '')):
+            figures.append(match.group(0))
+    return figures
+
+
+def gate(text, conversation=None, since=None, workflow_name=''):
+    """Decide what leaves, and record why. Returns (text_to_send, problems).
+
+    **Warn** — the reply goes out unchanged and a note lands in the thread, so
+    a human sees it next to the customer's message without the customer
+    waiting on us.
+
+    **Block** — the customer gets the holding sentence, the conversation is
+    handed to a human the same way `ka_escalate_conversation_to_staff` does
+    it, and the note carries the reply that was stopped, word for word, with
+    the rule that stopped it. Silently swallowing what the model tried to say
+    would hide exactly the evidence the client needs to tune the prompt.
+
+    Never returns an empty string: an empty output makes the channel bridge
+    re-run the model and then send a failure email, which is neither silent
+    nor free.
+    """
+    problems = check_reply(text, allowed_figures=figures_from_tool_messages(conversation, since))
+    if not problems:
+        return text, problems
+
+    blocking = [p for p in problems if p['severity'] == 'block']
+    lines = [f"- [{p['severity']}] {p['why']}" for p in problems]
+
+    if not blocking:
+        _note(conversation,
+              '⚠️ ملاحظة على رد المساعد (اتبعت زي ما هو):\n' + '\n'.join(lines)
+              + f'\n\nالرد:\n{text}',
+              subject='ملاحظة على رد المساعد')
+        return text, problems
+
+    _hand_over(conversation, topic=blocking[0]['rule'])
+    body = ('🛑 رد المساعد اتوقف قبل ما يوصل للعميل.\n'
+            + '\n'.join(lines)
+            + '\n\nالرد اللي كان هيتبعت:\n' + str(text)
+            + '\n\nالعميل وصله: "' + HOLDING_TEXT + '"\nمحتاج حد يكمّل معاه من هنا.')
+    if any(p['rule'] in ('untraceable_figure', 'promise') for p in blocking):
+        body += _figures_for(conversation)
+    _note(conversation, body, subject='رد المساعد اتوقف — محتاج زميل')
+    return HOLDING_TEXT, problems
+
+
+def _hand_over(conversation, topic='supervisor'):
+    """The same hand-over the escalation tool performs, and stamped the same way
+    so the chaser can tell "we handed over" from "never had an assistant"."""
+    if conversation is None:
+        return
+    try:
+        from django.utils import timezone
+        data = conversation.social_platform_data
+        if not isinstance(data, dict):
+            data = {}
+        data['car_import_escalated_at'] = timezone.now().isoformat()
+        data['car_import_escalation_topic'] = f'supervisor:{topic}'
+        conversation.handled_by_ai = False
+        conversation.social_platform_data = data
+        conversation.save(update_fields=['handled_by_ai', 'social_platform_data'])
+    except Exception:
+        logger.exception('car_import: supervisor could not hand the conversation over')
+
+
+def _note(conversation, body, subject):
+    if conversation is None:
+        return
+    try:
+        from car_import.services import internal_note
+        from car_import.tasks import _owner_users_for_partner
+        owners = _owner_users_for_partner(getattr(conversation, 'social_partner', None))
+        internal_note.post(conversation, body, recipients=owners, subject=subject)
+    except Exception:
+        logger.exception('car_import: supervisor could not leave its note')
+
+
+def _figures_for(conversation):
+    try:
+        from car_import.services import money_briefing
+        partner = getattr(conversation, 'social_partner', None)
+        figures = money_briefing.build(partner, topic='money')
+        return ('\n\n' + figures) if figures else ''
+    except Exception:
+        return ''
