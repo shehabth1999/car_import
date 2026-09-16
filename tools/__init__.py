@@ -9,6 +9,10 @@ from .deal_tools import (
     ka_escalate_conversation_to_staff,
     ka_get_document_checklist,
 )
+from .followup_tools import (  # noqa: F401
+    ka_schedule_followup,
+    ka_log_call_outcome,
+)
 from .market_tools import (  # noqa: F401
     ka_search_vehicle_listings,
     ka_search_initiative_listings,
@@ -26,4 +30,6 @@ __all__ = [
     'ka_search_vehicle_listings',
     'ka_search_initiative_listings',
     'ka_register_initiative_for_sale',
+    'ka_schedule_followup',
+    'ka_log_call_outcome',
 ]
