@@ -552,3 +552,33 @@ def ka_escalate_conversation_to_staff(context, reason: str, topic: Optional[str]
     except Exception as e:
         logger.exception("ka_escalate_conversation_to_staff failed")
         return {"success": False, "error": str(e), "error_type": "unknown"}
+
+
+@tool(
+    name="ka_get_document_checklist",
+    display_name="Document checklist",
+    description=(
+        "Use this tool when the customer asks what papers they need, or when you need to chase "
+        "missing documents. Before calling it you MUST be talking to a customer who has a deal. "
+        "Returns which documents are still missing, which were rejected and why, and which have "
+        "expired. Do NOT ask for a document this tool did not list, and do NOT ask the customer "
+        "to send a national ID or passport into the chat — say a colleague will arrange it."
+    ),
+    category="car_import",
+    parameters_schema={"type": "object", "properties": {}, "required": []},
+)
+def ka_get_document_checklist(context) -> Dict[str, Any]:
+    """What paperwork is still outstanding on this customer's deal."""
+    try:
+        deal = _deal_for(context)
+        if deal is None:
+            return {"success": False, "error": "No open deal for this customer",
+                    "error_type": "not_found"}
+        from car_import.services.documents import checklist_status
+        status = checklist_status(deal)
+        # A confidential document is named but flagged: the assistant may say
+        # "we need your ID" and must not invite it into a WhatsApp thread.
+        return {"success": True, "data": dict(status, deal_reference=deal.name)}
+    except Exception as e:
+        logger.exception("ka_get_document_checklist failed")
+        return {"success": False, "error": str(e), "error_type": "unknown"}

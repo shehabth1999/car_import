@@ -383,6 +383,33 @@ class CarDeal(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
         }
 
     @action
+    def action_build_document_checklist(queryset):
+        """Create the paperwork lines this deal's programme asks for.
+
+        Idempotent: it adds what is missing and never touches a document the
+        customer has already sent — the programme gets corrected after the fact
+        more often than anyone would like.
+        """
+        from car_import.services.documents import build_checklist, checklist_status
+
+        added = 0
+        for deal in queryset:
+            added += len(build_checklist(deal))
+        status = checklist_status(queryset[0]) if len(queryset) == 1 else None
+
+        message = _("Added %(count)d document line(s).") % {'count': added}
+        if status and status['outstanding']:
+            outstanding = ', '.join(row['name'] for row in status['outstanding'])
+            message += '\n' + str(_("Still outstanding: %(names)s")) % {'names': outstanding}
+        return {
+            'status': True,
+            'open_mode': 'message',
+            'message': message,
+            'data': {},
+            'on_success': {'type': 'refresh'},
+        }
+
+    @action
     def action_hold(queryset):
         """Pause a deal without losing its stage."""
         count = queryset.update(state='on_hold')

@@ -19,6 +19,14 @@ _STAGE_ACTIONS = [
         "confirm_required": False,
     },
     {
+        "name": "action_build_document_checklist",
+        "string": _("Build document checklist"),
+        "icon": "ClipboardList",
+        "type": "server",
+        "as": "dropdown",
+        "view_type": ["form", "list"],
+    },
+    {
         "name": "action_send_stage_update",
         "string": _("Send update to customer"),
         "icon": "Send",

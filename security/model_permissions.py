@@ -54,6 +54,19 @@ MODEL_PERMISSIONS = [
     {'model': 'car_import.fxreference', 'group': 'car_import.management', 'permissions': FULL},
     {'model': 'car_import.fxreference', 'group': 'car_import.sales_manager', 'permissions': VIEW_ONLY},
 
+    # ── paperwork ───────────────────────────────────────────────────────────
+    {'model': 'car_import.documentrequirement', 'group': 'car_import.management', 'permissions': FULL},
+    {'model': 'car_import.documentrequirement', 'group': 'car_import.operations', 'permissions': MANAGE},
+    {'model': 'car_import.dealdocument', 'group': 'car_import.sales_agent', 'permissions': MANAGE},
+    {'model': 'car_import.dealdocument', 'group': 'car_import.sales_manager', 'permissions': MANAGE},
+    {'model': 'car_import.dealdocument', 'group': 'car_import.operations', 'permissions': MANAGE},
+    {'model': 'car_import.dealdocument', 'group': 'car_import.management', 'permissions': FULL},
+
+    # ── initiatives ─────────────────────────────────────────────────────────
+    {'model': 'car_import.initiative', 'group': 'car_import.sales_agent', 'permissions': VIEW_ONLY},
+    {'model': 'car_import.initiative', 'group': 'car_import.sales_manager', 'permissions': MANAGE},
+    {'model': 'car_import.initiative', 'group': 'car_import.management', 'permissions': FULL},
+
     # ── the log is evidence: nobody edits it ────────────────────────────────
     {'model': 'car_import.stagechangelog', 'group': 'car_import.sales_agent', 'permissions': VIEW_ONLY},
     {'model': 'car_import.stagechangelog', 'group': 'car_import.sales_manager', 'permissions': VIEW_ONLY},

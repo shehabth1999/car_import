@@ -4,6 +4,8 @@ from .vehicle import Vehicle
 from .car_deal import CarDeal
 from .stage_change_log import StageChangeLog
 from .supplier_listing import SupplierListing
+from .documents import DocumentRequirement, DealDocument
+from .initiative import Initiative
 from .reference_data import (
     ImportProgram, TaxRule, Eur1Rule,
     DepositTier, CustomsValuation, ModelPriceRange,
@@ -12,6 +14,7 @@ from .reference_data import (
 
 __all__ = [
     'ImportStage', 'Vehicle', 'CarDeal', 'StageChangeLog', 'SupplierListing',
+    'DocumentRequirement', 'DealDocument', 'Initiative',
     'ImportProgram', 'TaxRule', 'Eur1Rule',
     'DepositTier', 'CustomsValuation', 'ModelPriceRange',
     'FeeSchedule', 'FinancingPlan', 'FirstOwnerDiscount', 'FxReference',

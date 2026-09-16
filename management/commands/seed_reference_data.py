@@ -74,6 +74,32 @@ FINANCING = [
 ]
 
 
+# The checklists the eligibility tool has been reciting since day one, now as
+# rows somebody can tick. Confirmed with the owner on 2026-09-14.
+DOCUMENTS = {
+    None: [                      # every route
+        ('national_id_front_back', 'صورة البطاقة وش وضهر', True, False, True),
+        ('passport', 'الباسبور', True, True, True),
+    ],
+    'initiative': [
+        ('residence_permit', 'الإقامة', True, True, True),
+        ('bank_statement_6m', 'كشف حساب 6 شهور فيه تحويل الوديعة', True, False, True),
+        ('deposit_receipts', 'إيصالات الوديعة', True, False, False),
+        ('import_approval', 'الموافقة الاستيرادية', True, False, False),
+        ('customs_broker_poa', 'توكيل المخلص الجمركي', True, False, False),
+        ('ownership_transfer_poa', 'توكيل نقل الملكية', False, False, False),
+        ('licensing_poa', 'توكيل الترخيص', False, False, False),
+    ],
+    'personal': [
+        ('eur1_certificate', 'شهادة يورو 1', False, False, False),
+        ('coc_and_papers', 'شهادة المطابقة وأوراق العربية', True, False, False),
+        ('acid_permit', 'رقم ACID', True, False, False),
+        ('bill_of_lading', 'بوليصة الشحن', True, False, False),
+    ],
+}
+DOCUMENTS['commercial'] = DOCUMENTS['personal']
+
+
 class Command(BaseCommand):
     help = "Seed the confirmed programmes, tax bands, fees, financing plans and EUR 1 rule"
 
@@ -145,6 +171,22 @@ class Command(BaseCommand):
                     defaults={'discount_pct': 5 * years, 'effective_from': CONFIRMED,
                               'source_note': SOURCE})
             counts['first-owner discounts'] = 5
+
+            from car_import.models import DocumentRequirement
+            made = 0
+            for code, rows in DOCUMENTS.items():
+                program = ImportProgram.objects.filter(code=code).first() if code else None
+                if code and program is None:
+                    continue
+                for sequence, (doc_code, name, mandatory, expires, sensitive) in enumerate(rows, 1):
+                    _row, m = DocumentRequirement.objects.update_or_create(
+                        code=doc_code, program=program,
+                        defaults={'name': name, 'sequence': sequence * 10,
+                                  'mandatory': mandatory, 'expires': expires,
+                                  'is_sensitive': sensitive,
+                                  'effective_from': CONFIRMED, 'source_note': SOURCE})
+                    made += bool(m)
+            counts['document requirements'] = f'{made} new'
 
         for label, value in counts.items():
             self.stdout.write(f'  {label}: {value}')
