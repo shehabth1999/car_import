@@ -29,6 +29,21 @@ logger = logging.getLogger(__name__)
 #: about a scratched bumper does not need the fee schedule attached to it.
 MONEY_TOPICS = {'money', 'discount', 'refund', 'instalment_amount', 'price', 'fees'}
 
+#: What to call each topic in the note. The colleague opening the thread should
+#: know why it was handed over before they read a word of the customer's.
+TOPIC_LABELS = {
+    'money': 'سؤال فلوس',
+    'price': 'سؤال عن السعر',
+    'fees': 'سؤال عن المصاريف',
+    'discount': 'طلب خصم',
+    'refund': 'طلب استرداد',
+    'instalment_amount': 'سؤال عن قيمة القسط',
+    'cancellation': 'طلب إلغاء',
+    'complaint': 'شكوى',
+    'legal': 'موضوع قانوني',
+    'other': 'محتاج زميل',
+}
+
 
 def is_money_topic(topic):
     return (topic or 'other').strip().lower() in MONEY_TOPICS
@@ -83,34 +98,71 @@ def build(partner, topic=None, reason=''):
 
 
 def notify(partner, conversation=None, topic=None, reason=''):
-    """Send the briefing to whoever owns this customer. Never raises."""
-    if not is_money_topic(topic):
-        return False
+    """Leave a note in the conversation saying why it was handed over.
+
+    Every escalation gets one, not only the money ones — the colleague opening
+    the thread should know why it arrived before they read a word of the
+    customer's. A money topic gets the approved figures attached; a complaint
+    about a scratched bumper does not need the fee schedule stapled to it.
+
+    The note goes IN the thread, not only in a notification bell. A bell says
+    "someone needs you" and sends you somewhere to work out why; a note sits
+    next to the customer's own question with the answer already in it, and it
+    is still there tomorrow for whoever picks the conversation up next.
+
+    Never raises: a note that fails must not take the escalation with it.
+    """
     try:
-        body = build(partner, topic=topic, reason=reason)
+        body = _note_body(partner, topic, reason)
         if not body:
             return False
 
-        from car_import.tasks import _recipients_for_partner
-        recipients = _recipients_for_partner(partner)
-        if not recipients:
-            return False
+        from car_import.services import internal_note
+        from car_import.tasks import _owner_users_for_partner
 
+        owners = _owner_users_for_partner(partner)
+        subject = _subject(topic)
+        if conversation is not None:
+            return internal_note.post(conversation, body, recipients=owners,
+                                      subject=subject)
+
+        # No conversation to write into — a record trigger, a test, a tool
+        # called directly. Fall back to the notification alone rather than
+        # dropping the figures on the floor.
+        partner_ids = [u.partner_id for u in owners if getattr(u, 'partner_id', None)]
+        if not partner_ids:
+            return False
         from modules.notifications.services.post_notification import post_notification
-        # `subject`, not `title`. The wrong keyword here raised on every call
-        # once before, and the except swallowed it while the caller reported
-        # success — a notification that reaches nobody and says so to no one.
-        post_notification(
-            partner_ids=recipients,
-            subject='سؤال فلوس محوّل — راجع الأرقام',
-            body=body,
-            url=('/chat/?chat=%s' % conversation.pk) if conversation is not None else '/chat/',
-            category='car_import',
-        )
+        post_notification(partner_ids=partner_ids, subject=subject, body=body,
+                          url='/chat/', category='car_import')
         return True
     except Exception:
-        logger.exception('car_import: could not brief the team on a money escalation')
+        logger.exception('car_import: could not brief the team on an escalation')
         return False
+
+
+def _subject(topic):
+    label = TOPIC_LABELS.get((topic or 'other').strip().lower(), TOPIC_LABELS['other'])
+    return (f'{label} محوّل — راجع الأرقام' if is_money_topic(topic)
+            else f'{label} — محادثة محوّلة')
+
+
+def _note_body(partner, topic, reason):
+    """The header every escalation gets, plus the figures when money is in it."""
+    label = TOPIC_LABELS.get((topic or 'other').strip().lower(), TOPIC_LABELS['other'])
+    lines = [f'🔁 المساعد حوّل المحادثة — {label}.']
+    if (reason or '').strip():
+        lines.append(f'السبب: {reason.strip()}')
+
+    if is_money_topic(topic):
+        figures = build(partner, topic=topic, reason=reason)
+        if figures:
+            lines.append('')
+            lines.append(figures)
+            return '\n'.join(lines)
+
+    lines.append('محتاج حد يكمّل مع العميل من هنا. المساعد وقف ومش هيرد تاني.')
+    return '\n'.join(lines)
 
 
 # ── the pieces ─────────────────────────────────────────────────────────────

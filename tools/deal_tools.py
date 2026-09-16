@@ -539,8 +539,10 @@ def ka_escalate_conversation_to_staff(context, reason: str, topic: Optional[str]
 
         # The client's decision of 2026-09-16: the assistant stays closed AND
         # the colleague picking this up is shown the approved figures to check
-        # — "مع اضهار اقتراح لمطابقة الارقام هل هي صحيحة ام لا". Internal only,
-        # and it never reaches the customer.
+        # — "مع اضهار اقتراح لمطابقة الارقام هل هي صحيحة ام لا". It lands as an
+        # INTERNAL NOTE in the thread, so the reason and the numbers sit next to
+        # the customer's own question rather than in a bell somebody clears.
+        # Every escalation leaves one; only the money ones carry figures.
         from car_import.services import money_briefing
         briefed = money_briefing.notify(partner, conversation=conversation,
                                         topic=topic, reason=reason)

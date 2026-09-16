@@ -154,45 +154,50 @@ def _sla_minutes():
 def _warn_about(conversation, waited_minutes):
     """Tell whoever owns this customer that they are still waiting."""
     partner = conversation.social_partner
-    recipients = _recipients_for_partner(partner)
-    if not recipients:
-        return
+    owners = _owner_users_for_partner(partner)
+    if not owners:
+        return False
 
-    name = getattr(partner, 'name', '') or 'a customer'
+    name = getattr(partner, 'name', '') or 'أحد العملاء'
+    body = (f'{name} محوّل للفريق ومستني من {waited_minutes} دقيقة من غير رد.\n'
+            'محتاج حد يكمّل معاه من هنا.')
     try:
-        from modules.notifications.services.post_notification import post_notification
-        # subject/body, NOT title/body: the wrong keyword made this raise on
-        # every call, the except swallowed it, and the task reported success
-        # while delivering nothing at all.
-        post_notification(
-            partner_ids=recipients,
-            subject='عميل محوّل ومستني',
-            body=f'{name} محوّل للفريق ومستني من {waited_minutes} دقيقة من غير رد.',
-            url='/chat/?chat=%s' % conversation.pk,
-            category='car_import',
-        )
-        return True
+        # The warning goes IN the conversation as well as to the bell. The
+        # client's point: a notification tells you somebody needs you and then
+        # sends you off to find out why; a note says it where the reply will be
+        # typed, and is still there for whoever opens the thread tomorrow.
+        from car_import.services import internal_note
+        return internal_note.post(conversation, body, recipients=owners,
+                                  subject='عميل محوّل ومستني')
     except Exception:
         logger.exception('car_import: could not warn about conversation %s', conversation.pk)
         return False
 
 
-def _recipients_for_partner(partner):
-    """Partner ids to notify about this customer: their agent, else the team.
+def _owner_users_for_partner(partner):
+    """The USERS who own this customer: their agent, else the sales team.
 
-    Extracted so the escalation path and the chaser cannot drift apart — they
-    are answering the same question ("who owns this customer?") and a second
-    copy of that answer is a second place for it to go stale.
+    Users, not partner ids, because an @mention addresses a user while a
+    notification addresses a partner — and the two callers need both. Resolving
+    once and deriving the ids keeps the escalation path and the chaser answering
+    the same question the same way; a second copy of "who owns this customer?"
+    is a second place for it to go stale.
     """
     from car_import.models import CarDeal
 
     if partner is None:
-        return _sales_team_partner_ids()
+        return _sales_team_users()
     deal = (CarDeal.all_objects.filter(partner=partner)
             .exclude(state='cancelled').order_by('-id').first())
-    if deal is not None and getattr(deal.assigned_to, 'partner_id', None):
-        return [deal.assigned_to.partner_id]
-    return _sales_team_partner_ids()
+    if deal is not None and deal.assigned_to_id:
+        return [deal.assigned_to]
+    return _sales_team_users()
+
+
+def _recipients_for_partner(partner):
+    """The same answer as partner ids, for the notification path."""
+    return [u.partner_id for u in _owner_users_for_partner(partner)
+            if getattr(u, 'partner_id', None)]
 
 
 #: Who to tell, best first. The last entry is the point: on a tenant where
@@ -206,7 +211,7 @@ ESCALATION_AUDIENCE = [
 ]
 
 
-def _sales_team_partner_ids():
+def _sales_team_users():
     """The first group in the chain that actually has somebody in it."""
     try:
         from modules.base.models.user import User
@@ -216,19 +221,18 @@ def _sales_team_partner_ids():
 
     for index, groups in enumerate(ESCALATION_AUDIENCE):
         try:
-            users = User.objects.filter(groups__technical_name__in=groups,
-                                        is_active=True).distinct()
-            ids = [u.partner_id for u in users if getattr(u, 'partner_id', None)]
+            users = list(User.objects.filter(groups__technical_name__in=groups,
+                                             is_active=True).distinct())
         except Exception:
             logger.exception('car_import: could not resolve %s', groups)
             continue
-        if ids:
+        if users:
             if index:
                 logger.warning(
                     'car_import: nobody is in %s, so an escalation warning fell back to %s. '
                     'Put the sales team into the car_import groups.',
                     ESCALATION_AUDIENCE[index - 1], groups)
-            return ids
+            return users
 
     logger.error('car_import: an escalated customer is waiting and there is NOBODY to tell — '
                  'no user belongs to any car_import group or to base.owner.')
