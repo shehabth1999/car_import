@@ -334,3 +334,19 @@ class FxReference(BaseModel, EffectiveMixin):
 
     def __str__(self):
         return f'{self.currency_from}/{self.currency_to} {self.rate}'
+
+    def pre_save(self):
+        """Publishing a rate is the company manager's decision, not an agent's.
+
+        The client's matrix: *"Transfer / تدبير rate and its 1.5–2 % commission —
+        Company manager."* Asked once, on creation: a rate that is on the table
+        is a rate somebody will quote within the hour.
+        """
+        super().pre_save()
+        if self.pk:
+            return
+        from .approval import require
+        require('fx_rate', None, field='rate',
+                reason=_("Publish %(pair)s at %(rate)s") % {
+                    'pair': f'{self.currency_from}/{self.currency_to}', 'rate': self.rate},
+                user=getattr(getattr(self, 'env', None), 'user', None))

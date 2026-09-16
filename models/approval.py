@@ -45,6 +45,7 @@ SUBJECT = [
     ('complaint', _("A complaint about condition, a missing option or damage")),
     ('sourcing_outside_eu', _("Sourcing outside Germany or the EU")),
     ('contract_signature', _("Signing the contract")),
+    ('program_approval', _("Opening a deal on a programme that needs management")),
 ]
 
 

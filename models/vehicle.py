@@ -190,6 +190,48 @@ class Vehicle(BaseModel):
         parts = [self.make, self.model, self.trim, str(self.model_year or '')]
         return ' '.join(p for p in parts if p).strip() or (self.vin or '—')
 
+    # ── the client's approval matrix, where the car is the subject ──────────
+    #: The EU as the customs union sees it, plus the three states whose cars
+    #: the client already sources through the same route. Anything else is
+    #: "sourcing outside Germany or the EU", which their matrix hands to
+    #: management before a euro moves.
+    EU_COUNTRIES = {
+        'germany', 'deutschland', 'austria', 'belgium', 'bulgaria', 'croatia', 'cyprus',
+        'czechia', 'czech republic', 'denmark', 'estonia', 'finland', 'france', 'greece',
+        'hungary', 'ireland', 'italy', 'latvia', 'lithuania', 'luxembourg', 'malta',
+        'netherlands', 'poland', 'portugal', 'romania', 'slovakia', 'slovenia', 'spain',
+        'sweden', 'eu', 'ألمانيا', 'المانيا', 'النمسا', 'بلجيكا', 'هولندا', 'فرنسا',
+        'إيطاليا', 'ايطاليا', 'إسبانيا', 'اسبانيا', 'بولندا', 'التشيك', 'المجر', 'السويد',
+        'الدنمارك', 'فنلندا', 'البرتغال', 'اليونان', 'رومانيا', 'سلوفاكيا', 'سلوفينيا',
+        'كرواتيا', 'بلغاريا', 'ليتوانيا', 'لاتفيا', 'إستونيا', 'استونيا', 'أيرلندا', 'ايرلندا',
+        'لوكسمبورغ', 'مالطا', 'قبرص',
+    }
+
+    def pre_save(self):
+        super().pre_save()
+        from .approval import require
+
+        user = getattr(getattr(self, 'env', None), 'user', None)
+        stored = (type(self)._base_manager.filter(pk=self.pk)
+                  .values('negotiated_discount_eur', 'country_built').first()
+                  if self.pk else {}) or {}
+
+        # A discount on the car's price above the threshold is management's.
+        # Checked on change, not on every save — an approved discount must not
+        # be re-asked each time somebody corrects the colour.
+        discount = self.negotiated_discount_eur or 0
+        if discount and discount != (stored.get('negotiated_discount_eur') or 0):
+            require('car_discount', discount, field='negotiated_discount_eur',
+                    reason=_("Negotiated discount on %(car)s") % {'car': self},
+                    user=user)
+
+        country = (self.country_built or '').strip().lower()
+        if country and country != (stored.get('country_built') or '').strip().lower()                 and country not in self.EU_COUNTRIES:
+            require('sourcing_outside_eu', None, field='country_built',
+                    reason=_("%(car)s is built in %(country)s") % {
+                        'car': self, 'country': self.country_built},
+                    user=user)
+
     # ── the client's tier rule ──────────────────────────────────────────────
     @property
     def tier_option_count(self):

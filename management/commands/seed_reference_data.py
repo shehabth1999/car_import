@@ -150,6 +150,10 @@ APPROVALS = [
     ('complaint', 'شكوى حالة أو مواصفة ناقصة أو ضرر', None, 'EUR'),
     ('sourcing_outside_eu', 'الشراء من خارج ألمانيا أو الاتحاد الأوروبي', None, 'EUR'),
     ('contract_signature', 'التوقيع على العقد', None, 'EUR'),
+    # Not one of the nine, but the same shape: ImportProgram already carries
+    # `requires_management_approval` (commercial import), and until now the
+    # flag was displayed and enforced nowhere.
+    ('program_approval', 'فتح صفقة على برنامج محتاج موافقة الإدارة (الاستيراد التجاري)', None, 'EUR'),
 ]
 
 

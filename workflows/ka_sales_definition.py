@@ -70,6 +70,7 @@ TOOL_NAMES = [
     'ka_register_initiative_for_sale',
     'ka_schedule_followup',
     'ka_escalate_conversation_to_staff',
+    'ka_share_bank_details',
 ]
 
 ERROR_MESSAGE = "بعتذر لحضرتك، هحوّل حضرتك لزميلي يكمل مع حضرتك دلوقتي."

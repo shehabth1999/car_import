@@ -253,6 +253,19 @@ class CarDeal(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
                     partner=self.partner, field='state',
                     reason=self.cancel_reason or _("Cancelling this deal"), user=user)
 
+        # A programme flagged `requires_management_approval` — commercial
+        # import today — asks before the deal exists, not after money moved.
+        if not self.pk:
+            from .reference_data import ImportProgram
+            program = ImportProgram.objects.filter(code=self.program).only(
+                'requires_management_approval', 'name').first()
+            if program is not None and program.requires_management_approval:
+                require('program_approval', None, partner=self.partner, field='program',
+                        reason=_("%(customer)s on %(programme)s") % {
+                            'customer': getattr(self.partner, 'name', '') or '—',
+                            'programme': program.name},
+                        user=user)
+
         if (self.financing_type == 'direct_instalments'
                 and (stored or {}).get('financing_type') != 'direct_instalments'):
             require('payment_schedule', self.amount_agreed, deal=self,
