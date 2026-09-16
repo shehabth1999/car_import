@@ -971,4 +971,16 @@ CATALOG = {
     "Sales": "المبيعات",
     "Cars and listings": "العربيات والعروض",
     "Operations": "العمليات",
+    # chat-header actions and the qualify wizard
+    'Budget (€)': 'الميزانية (€)',
+    'Consignment': 'الوساطة',
+    'From the chat': 'من الشات',
+    'Money and place': 'الفلوس والمكان',
+    'New quotation': 'عرض سعر جديد',
+    'Qualify customer': 'تأهيل العميل',
+    'This conversation has no customer attached.': 'المحادثة دي مش مربوطة بعميل.',
+    'What they want': 'اللي هو عايزه',
+    'Zero': 'زيرو',
+    'funds on %(date)s': 'الفلوس جاهزة في %(date)s',
+    'nothing new': 'مفيش جديد',
 }

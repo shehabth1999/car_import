@@ -537,6 +537,13 @@ msgstr "الميزانية"
 msgid "Budget (EUR)"
 msgstr "الميزانية (يورو)"
 
+msgid "Budget (€)"
+msgstr "الميزانية (€)"
+
+msgctxt "ui/views/qualify_views.py"
+msgid "Budget (€)"
+msgstr "الميزانية (€)"
+
 msgctxt "ui/views/car_deal_views.py"
 msgid "Build document checklist"
 msgstr "إنشاء قائمة المستندات"
@@ -898,6 +905,10 @@ msgstr "اللون الخارجي"
 msgid "Colour wanted"
 msgstr "اللون المطلوب"
 
+msgctxt "ui/views/qualify_views.py"
+msgid "Colour wanted"
+msgstr "اللون المطلوب"
+
 msgctxt "ui/views/consignment_views.py"
 msgid "Comm. %"
 msgstr "العمولة %"
@@ -1021,6 +1032,9 @@ msgctxt "ui/views/call_views.py"
 msgid "Consent on file"
 msgstr "الموافقة مسجّلة"
 
+msgid "Consignment"
+msgstr "الوساطة"
+
 msgid "Consignment (وساطة)"
 msgstr "وساطة"
 
@@ -1139,6 +1153,10 @@ msgstr "الدولة"
 msgid "Country of residence"
 msgstr "دولة الإقامة"
 
+msgctxt "ui/views/qualify_views.py"
+msgid "Country of residence"
+msgstr "دولة الإقامة"
+
 msgid "Coupé"
 msgstr "كوبيه"
 
@@ -1199,6 +1217,10 @@ msgid "Customer"
 msgstr "العميل"
 
 msgctxt "ui/views/dashboard_views.py"
+msgid "Customer"
+msgstr "العميل"
+
+msgctxt "ui/views/qualify_views.py"
 msgid "Customer"
 msgstr "العميل"
 
@@ -1630,6 +1652,10 @@ msgstr "السعر في مصر (ج.م)"
 msgid "Egyptian abroad"
 msgstr "مصري بالخارج"
 
+msgctxt "ui/views/qualify_views.py"
+msgid "Egyptian abroad"
+msgstr "مصري بالخارج"
+
 msgid "Electric boot (شنطة كهرباء)"
 msgstr "شنطة كهرباء"
 
@@ -1935,6 +1961,9 @@ msgstr "من (€ شامل الضريبة)"
 msgid "From stage"
 msgstr "من مرحلة"
 
+msgid "From the chat"
+msgstr "من الشات"
+
 msgid "Fuel"
 msgstr "الوقود"
 
@@ -1952,6 +1981,10 @@ msgstr "كاملة"
 msgid "Fully paid"
 msgstr "مدفوعة بالكامل"
 
+msgid "Funds ready on"
+msgstr "الفلوس جاهزة في"
+
+msgctxt "ui/views/qualify_views.py"
 msgid "Funds ready on"
 msgstr "الفلوس جاهزة في"
 
@@ -2157,6 +2190,10 @@ msgstr "المبادرة"
 msgid "Initiative for sale"
 msgstr "مبادرة للبيع"
 
+msgid "Initiative type"
+msgstr "نوع المبادرة"
+
+msgctxt "ui/views/qualify_views.py"
 msgid "Initiative type"
 msgstr "نوع المبادرة"
 
@@ -2572,6 +2609,10 @@ msgstr "نطاقات أسعار الموديلات"
 msgid "Model wanted"
 msgstr "الموديل المطلوب"
 
+msgctxt "ui/views/qualify_views.py"
+msgid "Model wanted"
+msgstr "الموديل المطلوب"
+
 msgid "Model year"
 msgstr "سنة الموديل"
 
@@ -2590,6 +2631,10 @@ msgstr "سنة الموديل"
 msgid "Model year wanted"
 msgstr "سنة الموديل المطلوبة"
 
+msgctxt "ui/views/qualify_views.py"
+msgid "Model year wanted"
+msgstr "سنة الموديل المطلوبة"
+
 msgid "Modifications used"
 msgstr "التعديلات المستخدمة"
 
@@ -2603,6 +2648,10 @@ msgstr "معدّلة"
 msgctxt "ui/views/dashboard_views.py"
 msgid "Money"
 msgstr "الأموال"
+
+msgctxt "ui/views/qualify_views.py"
+msgid "Money and place"
+msgstr "الفلوس والمكان"
 
 msgctxt "ui/views/car_deal_views.py"
 msgid "Move to next stage"
@@ -2753,6 +2802,9 @@ msgstr "صافي — مفيش ضريبة تُسترد"
 msgid "Never more than the fee itself"
 msgstr "عمره ما يزيد عن المصاريف نفسها"
 
+msgid "New quotation"
+msgstr "عرض سعر جديد"
+
 msgctxt "ui/views/approval_views.py"
 msgid "Newest"
 msgstr "الأحدث"
@@ -2846,6 +2898,10 @@ msgid "Note"
 msgstr "ملاحظة"
 
 msgctxt "ui/views/document_views.py"
+msgid "Note"
+msgstr "ملاحظة"
+
+msgctxt "ui/views/qualify_views.py"
 msgid "Note"
 msgstr "ملاحظة"
 
@@ -3368,6 +3424,10 @@ msgctxt "ui/views/document_views.py"
 msgid "Programme"
 msgstr "البرنامج"
 
+msgctxt "ui/views/qualify_views.py"
+msgid "Programme"
+msgstr "البرنامج"
+
 msgctxt "ui/views/reference_views.py"
 msgid "Programme"
 msgstr "البرنامج"
@@ -3402,6 +3462,9 @@ msgstr "تم تعليق %(count)d صفقة"
 msgctxt "ui/views/car_deal_views.py"
 msgid "Put on hold"
 msgstr "تعليق"
+
+msgid "Qualify customer"
+msgstr "تأهيل العميل"
 
 msgid "Queued"
 msgstr "في الانتظار"
@@ -3783,6 +3846,9 @@ msgstr "حدده بس لو شيت الودائع مختلف عن عدد المو
 
 msgid "Set stage"
 msgstr "تغيير المرحلة"
+
+msgid "Set stage…"
+msgstr "تغيير المرحلة…"
 
 msgctxt "ui/views/car_deal_views.py"
 msgid "Set stage…"
@@ -4390,6 +4456,9 @@ msgstr "مفيش سعر يتطبع."
 msgid "There is no price yet. %(why)s"
 msgstr "لسه مفيش سعر. %(why)s"
 
+msgid "This conversation has no customer attached."
+msgstr "المحادثة دي مش مربوطة بعميل."
+
 msgid "This deal has no car, so there is nothing to specify."
 msgstr "الصفقة دي مالهاش عربية، فمفيش مواصفات تتكتب."
 
@@ -4548,6 +4617,10 @@ msgctxt "ui/views/vehicle_views.py"
 msgid "Trim"
 msgstr "الفئة"
 
+msgid "Trim wanted"
+msgstr "الفئة المطلوبة"
+
+msgctxt "ui/views/qualify_views.py"
 msgid "Trim wanted"
 msgstr "الفئة المطلوبة"
 
@@ -4802,6 +4875,10 @@ msgctxt "ui/views/quote_views.py"
 msgid "What the salesman enters"
 msgstr "اللي المندوب بيدخله"
 
+msgctxt "ui/views/qualify_views.py"
+msgid "What they want"
+msgstr "اللي هو عايزه"
+
 msgctxt "ui/views/call_views.py"
 msgid "What was said"
 msgstr "اللي اتقال"
@@ -4978,6 +5055,9 @@ msgstr "السنة"
 msgid "Years owned"
 msgstr "سنوات الملكية"
 
+msgid "Zero"
+msgstr "زيرو"
+
 msgid "Zero (under 50 km)"
 msgstr "زيرو (أقل من 50 كم)"
 
@@ -4985,6 +5065,10 @@ msgctxt "ui/views/reference_views.py"
 msgid "Zero km"
 msgstr "زيرو كم"
 
+msgid "Zero or used"
+msgstr "زيرو أو مستعملة"
+
+msgctxt "ui/views/qualify_views.py"
 msgid "Zero or used"
 msgstr "زيرو أو مستعملة"
 
@@ -5001,6 +5085,9 @@ msgstr "cc"
 
 msgid "e.g. owner's answers 2026-09-14, the values workbook"
 msgstr "مثال: إجابات المالك 2026-09-14، شيت القيم"
+
+msgid "funds on %(date)s"
+msgstr "الفلوس جاهزة في %(date)s"
 
 msgid "generate it first"
 msgstr "ولّده الأول"
@@ -5033,6 +5120,9 @@ msgstr "مفيش سبب مكتوب"
 
 msgid "none / gulf / european — drives eligibility and the deposit"
 msgstr "none / gulf / european — بتحدد الأهلية والوديعة"
+
+msgid "nothing new"
+msgstr "مفيش جديد"
 
 msgid "there is no price to accept"
 msgstr "مفيش سعر يتقبل"
