@@ -97,10 +97,16 @@ class Command(BaseCommand):
                 path = os.path.join(KNOWLEDGE_DIR, name)
                 with open(path, 'rb') as handle:
                     raw = handle.read()
+                # Stored as .txt, deliberately. The platform routes .md through
+                # UnstructuredMarkdownLoader, which needs the `unstructured`
+                # package the tenants do not carry; .txt goes through TextLoader
+                # with no extra dependency, and markdown is plain text to an
+                # embedding anyway. The source files in the module stay .md.
+                stored = name[:-3] + '.txt'
                 document = RAGDocument(collection=collection, source_type='file',
-                                       title=f'ka:{name}', original_filename=name,
-                                       file_size=len(raw), file_type='md', status='processing')
-                document.file.save(name, ContentFile(raw), save=False)
+                                       title=f'ka:{name}', original_filename=stored,
+                                       file_size=len(raw), file_type='txt', status='processing')
+                document.file.save(stored, ContentFile(raw), save=False)
                 document.save()
 
                 loaded = loader.process_file(
