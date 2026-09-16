@@ -115,10 +115,13 @@ def execute(input_data):
         convo = conversation
     except NameError:
         convo = None
-    channel = str(getattr(convo, 'type', '') or '').lower()
-    channel_names = {'whatsapp': 'واتساب', 'messenger': 'ماسنجر', 'instagram': 'إنستجرام',
-                     'tiktok': 'تيك توك', 'webbot': 'شات الموقع', 'web': 'شات الموقع'}
-    facts_lines.append('القناة: %s' % (channel_names.get(channel) or channel or 'غير معروفة'))
+    # The customer, the lead, the channel and the last few messages, built in
+    # the package (services/turn_context.py) — the node's code box is capped
+    # near 10,000 characters, and a function in git is reviewable.
+    from car_import.services import turn_context
+    channel_label = turn_context.channel_label(convo)
+    partner_text = turn_context.partner_facts(who)
+    recent_text = turn_context.recent_messages(convo, who)
 
     try:
         CarDeal = models['car_import']['CarDeal']
@@ -208,6 +211,9 @@ def execute(input_data):
         'needs_ai': bool(message.strip()),
         'in_hours': in_hours,
         'deal_reference': (deal.name if deal is not None else ''),
+        'channel_label': channel_label,
+        'partner_facts': partner_text,
+        'recent_messages': recent_text,
         'deal_facts': ('\\n'.join(facts_lines) if facts_lines else 'مفيش صفقة مفتوحة للعميل ده.'),
         'warnings': ('\\n'.join('- ' + w for w in warnings) if warnings else 'مفيش تحذيرات.'),
     }
@@ -218,16 +224,63 @@ WORKFLOW_NAME = 'KA Sales'
 
 
 def system_message_text():
-    """The agent's system prompt: the rules, the voice, and this turn's facts."""
+    """The STATIC system message: the rules, the voice, the lane. Cached.
+
+    Nothing in it changes between turns — that is what makes the Anthropic
+    prompt cache hit. Everything that does change is in `dynamic_message_text`.
+    """
     from car_import.agent_prompts import system_prompt
 
     return (
         system_prompt()
-        + "\n\n# بيانات الصفقة الحالية (من السيستم، مش من ذاكرتك)\n"
-        + "{{ prepare_turn.deal_facts }}\n\n"
-        + "# تحذيرات خاصة بالرسالة دي\n"
-        + "{{ prepare_turn.warnings }}\n\n"
-        + "# إرشادات الإدارة\n{{ instructions_text }}"
+        + "\n\n# مصدر الحقائق\n"
+        + "بيانات العميل والصفقة والمحادثة والتحذيرات وإرشادات الإدارة بتوصلك في الرسالة اللي بعد دي "
+        + "(<dynamic_context>). هي المرجع، مش ذاكرتك."
+    )
+
+
+def dynamic_message_text():
+    """The DYNAMIC system message, never cached: this turn's facts.
+
+    The shape the other live agents use (maalem, basma): one `<dynamic_context>`
+    block carrying who the customer is, where the conversation stands, the
+    running summary, the last few messages, and the per-account instructions.
+    Ours adds the deal facts and the per-message warnings `prepare_turn` built.
+    """
+    return (
+        "<dynamic_context>\n"
+        "دلوقتي: {{ now() }}\n"
+        "القناة: {{ prepare_turn.channel_label }}\n"
+        "إحنا: فريق مبيعات خالد أوتوموبيل / K&T\n"
+        "\n"
+        "# العميل (من السيستم، مش من ذاكرتك)\n"
+        "{{ prepare_turn.partner_facts }}\n"
+        "\n"
+        "# الصفقة الحالية\n"
+        "{{ prepare_turn.deal_facts }}\n"
+        "\n"
+        "{% if conversation and conversation.summary %}"
+        "# ملخص المحادثة لحد دلوقتي\n"
+        "{{ conversation.summary }}\n"
+        "\n"
+        "{% endif %}"
+        "# آخر الرسايل (للتذكير — الرد على اللي جاي في رسالة العميل)\n"
+        "{{ prepare_turn.recent_messages }}\n"
+        "\n"
+        "# تحذيرات خاصة بالرسالة دي\n"
+        "{{ prepare_turn.warnings }}\n"
+        "\n"
+        "# إرشادات الإدارة\n"
+        "{{ instructions_text }}\n"
+        "{% if conversation and conversation.social_account and conversation.social_account.instructions %}"
+        "\n# إرشادات خاصة بالرقم/الحساب ده\n"
+        "{{ conversation.social_account.instructions }}\n"
+        "{% endif %}"
+        "{% if conversation and conversation.meta_ad_instructions %}"
+        "\n# الإعلان اللي جاب العميل\n"
+        "{{ conversation.meta_ad_instructions }}\n"
+        "{% endif %}"
+        "</dynamic_context>"
     )
 
 
@@ -256,6 +309,7 @@ def workflow_payload():
 
 def nodes(system_text=None):
     text = system_text if system_text is not None else system_message_text()
+    dynamic = dynamic_message_text()
     return [
         {
             'node_id': 'prepare_turn',
@@ -311,8 +365,13 @@ def nodes(system_text=None):
             'configuration': {
                 'llm_model_id': None,
                 'backup_llm_model_id': None,
+                # Two system rows, on purpose: the first is stable and cached
+                # (rules, voice, lane); the second is this turn's facts and is
+                # never cached. One cached row holding both would miss the
+                # cache on every turn and cost the full prompt each time.
                 'messages': [
                     {'role': 'system', 'cache': True, 'cache_ttl': '5m', 'text': text},
+                    {'role': 'system', 'cache': False, 'text': dynamic},
                 ],
                 'max_tokens': 4000,
                 'enable_history': True,

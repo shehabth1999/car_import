@@ -252,7 +252,7 @@ uv run python manage.py build_ka_workflows --voice aya
 ```
 
 **Or** import a bundle through the UI — AI Studio → Workflows → Import → choose
-`workflows/ka_sales.bundle.json`. Tools and models
+`workflows/ka_sales.bundle.json`. The agent node carries two system messages: a cached static one (rules, voice, lane) and an uncached `<dynamic_context>` (customer, lead, deal, summary, last messages, warnings, per-account instructions). Tools and models
 are carried by name, so pick the model in the node afterwards if the name differs.
 
 Either way, verify the graph before anyone connects a number — one entry node, both
