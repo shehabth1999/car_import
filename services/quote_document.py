@@ -34,6 +34,12 @@ def _amount(value, currency):
     return f"{value:,.2f} {SYMBOLS.get(currency, currency)}"
 
 
+def _pct(value):
+    """15, not 15.00. A Decimal column keeps its trailing zeros; an offer
+    should not."""
+    return f'{float(value):g}'
+
+
 def _visible_lines(quote, currency):
     """The rows worth showing a customer.
 
@@ -64,7 +70,7 @@ def as_text(quote):
 
     out.append('')
     out.append(f'إجمالي سعر البيع: {_amount(quote.total_eur, EUR)}')
-    out.append(f'مقدم جدية الحجز ({quote.deposit_pct:g}%): {_amount(quote.deposit_eur, EUR)}')
+    out.append(f'مقدم جدية الحجز ({_pct(quote.deposit_pct)}%): {_amount(quote.deposit_eur, EUR)}')
     out.append(f'الباقي: {_amount(quote.balance_eur, EUR)}')
 
     egp_lines = _visible_lines(quote, EGP)
@@ -106,7 +112,7 @@ def _notes(quote):
     if quote.showroom_fee_egp:
         notes.append(
             f'الاستلام من المعرض عليه {quote.showroom_fee_egp:,.0f} جنيه إضافية.')
-    notes.append(f'نسبة مقدم جدية الحجز من إجمالي سعر البيع: {quote.deposit_pct:g}%.')
+    notes.append(f'نسبة مقدم جدية الحجز من إجمالي سعر البيع: {_pct(quote.deposit_pct)}%.')
     if quote.total_egp_indicative:
         notes.append(
             f'أي رقم بالجنيه تقريبي بسعر اليوم ({quote.fx_rate_egp:,.2f}) وعليه عمولة تحويل '
@@ -163,7 +169,7 @@ def as_html(quote):
 </div>
 <table>{rows_eur}
 <tr class="total"><td>إجمالي سعر البيع</td><td class="n">{_amount(quote.total_eur, EUR)}</td></tr>
-<tr><td>مقدم جدية الحجز ({quote.deposit_pct:g}%)</td>
+<tr><td>مقدم جدية الحجز ({_pct(quote.deposit_pct)}%)</td>
     <td class="n">{_amount(quote.deposit_eur, EUR)}</td></tr>
 <tr><td>الباقي</td><td class="n">{_amount(quote.balance_eur, EUR)}</td></tr>
 </table>

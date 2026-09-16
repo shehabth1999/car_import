@@ -42,6 +42,12 @@ def _money(value):
     return Decimal(value or 0).quantize(TWO, rounding=ROUND_HALF_UP)
 
 
+def _pct(value):
+    """19, not 19.00 — a Decimal keeps its trailing zeros and `:g` keeps them
+    too, so a customer reads "VAT 19.00%" on an offer no human would write."""
+    return f'{float(value):g}'
+
+
 def _fee(code, default=None):
     """One fee amount from the table, or the default when it is not there."""
     try:
@@ -116,7 +122,7 @@ def quote(gross_price_eur, *, eur1=False, shipping_type=None, port='alexandria',
     lines = [
         {'code': 'gross', 'label_ar': 'إجمالي سعر العربية شامل الضريبة',
          'amount': _money(gross), 'currency': 'EUR'},
-        {'code': 'vat', 'label_ar': f'الضريبة {rate:g}% (بتسترد بعد التصدير)',
+        {'code': 'vat', 'label_ar': f'الضريبة {_pct(rate)}% (بتسترد بعد التصدير)',
          'amount': -vat, 'currency': 'EUR'},
         {'code': 'net', 'label_ar': 'صافي سعر العربية', 'amount': net, 'currency': 'EUR'},
         {'code': 'shipping', 'label_ar': 'مصاريف الشحن', 'amount': _money(shipping),
@@ -142,7 +148,7 @@ def quote(gross_price_eur, *, eur1=False, shipping_type=None, port='alexandria',
     egp_lines = []
     if port_fee_egp is not None:
         port_label = 'ميناء الإسكندرية' if port_key == 'alexandria' else 'ميناء بورسعيد'
-        egp_lines.append({'code': 'port', 'label_ar': f'مصاريف {port_label} (بتتحصّل عند الوصول)',
+        egp_lines.append({'code': 'port', 'label_ar': f'مصاريف {port_label}',
                           'amount': _money(port_fee_egp), 'currency': 'EGP'})
     if showroom_egp:
         egp_lines.append({'code': 'showroom', 'label_ar': 'الاستلام من المعرض',
