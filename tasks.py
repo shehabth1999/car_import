@@ -186,17 +186,44 @@ def _warn_about(conversation, waited_minutes):
         return False
 
 
+#: Who to tell, best first. The last entry is the point: on a tenant where
+#: nobody has been put into the car_import groups yet — which is exactly how
+#: khaled_test was found — every earlier step resolves to nobody and the
+#: warning evaporates. A warning that reaches nobody is not a warning.
+ESCALATION_AUDIENCE = [
+    ['car_import.sales_agent', 'car_import.sales_manager'],
+    ['car_import.management', 'car_import.operations'],
+    ['base.owner'],
+]
+
+
 def _sales_team_partner_ids():
-    """Everyone in the sales groups, as partner ids."""
+    """The first group in the chain that actually has somebody in it."""
     try:
         from modules.base.models.user import User
-        users = User.objects.filter(
-            groups__technical_name__in=['car_import.sales_agent', 'car_import.sales_manager'],
-            is_active=True).distinct()
-        return [u.partner_id for u in users if getattr(u, 'partner_id', None)]
     except Exception:
-        logger.exception('car_import: could not resolve the sales team')
+        logger.exception('car_import: could not load the user model')
         return []
+
+    for index, groups in enumerate(ESCALATION_AUDIENCE):
+        try:
+            users = User.objects.filter(groups__technical_name__in=groups,
+                                        is_active=True).distinct()
+            ids = [u.partner_id for u in users if getattr(u, 'partner_id', None)]
+        except Exception:
+            logger.exception('car_import: could not resolve %s', groups)
+            continue
+        if ids:
+            if index:
+                logger.warning(
+                    'car_import: nobody is in %s, so an escalation warning fell back to %s. '
+                    'Put the sales team into the car_import groups.',
+                    ESCALATION_AUDIENCE[index - 1], groups)
+            return ids
+
+    logger.error('car_import: an escalated customer is waiting and there is NOBODY to tell — '
+                 'no user belongs to any car_import group or to base.owner.')
+    return []
 
 
 @shared_task
