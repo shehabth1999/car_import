@@ -60,6 +60,26 @@ def _raise_activity(log):
 #: How long a handed-over customer may sit unanswered before we chase it.
 ESCALATION_SLA_KEY = 'car_import.escalation_sla_minutes'
 DEFAULT_SLA_MINUTES = 30
+#: How far back to look at all. Beyond this a silent thread is history, not a
+#: customer waiting.
+MAX_AGE_KEY = 'car_import.escalation_max_age_hours'
+DEFAULT_MAX_AGE_HOURS = 48
+#: Stamped onto the conversation by ka_escalate_conversation_to_staff.
+ESCALATION_STAMP = 'car_import_escalated_at'
+
+
+def _was_escalated(conversation):
+    data = getattr(conversation, 'social_platform_data', None) or {}
+    return bool(isinstance(data, dict) and data.get(ESCALATION_STAMP))
+
+
+def _config_int(key, default):
+    try:
+        from modules.base.models import ConfigParameter
+        row = ConfigParameter.objects.filter(key=key).values('value').first()
+        return max(1, int(str((row or {}).get('value')).strip()))
+    except Exception:
+        return default
 
 
 @shared_task
@@ -88,7 +108,14 @@ def chase_abandoned_escalations():
         return {'checked': 0}
 
     minutes = _sla_minutes()
-    cutoff = timezone.now() - timedelta(minutes=minutes)
+    max_age_hours = _config_int(MAX_AGE_KEY, DEFAULT_MAX_AGE_HOURS)
+    now = timezone.now()
+    cutoff = now - timedelta(minutes=minutes)
+    # An UPPER bound as well as a lower one. Without it the first run matched
+    # 279 of the client's imported historical conversations — every old thread
+    # that happened to end with a customer message — and would have chased them
+    # all. We are looking for a customer waiting NOW, not an archive.
+    floor = now - timedelta(hours=max_age_hours)
 
     stale = []
     conversations = (Conversation.objects
@@ -99,27 +126,29 @@ def chase_abandoned_escalations():
         last = (Message.objects.filter(conversation=conversation)
                 .order_by('-created_at').first())
         # Nobody has replied when the newest message is still the customer's.
-        if last is None or last.direction != 'inbound' or last.created_at > cutoff:
+        if last is None or last.direction != 'inbound':
             continue
-        waited = int((timezone.now() - last.created_at).total_seconds() // 60)
+        if not (floor <= last.created_at <= cutoff):
+            continue
+        # And it must be a conversation the assistant actually handed over.
+        # `handled_by_ai=False` is also the default for every thread that never
+        # had AI at all, which is most of an imported history.
+        if not _was_escalated(conversation):
+            continue
+        waited = int((now - last.created_at).total_seconds() // 60)
         stale.append((conversation, waited))
 
-    for conversation, waited in stale:
-        _warn_about(conversation, waited)
+    warned = sum(1 for conversation, waited in stale if _warn_about(conversation, waited))
 
     if stale:
         logger.info('car_import: %d escalated conversation(s) waiting longer than %d minutes',
                     len(stale), minutes)
-    return {'checked': conversations.count(), 'waiting': len(stale), 'sla_minutes': minutes}
+    return {'checked': conversations.count(), 'waiting': len(stale),
+            'warned': warned, 'sla_minutes': minutes, 'max_age_hours': max_age_hours}
 
 
 def _sla_minutes():
-    try:
-        from modules.base.models import ConfigParameter
-        row = ConfigParameter.objects.filter(key=ESCALATION_SLA_KEY).values('value').first()
-        return max(1, int(str((row or {}).get('value')).strip()))
-    except Exception:
-        return DEFAULT_SLA_MINUTES
+    return _config_int(ESCALATION_SLA_KEY, DEFAULT_SLA_MINUTES)
 
 
 def _warn_about(conversation, waited_minutes):
@@ -141,14 +170,20 @@ def _warn_about(conversation, waited_minutes):
     name = getattr(partner, 'name', '') or 'a customer'
     try:
         from modules.notifications.services.post_notification import post_notification
+        # subject/body, NOT title/body: the wrong keyword made this raise on
+        # every call, the except swallowed it, and the task reported success
+        # while delivering nothing at all.
         post_notification(
             partner_ids=recipients,
-            title='عميل محوّل ومستني',
+            subject='عميل محوّل ومستني',
             body=f'{name} محوّل للفريق ومستني من {waited_minutes} دقيقة من غير رد.',
             url='/chat/?chat=%s' % conversation.pk,
+            category='car_import',
         )
+        return True
     except Exception:
         logger.exception('car_import: could not warn about conversation %s', conversation.pk)
+        return False
 
 
 def _sales_team_partner_ids():

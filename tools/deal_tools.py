@@ -520,7 +520,18 @@ def ka_escalate_conversation_to_staff(context, reason: str, topic: Optional[str]
 
         if conversation is not None:
             conversation.handled_by_ai = False
-            conversation.save(update_fields=['handled_by_ai'])
+            # Stamp WHEN we handed over. `handled_by_ai=False` alone cannot be
+            # the signal: it is also the resting state of every conversation
+            # that never had an assistant, which is most of an imported
+            # history. The chaser uses this to tell the two apart.
+            from django.utils import timezone as _tz
+            data = conversation.social_platform_data
+            if not isinstance(data, dict):
+                data = {}
+            data['car_import_escalated_at'] = _tz.now().isoformat()
+            data['car_import_escalation_topic'] = topic or 'other'
+            conversation.social_platform_data = data
+            conversation.save(update_fields=['handled_by_ai', 'social_platform_data'])
 
         holding = "تمام يا فندم 🙏 هحوّل حضرتك لزميلي وهو هيرد على حضرتك حالاً."
         from modules.chat.services.omnichannel_send_service import OmnichannelSendService
