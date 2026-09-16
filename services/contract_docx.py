@@ -134,9 +134,38 @@ def fill(docx_bytes, values, required=()):
 
 
 # ── the run-splicing that makes the above safe ─────────────────────────────
+#: Every `xmlns:prefix="uri"` on the document element.
+_XMLNS = re.compile(r'xmlns:([\w.-]+)\s*=\s*"([^"]+)"')
+
+
+def _register_prefixes(xml_text):
+    """Keep Word's own namespace prefixes, or Word calls the file corrupt.
+
+    ElementTree renames unregistered namespaces to ns0, ns1, ns2 on output.
+    That would be harmless except that a .docx carries
+    `mc:Ignorable="w14 w15 w16se … wp14"` — an attribute whose VALUE is a list
+    of prefixes. Rename the declarations and that list points at prefixes the
+    document no longer declares, which is a validation error: Word refuses to
+    open the file and offers to repair it.
+
+    So every prefix on the original document element is re-registered before
+    anything is written back. Registration is global to ElementTree, which is
+    fine — these are the standard OOXML namespaces, and re-registering the same
+    prefix for the same URI is a no-op.
+    """
+    # NOT "up to the first '>'": a .docx opens with an XML declaration, so the
+    # first '>' closes `<?xml … ?>` and the document element's declarations sit
+    # after it. The first few kilobytes cover the root element on every real
+    # file, and a stray extra registration would be harmless anyway.
+    for prefix, uri in _XMLNS.findall(xml_text[:8000]):
+        ET.register_namespace(prefix, uri)
+
+
 def _root(docx_bytes):
     with zipfile.ZipFile(io.BytesIO(docx_bytes)) as z:
-        return ET.fromstring(z.read(DOCUMENT))
+        raw = z.read(DOCUMENT)
+    _register_prefixes(raw.decode('utf-8', 'replace'))
+    return ET.fromstring(raw)
 
 
 def _write(root, original_bytes):
@@ -146,6 +175,7 @@ def _write(root, original_bytes):
     byte for byte. We are editing a lawyer's document, not regenerating it.
     """
     body = ET.tostring(root, encoding='utf-8', xml_declaration=True)
+    body = _restore_root_tag(body, original_bytes)
     out = io.BytesIO()
     with zipfile.ZipFile(io.BytesIO(original_bytes)) as src, \
             zipfile.ZipFile(out, 'w', zipfile.ZIP_DEFLATED) as dst:
@@ -153,6 +183,43 @@ def _write(root, original_bytes):
             data = body if item.filename == DOCUMENT else src.read(item.filename)
             dst.writestr(item, data)
     return out.getvalue()
+
+
+def _restore_root_tag(new_xml, original_bytes):
+    """Put back the document element exactly as Word wrote it.
+
+    ElementTree only re-emits the namespaces the tree actually uses, so a
+    declaration like `xmlns:w15=…` disappears when nothing in this document
+    happens to use it — while `mc:Ignorable="w14 w15 w16se … wp14"` goes on
+    naming it. An Ignorable entry with no matching declaration is a validation
+    error, and Word answers validation errors on a .docx by announcing the file
+    is corrupt and offering to repair it. On a signed contract that is not a
+    cosmetic problem.
+
+    Swapping the whole start tag back is cheap and total: the body we generated
+    is unchanged, and the root is byte-identical to the lawyer's.
+    """
+    with zipfile.ZipFile(io.BytesIO(original_bytes)) as z:
+        original = z.read(DOCUMENT)
+    old_start, old_end = _root_tag_span(original)
+    new_start, new_end = _root_tag_span(new_xml)
+    if old_start < 0 or new_start < 0:
+        return new_xml
+    return new_xml[:new_start] + original[old_start:old_end] + new_xml[new_end:]
+
+
+def _root_tag_span(xml_bytes):
+    """(start, end) of the document element's start tag, skipping the prolog."""
+    cursor = 0
+    while True:
+        start = xml_bytes.find(b'<', cursor)
+        if start < 0:
+            return -1, -1
+        if xml_bytes[start + 1:start + 2] in (b'?', b'!'):
+            cursor = xml_bytes.find(b'>', start) + 1
+            continue
+        end = xml_bytes.find(b'>', start)
+        return (start, end + 1) if end >= 0 else (-1, -1)
 
 
 def _text_nodes(paragraph):
