@@ -31,6 +31,16 @@ menu_dict = {
                 "allowed_groups": ["car_import.sales_agent", "car_import.sales_manager",
                                    "car_import.operations", "car_import.management"],
             },
+            "car_import_menu_quotes": {
+                "name": _("Quotations"),
+                "icon": "Calculator",
+                "module": "car_import",
+                "model": "car_import.quote",
+                "view_types": "list,form",
+                "sequence": 15,
+                "allowed_groups": ["car_import.sales_agent", "car_import.sales_manager",
+                                   "car_import.management"],
+            },
             "car_import_menu_vehicles": {
                 "name": _("Cars"),
                 "icon": "CarFront",

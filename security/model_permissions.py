@@ -53,6 +53,23 @@ MODEL_PERMISSIONS = [
     {'model': 'car_import.modelpricerange', 'group': 'car_import.sales_manager', 'permissions': VIEW_ONLY},
     {'model': 'car_import.fxreference', 'group': 'car_import.management', 'permissions': FULL},
     {'model': 'car_import.fxreference', 'group': 'car_import.sales_manager', 'permissions': VIEW_ONLY},
+    # The bands ARE the price list. A sales manager reads them — they have to,
+    # to explain a deposit — and only management moves a percentage.
+    {'model': 'car_import.pricingband', 'group': 'car_import.management', 'permissions': FULL},
+    {'model': 'car_import.pricingband', 'group': 'car_import.sales_manager', 'permissions': VIEW_ONLY},
+    {'model': 'car_import.pricingband', 'group': 'car_import.sales_agent', 'permissions': VIEW_ONLY},
+
+    # ── quotations ──────────────────────────────────────────────────────────
+    # An agent writes offers; nobody deletes one. A quote that vanishes is a
+    # price the company can no longer prove it gave.
+    {'model': 'car_import.quote', 'group': 'car_import.sales_agent', 'permissions': MANAGE},
+    {'model': 'car_import.quote', 'group': 'car_import.sales_manager', 'permissions': MANAGE},
+    {'model': 'car_import.quote', 'group': 'car_import.operations', 'permissions': VIEW_ONLY},
+    {'model': 'car_import.quote', 'group': 'car_import.management', 'permissions': FULL},
+    {'model': 'car_import.quoteline', 'group': 'car_import.sales_agent', 'permissions': VIEW_ONLY},
+    {'model': 'car_import.quoteline', 'group': 'car_import.sales_manager', 'permissions': VIEW_ONLY},
+    {'model': 'car_import.quoteline', 'group': 'car_import.operations', 'permissions': VIEW_ONLY},
+    {'model': 'car_import.quoteline', 'group': 'car_import.management', 'permissions': FULL},
 
     # ── paperwork ───────────────────────────────────────────────────────────
     {'model': 'car_import.documentrequirement', 'group': 'car_import.management', 'permissions': FULL},

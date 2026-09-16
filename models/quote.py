@@ -1,0 +1,372 @@
+# -*- coding: utf-8 -*-
+"""A price offer, frozen at the moment it was given.
+
+The client's complaint about their current way of working was not that the
+calculator is wrong — it is a perfectly good spreadsheet. It is that a price
+quoted in March cannot be reconstructed in June: the sheet has moved on, the
+salesman remembers a number, and nobody can say which fee schedule produced it.
+
+So a quote stores its **results**, not only its inputs. Every figure the
+customer was shown is written into the row, along with the band that produced
+it. Re-reading a quote never re-runs the calculator, which means changing a
+band tomorrow cannot silently rewrite what somebody was promised yesterday.
+Pressing *Recalculate* re-runs it, deliberately, with a person's name on it.
+
+The lines are stored too, for the same reason and one more: they are what gets
+printed and sent, and a quote whose rows are regenerated from today's rules is
+not the quote the customer is holding.
+"""
+from decimal import Decimal
+
+from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.db import models
+from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
+
+from modules.base.decorators import action
+from modules.base.models.base import BaseModel
+from modules.base.models.managers import BranchAwareManager
+from modules.base.models.mixins import BranchMixin, SequenceMixin
+from modules.notifications.models.mixins import FullChatterMixin
+
+
+class Quote(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
+    """One price offer for one car, for one customer."""
+
+    sequence_code = 'car_import.quote'
+
+    objects = BranchAwareManager()
+    all_objects = models.Manager()
+
+    _mail_track = {
+        'state': None,
+        'total_eur': None,
+        'deposit_eur': None,
+        'paid_eur': None,
+    }
+
+    STATE = [
+        ('draft', _("Draft")),
+        ('sent', _("Sent to the customer")),
+        ('accepted', _("Accepted")),
+        ('declined', _("Declined")),
+        ('expired', _("Expired")),
+    ]
+    SHIPPING_TYPE = [
+        ('', _("Standard")),
+        ('vip_roro', _("VIP RORO")),
+        ('container', _("Container")),
+    ]
+    PORT = [
+        ('alexandria', _("Alexandria")),
+        ('port_said', _("Port Said")),
+    ]
+
+    # ── identity ────────────────────────────────────────────────────────────
+    name = models.CharField(max_length=32, blank=True, verbose_name=_("Reference"))
+    state = models.CharField(max_length=16, choices=STATE, default='draft',
+                             verbose_name=_("Status"))
+    partner = models.ForeignKey('base.Partner', null=True, blank=True, on_delete=models.PROTECT,
+                                related_name='car_quotes', verbose_name=_("Customer"))
+    deal = models.ForeignKey('car_import.CarDeal', null=True, blank=True,
+                             on_delete=models.SET_NULL, related_name='quotes',
+                             verbose_name=_("Deal"))
+    vehicle = models.ForeignKey('car_import.Vehicle', null=True, blank=True,
+                                on_delete=models.SET_NULL, related_name='quotes',
+                                verbose_name=_("Car"))
+    assigned_to = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
+                                    on_delete=models.SET_NULL, related_name='car_quotes',
+                                    verbose_name=_("Sales agent"))
+    quote_date = models.DateField(default=timezone.localdate, verbose_name=_("Date"))
+    valid_until = models.DateField(null=True, blank=True, verbose_name=_("Valid until"))
+
+    # ── what the salesman types ─────────────────────────────────────────────
+    gross_price_eur = models.DecimalField(
+        max_digits=12, decimal_places=2, null=True, blank=True,
+        verbose_name=_("Price with VAT (EUR)"),
+        help_text=_("The number on the German advert — everything else follows from it"))
+    with_eur1 = models.BooleanField(default=False, verbose_name=_("EUR 1 certificate"))
+    shipping_type = models.CharField(max_length=16, choices=SHIPPING_TYPE, blank=True, default='',
+                                     verbose_name=_("Shipping"))
+    port = models.CharField(max_length=16, choices=PORT, default='alexandria',
+                            verbose_name=_("Port of arrival"))
+    collect_from_showroom = models.BooleanField(default=False,
+                                                verbose_name=_("Collected from the showroom"))
+    admin_fee_discount_eur = models.DecimalField(
+        max_digits=12, decimal_places=2, default=0, verbose_name=_("Discount on the admin fee (EUR)"),
+        help_text=_("Never more than the fee itself"))
+    vat_rate_pct = models.DecimalField(max_digits=5, decimal_places=2, default=19,
+                                       verbose_name=_("VAT %"))
+    fx_rate_egp = models.DecimalField(
+        max_digits=12, decimal_places=4, null=True, blank=True, verbose_name=_("EGP per EUR"),
+        help_text=_("Only to show the customer an indicative figure. The company does not "
+                    "promise a rate"))
+
+    # ── what the calculator answered, frozen ────────────────────────────────
+    band = models.ForeignKey('car_import.PricingBand', null=True, blank=True,
+                             on_delete=models.SET_NULL, related_name='quotes',
+                             verbose_name=_("Band"))
+    band_label = models.CharField(max_length=120, blank=True, verbose_name=_("Band used"))
+    net_eur = models.DecimalField(max_digits=12, decimal_places=2, default=0,
+                                  verbose_name=_("Net price (EUR)"))
+    vat_reclaimable_eur = models.DecimalField(max_digits=12, decimal_places=2, default=0,
+                                              verbose_name=_("VAT reclaimed (EUR)"))
+    shipping_eur = models.DecimalField(max_digits=12, decimal_places=2, default=0,
+                                       verbose_name=_("Shipping (EUR)"))
+    admin_fee_before_discount_eur = models.DecimalField(max_digits=12, decimal_places=2, default=0,
+                                                        verbose_name=_("Admin fee (EUR)"))
+    admin_fee_eur = models.DecimalField(max_digits=12, decimal_places=2, default=0,
+                                        verbose_name=_("Admin fee after discount (EUR)"))
+    eur1_eur = models.DecimalField(max_digits=12, decimal_places=2, default=0,
+                                   verbose_name=_("EUR 1 (EUR)"))
+    shipping_extra_eur = models.DecimalField(max_digits=12, decimal_places=2, default=0,
+                                             verbose_name=_("Shipping option (EUR)"))
+    total_eur = models.DecimalField(max_digits=12, decimal_places=2, default=0,
+                                    verbose_name=_("Total selling price (EUR)"))
+    deposit_pct = models.DecimalField(max_digits=5, decimal_places=2, default=0,
+                                      verbose_name=_("Deposit %"))
+    deposit_eur = models.DecimalField(max_digits=12, decimal_places=2, default=0,
+                                      verbose_name=_("Deposit (EUR)"))
+    balance_eur = models.DecimalField(max_digits=12, decimal_places=2, default=0,
+                                      verbose_name=_("Balance (EUR)"))
+    port_fee_egp = models.DecimalField(max_digits=12, decimal_places=2, default=0,
+                                       verbose_name=_("Port fees (EGP)"))
+    showroom_fee_egp = models.DecimalField(max_digits=12, decimal_places=2, default=0,
+                                           verbose_name=_("Showroom collection (EGP)"))
+    egp_due_on_arrival = models.DecimalField(max_digits=12, decimal_places=2, default=0,
+                                             verbose_name=_("Due on arrival (EGP)"))
+    total_egp_indicative = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True,
+                                               verbose_name=_("Indicative total (EGP)"))
+    calculated_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Calculated at"))
+    pricing_error = models.CharField(max_length=255, blank=True, verbose_name=_("Why there is no price"))
+
+    # ── what the customer actually paid ─────────────────────────────────────
+    # The owner's point, in their own words: "ساعات العميل بيجي يدفع فلوس أكثر
+    # من المطلوب منه كـ deposit وممكن يدفع كل ثمن العربية". So this is a real
+    # amount somebody types, not a status somebody picks.
+    paid_eur = models.DecimalField(max_digits=12, decimal_places=2, default=0,
+                                   verbose_name=_("Paid so far (EUR)"))
+    deposit_covered = models.BooleanField(default=False, verbose_name=_("Deposit covered"))
+    fully_paid = models.BooleanField(default=False, verbose_name=_("Paid in full"))
+    remaining_eur = models.DecimalField(max_digits=12, decimal_places=2, default=0,
+                                        verbose_name=_("Still owed (EUR)"))
+    overpaid_eur = models.DecimalField(max_digits=12, decimal_places=2, default=0,
+                                       verbose_name=_("Overpaid (EUR)"))
+
+    notes = models.TextField(blank=True, verbose_name=_("Notes"))
+    sent_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Sent at"))
+
+    class Meta:
+        verbose_name = _("Quotation")
+        verbose_name_plural = _("Quotations")
+        ordering = ['-id']
+        indexes = [
+            models.Index(fields=['state', 'quote_date']),
+            models.Index(fields=['partner']),
+        ]
+
+    def __str__(self):
+        return f"{self.name or '—'} · {self.total_eur:,.0f} €"
+
+    # ── the calculation ─────────────────────────────────────────────────────
+    def recalculate(self, save_lines=True):
+        """Re-run the calculator and freeze the answer onto this row."""
+        from car_import.services import pricing
+
+        self.pricing_error = ''
+        if not self.gross_price_eur:
+            # Not an error worth shouting about: a salesman opens the form
+            # before they have the price. Everything simply stays at zero.
+            self._zero_results()
+            return None
+
+        try:
+            result = pricing.quote(
+                self.gross_price_eur,
+                eur1=self.with_eur1,
+                shipping_type=self.shipping_type or None,
+                port=self.port,
+                collect_from_showroom=self.collect_from_showroom,
+                admin_fee_discount_eur=self.admin_fee_discount_eur,
+                vat_rate=self.vat_rate_pct,
+                fx_rate_egp=self.fx_rate_egp,
+            )
+        except pricing.PricingError as exc:
+            self._zero_results()
+            self.pricing_error = str(exc)
+            return None
+
+        self.band_id = result['band_id']
+        self.band_label = result['band']
+        self.net_eur = result['net_eur']
+        self.vat_reclaimable_eur = result['vat_reclaimable_eur']
+        self.total_eur = result['total_eur']
+        self.deposit_pct = Decimal(str(result['deposit_pct']))
+        self.deposit_eur = result['deposit_eur']
+        self.balance_eur = result['balance_eur']
+        self.admin_fee_eur = result['admin_fee_eur']
+        self.admin_fee_before_discount_eur = result['admin_fee_before_discount_eur']
+        self.egp_due_on_arrival = result['egp_due_on_arrival']
+        self.total_egp_indicative = result.get('total_egp_indicative')
+        self.calculated_at = timezone.now()
+
+        by_code = {line['code']: line['amount'] for line in result['lines_eur']}
+        self.shipping_eur = by_code.get('shipping', Decimal(0))
+        self.eur1_eur = by_code.get('eur1', Decimal(0))
+        self.shipping_extra_eur = by_code.get('shipping_type', Decimal(0))
+
+        egp_by_code = {line['code']: line['amount'] for line in result['lines_egp']}
+        self.port_fee_egp = egp_by_code.get('port', Decimal(0))
+        self.showroom_fee_egp = egp_by_code.get('showroom', Decimal(0))
+
+        plan = pricing.payment_plan(result, self.paid_eur or 0)
+        self.deposit_covered = plan['deposit_covered']
+        self.fully_paid = plan['fully_paid']
+        self.remaining_eur = plan['remaining_eur']
+        self.overpaid_eur = plan['overpaid_eur']
+
+        self._pending_lines = result['lines_eur'] + result['lines_egp'] if save_lines else None
+        return result
+
+    def _zero_results(self):
+        for field in ('net_eur', 'vat_reclaimable_eur', 'shipping_eur', 'admin_fee_eur',
+                      'admin_fee_before_discount_eur', 'eur1_eur', 'shipping_extra_eur',
+                      'total_eur', 'deposit_pct', 'deposit_eur', 'balance_eur',
+                      'port_fee_egp', 'showroom_fee_egp', 'egp_due_on_arrival',
+                      'remaining_eur', 'overpaid_eur'):
+            setattr(self, field, Decimal(0))
+        self.total_egp_indicative = None
+        self.band_id = None
+        self.band_label = ''
+        self.deposit_covered = False
+        self.fully_paid = False
+        self._pending_lines = []
+
+    #: Written by ``recalculate``, consumed by ``post_save``. Never touched in
+    #: ``__init__`` — the serializer defers columns, so a partially loaded row
+    #: must not pretend it has lines to write.
+    _pending_lines = None
+
+    # ── hooks ───────────────────────────────────────────────────────────────
+    def pre_save(self):
+        """Validation belongs here: this platform's write path never calls
+        ``clean()`` (`modules/base/genie_serializer/write.py`), so a rule in
+        ``clean`` is a rule that never runs."""
+        if self.admin_fee_discount_eur and self.admin_fee_discount_eur < 0:
+            raise ValidationError({'admin_fee_discount_eur': _(
+                "A discount is a positive number. To charge more, change the band.")})
+        if self.paid_eur and self.paid_eur < 0:
+            raise ValidationError({'paid_eur': _("A payment cannot be negative.")})
+
+        # Price first, then judge the result. Checking `total_eur` before the
+        # calculator runs would reject a quote that is being created and
+        # accepted in the same save — which is exactly what happens when a
+        # salesman fills the form in front of a customer who says yes.
+        self.recalculate()
+
+        if self.state in ('sent', 'accepted') and not self.total_eur:
+            raise ValidationError({'state': _(
+                "There is no price yet. %(why)s") % {
+                    'why': self.pricing_error or _("Enter the car's price with VAT.")}})
+
+    def post_save(self):
+        self._write_lines()
+
+    def _write_lines(self):
+        if self._pending_lines is None:
+            return
+        lines, self._pending_lines = self._pending_lines, None
+        QuoteLine.all_objects.filter(quote_id=self.pk).delete()
+        QuoteLine.all_objects.bulk_create([
+            QuoteLine(quote_id=self.pk, sequence=(index + 1) * 10, code=line['code'],
+                      label=line['label_ar'], amount=line['amount'], currency=line['currency'])
+            for index, line in enumerate(lines)
+        ])
+
+    # ── buttons ─────────────────────────────────────────────────────────────
+    @action
+    def action_recalculate(queryset):
+        """Re-run the calculator on today's bands, deliberately.
+
+        A quote does not recalculate itself when a band changes — that is the
+        whole point of freezing the figures. This is the button that says "yes,
+        reprice this one", and the chatter records who pressed it.
+        """
+        repriced, refused = 0, []
+        for quote in queryset:
+            quote.save()
+            if quote.pricing_error:
+                refused.append(f"{quote.name or quote.pk}: {quote.pricing_error}")
+            else:
+                repriced += 1
+        message = _("Repriced %(count)d quotation(s)") % {'count': repriced}
+        if refused:
+            message += "\n" + "\n".join(refused)
+        return {'status': True, 'open_mode': 'message', 'message': message,
+                'data': {}, 'on_success': {'type': 'refresh'}}
+
+    @action
+    def action_mark_sent(queryset):
+        """Mark the offer as given to the customer."""
+        sent, refused = 0, []
+        for quote in queryset:
+            if not quote.total_eur:
+                refused.append(f"{quote.name or quote.pk}: {_('there is no price to send')}")
+                continue
+            quote.state = 'sent'
+            quote.sent_at = timezone.now()
+            quote.save()
+            sent += 1
+        message = _("Marked %(count)d quotation(s) as sent") % {'count': sent}
+        if refused:
+            message += "\n" + "\n".join(refused)
+        return {'status': True, 'open_mode': 'message', 'message': message,
+                'data': {}, 'on_success': {'type': 'refresh'}}
+
+    @action
+    def action_accept(queryset):
+        """The customer said yes — copy the total onto the deal."""
+        accepted, refused = 0, []
+        for quote in queryset:
+            if not quote.total_eur:
+                refused.append(f"{quote.name or quote.pk}: {_('there is no price to accept')}")
+                continue
+            quote.state = 'accepted'
+            quote.save()
+            # Copied, not linked. Renegotiating the quote afterwards must not
+            # silently move the number somebody already signed under.
+            if quote.deal_id:
+                deal = quote.deal
+                deal.amount_agreed = quote.total_eur
+                deal.currency_note = 'EUR'
+                deal.save()
+            accepted += 1
+        message = _("Accepted %(count)d quotation(s)") % {'count': accepted}
+        if refused:
+            message += "\n" + "\n".join(refused)
+        return {'status': True, 'open_mode': 'message', 'message': message,
+                'data': {}, 'on_success': {'type': 'refresh'}}
+
+
+class QuoteLine(BaseModel):
+    """One row of the offer, exactly as the customer saw it."""
+
+    all_objects = models.Manager()
+
+    quote = models.ForeignKey(Quote, on_delete=models.CASCADE, related_name='lines',
+                              verbose_name=_("Quotation"))
+    sequence = models.PositiveIntegerField(default=10, verbose_name=_("#"))
+    code = models.CharField(max_length=32, verbose_name=_("Code"))
+    label = models.CharField(max_length=190, verbose_name=_("Description"))
+    amount = models.DecimalField(max_digits=14, decimal_places=2, default=0,
+                                 verbose_name=_("Amount"))
+    currency = models.CharField(max_length=8, default='EUR', verbose_name=_("Currency"))
+
+    class Meta:
+        verbose_name = _("Quotation line")
+        verbose_name_plural = _("Quotation lines")
+        ordering = ['sequence', 'id']
+
+    def __str__(self):
+        return f"{self.label} — {self.amount:,.2f} {self.currency}"
