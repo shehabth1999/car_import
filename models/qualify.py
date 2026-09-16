@@ -10,7 +10,7 @@ that never got filled when filling them meant leaving the conversation.
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from modules.base.models import TransientModel
+from modules.base.models.mixins import TransientModel
 from modules.base.decorators import action
 
 
