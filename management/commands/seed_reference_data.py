@@ -252,10 +252,12 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS('\nReference data seeded.'))
         self.stdout.write(
-            'Deliberately NOT seeded, because the client has not confirmed them:\n'
-            '  · whether the customs figure is the amount payable or the value the rate '
-            'applies to (question V1)\n'
+            'Deliberately NOT seeded, because the client has not confirmed it:\n'
             '  · bank financing terms\n'
-            'The pricing engine refuses rather than guesses while these are missing.\n'
-            'The deposit formula IS seeded now — it came with the client\'s own '
-            'calculator. Run `price_car --check` to prove it still matches.')
+            'The pricing engine refuses rather than guesses while that is missing.\n\n'
+            'Answered since, and seeded:\n'
+            '  · the deposit formula — their own calculator, 2026-09-16\n'
+            '  · the customs basis — the workbook figures are the amount actually PAID '
+            '(question V1, answered 2026-09-16), and they move when the government '
+            'moves them, which is what the dates on these rows are for\n'
+            'Run `price_car --check` to prove the calculator still matches their sheet.')
