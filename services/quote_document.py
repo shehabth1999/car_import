@@ -157,6 +157,10 @@ def as_html(quote):
  table {{ width: 100%; border-collapse: collapse; }}
  td {{ padding: .5rem .25rem; border-bottom: 1px solid #e3eaf2; }}
  td.n {{ text-align: left; direction: ltr; white-space: nowrap; }}
+ /* A date or a reference is a left-to-right run inside Arabic text. Without
+    an isolate the browser reorders "2026-09-16" into "16-09-2026" on the page
+    — the right characters in the wrong order, which is worse than either. */
+ bdi {{ unicode-bidi: isolate; }}
  tr.total td {{ font-weight: 700; border-top: 2px solid #16324f; border-bottom: none; }}
  ol {{ color: #55708c; font-size: .9rem; line-height: 1.8; }}
  /* Printed on A4 by a salesman with a customer waiting. One page, no chrome. */
@@ -164,12 +168,13 @@ def as_html(quote):
 </style></head><body>
 <h1>عرض سعر سيارة</h1>
 <div class="meta">
-  الاسم: {customer} &nbsp;·&nbsp; العربية: {car} &nbsp;·&nbsp;
-  التاريخ: {quote.quote_date:%Y-%m-%d} &nbsp;·&nbsp; رقم العرض: {_escape(quote.name or '—')}
+  الاسم: <bdi>{customer}</bdi> &nbsp;·&nbsp; العربية: <bdi>{car}</bdi> &nbsp;·&nbsp;
+  التاريخ: <bdi>{quote.quote_date:%Y-%m-%d}</bdi> &nbsp;·&nbsp;
+  رقم العرض: <bdi>{_escape(quote.name or '—')}</bdi>
 </div>
 <table>{rows_eur}
 <tr class="total"><td>إجمالي سعر البيع</td><td class="n">{_amount(quote.total_eur, EUR)}</td></tr>
-<tr><td>مقدم جدية الحجز ({_pct(quote.deposit_pct)}%)</td>
+<tr><td>مقدم جدية الحجز <bdi>({_pct(quote.deposit_pct)}%)</bdi></td>
     <td class="n">{_amount(quote.deposit_eur, EUR)}</td></tr>
 <tr><td>الباقي</td><td class="n">{_amount(quote.balance_eur, EUR)}</td></tr>
 </table>
