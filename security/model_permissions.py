@@ -67,6 +67,15 @@ MODEL_PERMISSIONS = [
     {'model': 'car_import.initiative', 'group': 'car_import.sales_manager', 'permissions': MANAGE},
     {'model': 'car_import.initiative', 'group': 'car_import.management', 'permissions': FULL},
 
+    # ── the company's own two markets ──────────────────────────────
+    {'model': 'car_import.showroomlisting', 'group': 'car_import.sales_agent', 'permissions': VIEW_ONLY},
+    {'model': 'car_import.showroomlisting', 'group': 'car_import.showroom', 'permissions': MANAGE},
+    {'model': 'car_import.showroomlisting', 'group': 'car_import.sales_manager', 'permissions': MANAGE},
+    {'model': 'car_import.showroomlisting', 'group': 'car_import.management', 'permissions': FULL},
+    {'model': 'car_import.initiativelisting', 'group': 'car_import.sales_agent', 'permissions': VIEW_ONLY},
+    {'model': 'car_import.initiativelisting', 'group': 'car_import.sales_manager', 'permissions': MANAGE},
+    {'model': 'car_import.initiativelisting', 'group': 'car_import.management', 'permissions': FULL},
+
     # ── call recordings: internal, and an agent never deletes one ──────
     {'model': 'car_import.callrecording', 'group': 'car_import.sales_manager', 'permissions': MANAGE},
     {'model': 'car_import.callrecording', 'group': 'car_import.operations', 'permissions': MANAGE},
