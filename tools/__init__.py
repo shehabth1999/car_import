@@ -34,3 +34,4 @@ __all__ = [
     'ka_log_call_outcome',
 ]
 from .bank_tools import ka_share_bank_details  # noqa: F401
+from .document_tools import ka_file_customer_document  # noqa: F401
