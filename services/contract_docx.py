@@ -79,7 +79,15 @@ def tokenise(docx_bytes, rules):
     applied, missing = 0, []
 
     for anchor, tokens in rules:
-        target = next((p for p in paras if anchor in _joined(p)), None)
+        # The first paragraph that contains the anchor AND has a blank in it.
+        # Requiring the blank is not a refinement, it is the whole point: the
+        # phrase "بطاقة رقم قومي /" appears first in the clause naming the
+        # COMPANY's own signatory, where the number is already printed. Taking
+        # the first textual match there would silently leave the customer's
+        # clause — the one with the blanks — untouched, and the contract would
+        # go out with dots where the customer's ID belongs.
+        target = next((p for p in paras
+                       if anchor in _joined(p) and BLANK.search(_joined(p))), None)
         if target is None:
             missing.append(anchor)
             continue

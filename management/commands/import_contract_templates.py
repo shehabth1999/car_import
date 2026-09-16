@@ -48,7 +48,10 @@ RULE_GROUPS = [
     ('the customer', [
         ('ويحمل بطاقة رقم قومي رقم',
          ['customer_name', 'customer_national_id', 'customer_address']),
-        ('بطاقة رقم قومي / ',
+        # The "عقد مبادرة" file words this clause differently, and the phrase
+        # it uses also appears in the clause naming the company's signatory —
+        # so the anchor is the Second Party's own closing words instead.
+        ('ويسمى فيما بعد بالطرف الثاني',
          ['customer_name', 'customer_national_id', 'customer_address']),
         ('holder of National ID No',
          ['customer_name', 'customer_national_id', 'customer_address']),
