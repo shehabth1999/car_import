@@ -1,0 +1,4864 @@
+# Translation file - Auto-generated
+# Language: ar
+#
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: ar\n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
+
+msgid "\nCar Import (Khaled Automobile GmbH + K&T)\n-----------------------------------------\nThe deal is its own record, not a sales order — `sales`, `account`, `payment`\nand `products` are never installed (decision D24).\n\n- CarDeal: one car, one customer, the client's 13 shipping stages, a human-set\n  paid / not-paid mark, financing terms, contract amounts and logistics facts.\n- ImportStage: the stages and their customer message, editable by ops.\n- StageChangeLog: one row per transition, with the outcome of the message.\n- Every stage move sends the customer a message automatically on whatever\n  channel they use (all stages except cancellation).\n"
+msgstr "\nاستيراد العربيات (خالد أوتوموبيل GmbH + K&T)\n-----------------------------------------\nالصفقة سجل مستقل، مش أمر بيع — موديولات `sales` و`account` و`payment`\nو`products` لا تُركّب أبداً (القرار D24).\n\n- CarDeal: عربية واحدة، عميل واحد، مراحل الشحن الـ13 بتاعة العميل، علامة مدفوع/غير مدفوع\n  بيحطها إنسان، شروط التمويل، مبالغ العقد وبيانات الشحن.\n- ImportStage: المراحل ورسالة العميل لكل مرحلة، بتتعدّل من التشغيل.\n- StageChangeLog: صف لكل انتقال، مع نتيجة الرسالة.\n- كل نقلة مرحلة بتبعت للعميل رسالة تلقائية على القناة اللي بيستخدمها\n  (كل المراحل ما عدا الإلغاء).\n"
+
+msgid "#"
+msgstr "#"
+
+msgctxt "ui/views/document_views.py"
+msgid "#"
+msgstr "#"
+
+msgctxt "ui/views/import_stage_views.py"
+msgid "#"
+msgstr "#"
+
+msgctxt "ui/views/pricing_views.py"
+msgid "#"
+msgstr "#"
+
+msgctxt "ui/views/quote_views.py"
+msgid "#"
+msgstr "#"
+
+msgctxt "ui/views/reference_views.py"
+msgid "#"
+msgstr "#"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "17 characters — never shortened"
+msgstr "17 حرف — لا يُختصر أبداً"
+
+msgid "17 characters, never shortened"
+msgstr "17 حرف، لا يُختصر أبداً"
+
+msgid "A complaint about condition, a missing option or damage"
+msgstr "شكوى عن الحالة أو مواصفة ناقصة أو ضرر"
+
+msgid "A discount is a positive number. To charge more, change the band."
+msgstr "الخصم رقم موجب. لو عايز تزوّد المصاريف، غيّر الفئة."
+
+msgid "A fixed amount"
+msgstr "مبلغ ثابت"
+
+msgid "A group's technical name, e.g. car_import.management"
+msgstr "الاسم التقني للمجموعة، مثال: car_import.management"
+
+msgid "A payment cannot be negative."
+msgstr "المبلغ المدفوع لا يمكن أن يكون بالسالب."
+
+msgid "A payment schedule other than the standard"
+msgstr "جدول سداد غير القياسي"
+
+msgid "A percentage of the net price"
+msgstr "نسبة من السعر الصافي"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "ACID"
+msgstr "ACID"
+
+msgid "ACID number"
+msgstr "رقم ACID"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "ACID number"
+msgstr "رقم ACID"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "AI on / off for this customer"
+msgstr "تشغيل/إيقاف المساعد لهذا العميل"
+
+msgctxt "ui/views/approval_views.py"
+msgid "Above"
+msgstr "أكثر من"
+
+msgid "Accepted"
+msgstr "مقبول"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Accepted"
+msgstr "مقبول"
+
+msgid "Accepted %(count)d quotation(s)"
+msgstr "تم قبول %(count)d عرض سعر"
+
+msgid "Accepted quotation"
+msgstr "عرض السعر المقبول"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Accepted quotation"
+msgstr "عرض السعر المقبول"
+
+msgid "Accident-free"
+msgstr "خالية من الحوادث"
+
+msgctxt "ui/views/supplier_listing_views.py"
+msgid "Accident-free"
+msgstr "خالية من الحوادث"
+
+msgid "Accident-free (فابريكة)"
+msgstr "فابريكة (خالية من الحوادث)"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Accident-free (فابريكة)"
+msgstr "فابريكة (خالية من الحوادث)"
+
+msgid "Action items"
+msgstr "المطلوب عمله"
+
+msgctxt "ui/views/call_views.py"
+msgid "Action items"
+msgstr "المطلوب عمله"
+
+msgid "Active"
+msgstr "نشط"
+
+msgctxt "ui/views/consignment_views.py"
+msgid "Active"
+msgstr "نشط"
+
+msgid "Added %(count)d document line(s)."
+msgstr "تمت إضافة %(count)d مستند."
+
+msgid "Address"
+msgstr "العنوان"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Address"
+msgstr "العنوان"
+
+msgid "Address on the ID"
+msgstr "العنوان كما في البطاقة"
+
+msgid "Admin fee (EUR)"
+msgstr "المصاريف الإدارية (يورو)"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Admin fee (€)"
+msgstr "المصاريف الإدارية (€)"
+
+msgid "Admin fee after discount (EUR)"
+msgstr "المصاريف الإدارية بعد الخصم (يورو)"
+
+msgid "Admin fee is"
+msgstr "المصاريف الإدارية"
+
+msgctxt "ui/views/pricing_views.py"
+msgid "Admin fee is"
+msgstr "المصاريف الإدارية"
+
+msgid "Admin fee value"
+msgstr "قيمة المصاريف الإدارية"
+
+msgctxt "ui/views/supplier_listing_views.py"
+msgid "Advert"
+msgstr "الإعلان"
+
+msgid "Advert link"
+msgstr "رابط الإعلان"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Advert link"
+msgstr "رابط الإعلان"
+
+msgid "Advert number"
+msgstr "رقم الإعلان"
+
+msgctxt "ui/views/supplier_listing_views.py"
+msgid "Advert number"
+msgstr "رقم الإعلان"
+
+msgid "Agent"
+msgstr "المندوب"
+
+msgctxt "ui/views/call_views.py"
+msgid "Agent"
+msgstr "المندوب"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Agent"
+msgstr "المندوب"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Agent"
+msgstr "المندوب"
+
+msgid "Agent folder"
+msgstr "مجلد المندوب"
+
+msgid "Agent presses send"
+msgstr "المندوب يضغط إرسال"
+
+msgctxt "ui/views/import_stage_views.py"
+msgid "Agent presses send"
+msgstr "المندوب يضغط إرسال"
+
+msgid "Agreed amount"
+msgstr "المبلغ المتفق عليه"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Agreed amount"
+msgstr "المبلغ المتفق عليه"
+
+msgid "Agreed to appear in content"
+msgstr "وافق على الظهور في المحتوى"
+
+msgid "Alexandria"
+msgstr "الإسكندرية"
+
+msgid "All cheques received"
+msgstr "كل الشيكات استُلمت"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "All cheques received"
+msgstr "كل الشيكات استُلمت"
+
+msgid "Amount"
+msgstr "المبلغ"
+
+msgctxt "ui/views/approval_views.py"
+msgid "Amount"
+msgstr "المبلغ"
+
+msgctxt "ui/views/reference_views.py"
+msgid "Amount"
+msgstr "المبلغ"
+
+msgctxt "ui/views/pricing_views.py"
+msgid "Amount, or percentage"
+msgstr "مبلغ أو نسبة"
+
+msgctxt "ui/views/import_stage_views.py"
+msgid "An agent presses send"
+msgstr "المندوب يضغط إرسال"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Annex 1 — the payment schedule"
+msgstr "ملحق 1 — جدول السداد"
+
+msgid "Annex 2 is ready."
+msgstr "ملحق 2 جاهز."
+
+msgctxt "ui/views/contract_views.py"
+msgid "Annex 2 — specification"
+msgstr "ملحق 2 — المواصفات"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Any 3 of the 6 options make the car كاملة — set this only to disagree"
+msgstr "أي 3 من الـ6 مواصفات تخلي العربية كاملة — غيّر ده بس لو الشيت مختلف"
+
+msgid "Any programme"
+msgstr "أي برنامج"
+
+msgid "Applied"
+msgstr "تم التقديم"
+
+msgid "Applies"
+msgstr "ينطبق"
+
+msgctxt "ui/views/reference_views.py"
+msgid "Applies"
+msgstr "ينطبق"
+
+msgctxt "ui/views/document_views.py"
+msgid "Approval"
+msgstr "الموافقة"
+
+msgid "Approval number"
+msgstr "رقم الموافقة"
+
+msgctxt "ui/views/document_views.py"
+msgid "Approval number"
+msgstr "رقم الموافقة"
+
+msgid "Approval request"
+msgstr "طلب موافقة"
+
+msgctxt "ui/views/approval_views.py"
+msgid "Approval request"
+msgstr "طلب موافقة"
+
+msgid "Approval requests"
+msgstr "طلبات الموافقة"
+
+msgctxt "ui/views/approval_views.py"
+msgid "Approval requests"
+msgstr "طلبات الموافقة"
+
+msgid "Approval rule"
+msgstr "قاعدة موافقة"
+
+msgctxt "ui/views/approval_views.py"
+msgid "Approval rule"
+msgstr "قاعدة موافقة"
+
+msgid "Approval rules"
+msgstr "قواعد الموافقة"
+
+msgctxt "ui/views/approval_views.py"
+msgid "Approval rules"
+msgstr "قواعد الموافقة"
+
+msgctxt "ui/views/approval_views.py"
+msgid "Approval search"
+msgstr "بحث الموافقات"
+
+msgctxt "ui/views/approval_views.py"
+msgid "Approve"
+msgstr "موافقة"
+
+msgid "Approved"
+msgstr "تمت الموافقة"
+
+msgctxt "ui/views/approval_views.py"
+msgid "Approved"
+msgstr "تمت الموافقة"
+
+msgid "Approved %(count)d request(s)"
+msgstr "تمت الموافقة على %(count)d طلب"
+
+msgid "Approved by"
+msgstr "الموافقة من"
+
+msgctxt "ui/views/approval_views.py"
+msgid "Approved by"
+msgstr "الموافقة من"
+
+msgctxt "ui/views/approval_views.py"
+msgid "Approved by (group)"
+msgstr "الموافقة من (مجموعة)"
+
+msgid "Arrived on"
+msgstr "تاريخ الوصول"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Arrived on"
+msgstr "تاريخ الوصول"
+
+msgctxt "ui/views/contract_views.py"
+msgid "As the contract prints it"
+msgstr "كما يُطبع في العقد"
+
+msgid "Ask for it at"
+msgstr "يُطلب عند مرحلة"
+
+msgctxt "ui/views/document_views.py"
+msgid "Ask for it at"
+msgstr "يُطلب عند مرحلة"
+
+msgctxt "ui/views/approval_views.py"
+msgid "Asked at"
+msgstr "تاريخ الطلب"
+
+msgid "Asked by"
+msgstr "طلبه"
+
+msgctxt "ui/views/approval_views.py"
+msgid "Asked by"
+msgstr "طلبه"
+
+msgctxt "ui/views/listing_views.py"
+msgid "Asking (EGP)"
+msgstr "المطلوب (ج.م)"
+
+msgid "Asking price (EGP)"
+msgstr "السعر المطلوب (ج.م)"
+
+msgctxt "ui/views/document_views.py"
+msgid "Asking price (EGP)"
+msgstr "السعر المطلوب (ج.م)"
+
+msgctxt "ui/views/listing_views.py"
+msgid "Asking price (EGP)"
+msgstr "السعر المطلوب (ج.م)"
+
+msgctxt "ui/views/contract_views.py"
+msgid "At signing €"
+msgstr "عند التوقيع €"
+
+msgid "Attach media"
+msgstr "إرفاق صور/فيديو"
+
+msgctxt "ui/views/import_stage_views.py"
+msgid "Attach photos and video"
+msgstr "إرفاق الصور والفيديو"
+
+msgid "Authorised from"
+msgstr "مفوّض من تاريخ"
+
+msgid "Authorised signatories"
+msgstr "المفوّضون بالتوقيع"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Authorised signatories"
+msgstr "المفوّضون بالتوقيع"
+
+msgid "Authorised signatory"
+msgstr "المفوّض بالتوقيع"
+
+msgid "Authorised until"
+msgstr "مفوّض حتى"
+
+msgid "Available"
+msgstr "متاح"
+
+msgctxt "ui/views/listing_views.py"
+msgid "Available"
+msgstr "متاح"
+
+msgid "B/L date"
+msgstr "تاريخ بوليصة الشحن"
+
+msgid "Balance (EUR)"
+msgstr "الباقي (يورو)"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Balance (€)"
+msgstr "الباقي (€)"
+
+msgid "Band"
+msgstr "الفئة"
+
+msgctxt "ui/views/pricing_views.py"
+msgid "Band"
+msgstr "الفئة"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Band"
+msgstr "الفئة"
+
+msgid "Band used"
+msgstr "الفئة المستخدمة"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Band used"
+msgstr "الفئة المستخدمة"
+
+msgid "Bank"
+msgstr "البنك"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Bank"
+msgstr "البنك"
+
+msgid "Bank financing (cars in Egypt)"
+msgstr "تمويل بنكي (عربيات في مصر)"
+
+msgid "Bank transfer (EUR)"
+msgstr "تحويل بنكي (يورو)"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Bank transfer (EUR)"
+msgstr "تحويل بنكي (يورو)"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Bank transfer (€)"
+msgstr "تحويل بنكي (€)"
+
+msgid "Being transcribed"
+msgstr "جاري التفريغ"
+
+msgid "Bill of lading"
+msgstr "بوليصة الشحن"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Bill of lading"
+msgstr "بوليصة الشحن"
+
+msgid "Blocked"
+msgstr "متوقف"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Blocked"
+msgstr "متوقف"
+
+msgctxt "ui/views/dashboard_views.py"
+msgid "Blocked"
+msgstr "متوقف"
+
+msgid "Body"
+msgstr "نوع الهيكل"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Body"
+msgstr "نوع الهيكل"
+
+msgid "Booking"
+msgstr "رقم الحجز"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Branch"
+msgstr "الفرع"
+
+msgid "Brand new"
+msgstr "زيرو"
+
+msgid "Broker"
+msgstr "الوسيط"
+
+msgctxt "ui/views/consignment_views.py"
+msgid "Broker"
+msgstr "الوسيط"
+
+msgid "Budget"
+msgstr "الميزانية"
+
+msgid "Budget (EUR)"
+msgstr "الميزانية (يورو)"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Build document checklist"
+msgstr "إنشاء قائمة المستندات"
+
+msgid "Built for market"
+msgstr "مصنّعة لسوق"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Built for market"
+msgstr "مصنّعة لسوق"
+
+msgid "Built for the EU market"
+msgstr "مصنّعة للسوق الأوروبي"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Built for the EU market"
+msgstr "مصنّعة للسوق الأوروبي"
+
+msgid "Built in"
+msgstr "بلد الصنع"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Built in"
+msgstr "بلد الصنع"
+
+msgid "Built in the EU"
+msgstr "مصنّعة في الاتحاد الأوروبي"
+
+msgid "Buyer"
+msgstr "المشتري"
+
+msgctxt "ui/views/consignment_views.py"
+msgid "Buyer"
+msgstr "المشتري"
+
+msgctxt "ui/views/document_views.py"
+msgid "Buyer"
+msgstr "المشتري"
+
+msgctxt "ui/views/listing_views.py"
+msgid "Buyer"
+msgstr "المشتري"
+
+msgid "Buyer found"
+msgstr "تم إيجاد مشتري"
+
+msgctxt "ui/views/listing_views.py"
+msgid "Buyer found"
+msgstr "تم إيجاد مشتري"
+
+msgid "Buyer introduced on"
+msgstr "تاريخ تعريف المشتري"
+
+msgctxt "ui/views/consignment_views.py"
+msgid "Buyer introduced on"
+msgstr "تاريخ تعريف المشتري"
+
+msgctxt "ui/views/dashboard_views.py"
+msgid "By programme"
+msgstr "حسب البرنامج"
+
+msgid "Calculated at"
+msgstr "وقت الحساب"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Calculated at"
+msgstr "وقت الحساب"
+
+msgid "Call recording"
+msgstr "تسجيل مكالمة"
+
+msgid "Call recordings"
+msgstr "تسجيلات المكالمات"
+
+msgctxt "ui/views/dashboard_views.py"
+msgid "Calls to review"
+msgstr "مكالمات للمراجعة"
+
+msgid "Came from the built-in simulator, not Dropbox"
+msgstr "جاي من المحاكي الداخلي، مش من Dropbox"
+
+msgid "Can be filled"
+msgstr "قابل للتعبئة"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Can be filled"
+msgstr "قابل للتعبئة"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Cancel deal"
+msgstr "إلغاء الصفقة"
+
+msgid "Cancellation, refund or settlement"
+msgstr "الإلغاء أو الاسترداد أو التسوية"
+
+msgid "Cancelled"
+msgstr "ملغي"
+
+msgid "Cancelled %(count)d deal(s). The customer is told by a person, not by the system."
+msgstr "تم إلغاء %(count)d صفقة. العميل يبلّغه إنسان، مش النظام."
+
+msgid "Cancelling this deal"
+msgstr "إلغاء هذه الصفقة"
+
+msgid "Candidate car"
+msgstr "عربية مرشّحة"
+
+msgid "Candidate cars"
+msgstr "العربيات المرشّحة"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Candidate cars — tick the one the customer chose"
+msgstr "العربيات المرشّحة — علّم على اللي العميل اختارها"
+
+msgid "Capacity"
+msgstr "الصفة"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Capacity"
+msgstr "الصفة"
+
+msgid "Car"
+msgstr "العربية"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Car"
+msgstr "العربية"
+
+msgctxt "ui/views/consignment_views.py"
+msgid "Car"
+msgstr "العربية"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Car"
+msgstr "العربية"
+
+msgctxt "ui/views/listing_views.py"
+msgid "Car"
+msgstr "العربية"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Car"
+msgstr "العربية"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Car"
+msgstr "العربية"
+
+msgid "Car Deal"
+msgstr "صفقة عربية"
+
+msgid "Car Deals"
+msgstr "صفقات العربيات"
+
+msgid "Car Import"
+msgstr "استيراد العربيات"
+
+msgid "Car card"
+msgstr "بطاقة العربية"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Car card"
+msgstr "بطاقة العربية"
+
+msgid "Car deal"
+msgstr "صفقة عربية"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Car deal"
+msgstr "صفقة عربية"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Car deals"
+msgstr "صفقات العربيات"
+
+msgctxt "ui/views/dashboard_views.py"
+msgid "Car import"
+msgstr "استيراد العربيات"
+
+msgctxt "ui/views/dashboard_views.py"
+msgid "Car import dashboard"
+msgstr "لوحة استيراد العربيات"
+
+msgid "Car record"
+msgstr "سجل العربية"
+
+msgctxt "ui/views/listing_views.py"
+msgid "Car record"
+msgstr "سجل العربية"
+
+msgctxt "ui/views/supplier_listing_views.py"
+msgid "Car record"
+msgstr "سجل العربية"
+
+msgid "Car-import deals for Khaled Automobile / K&T: shipping stages, automatic customer messages, documents"
+msgstr "صفقات استيراد العربيات لخالد أوتوموبيل / K&T: مراحل الشحن، رسائل العملاء التلقائية، المستندات"
+
+msgid "Carrier"
+msgstr "شركة الشحن"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Carrier"
+msgstr "شركة الشحن"
+
+msgid "Cars"
+msgstr "العربيات"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Cars"
+msgstr "العربيات"
+
+msgid "Cash"
+msgstr "كاش"
+
+msgid "Cash on bill of lading (EUR)"
+msgstr "نقداً عند بوليصة الشحن (يورو)"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Cash on bill of lading (EUR)"
+msgstr "نقداً عند بوليصة الشحن (يورو)"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Cash on bill of lading (€)"
+msgstr "نقداً عند بوليصة الشحن (€)"
+
+msgid "Chamber of commerce"
+msgstr "الغرفة التجارية"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Chamber of commerce"
+msgstr "الغرفة التجارية"
+
+msgid "Channel"
+msgstr "القناة"
+
+msgctxt "ui/views/stage_change_log_views.py"
+msgid "Channel"
+msgstr "القناة"
+
+msgid "Checked by"
+msgstr "راجعه"
+
+msgctxt "ui/views/document_views.py"
+msgid "Checked by"
+msgstr "راجعه"
+
+msgid "Checked on"
+msgstr "تاريخ المراجعة"
+
+msgctxt "ui/views/document_views.py"
+msgid "Checked on"
+msgstr "تاريخ المراجعة"
+
+msgctxt "ui/views/reference_views.py"
+msgid "Cheques"
+msgstr "الشيكات"
+
+msgid "Cheques required"
+msgstr "مطلوب شيكات"
+
+msgctxt "ui/views/reference_views.py"
+msgid "Cheques required"
+msgstr "مطلوب شيكات"
+
+msgid "Choose a stage."
+msgstr "اختار مرحلة."
+
+msgctxt "ui/views/quote_views.py"
+msgid "Chosen"
+msgstr "المختارة"
+
+msgid "City"
+msgstr "المدينة"
+
+msgctxt "ui/views/supplier_listing_views.py"
+msgid "City"
+msgstr "المدينة"
+
+msgid "Closed %(count)d mandate(s)"
+msgstr "تم إغلاق %(count)d توكيل"
+
+msgid "Closed stages are folded so the pipeline stays readable"
+msgstr "المراحل المقفولة بتتطوى عشان الشاشة تفضل واضحة"
+
+msgid "Code"
+msgstr "الكود"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Code"
+msgstr "الكود"
+
+msgctxt "ui/views/document_views.py"
+msgid "Code"
+msgstr "الكود"
+
+msgctxt "ui/views/import_stage_views.py"
+msgid "Code"
+msgstr "الكود"
+
+msgctxt "ui/views/reference_views.py"
+msgid "Code"
+msgstr "الكود"
+
+msgid "Collected from the showroom"
+msgstr "استلام من المعرض"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Collected from the showroom"
+msgstr "استلام من المعرض"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Collected in Egypt, on arrival (EGP)"
+msgstr "بتتحصّل في مصر عند الوصول (ج.م)"
+
+msgid "Colour"
+msgstr "اللون"
+
+msgctxt "ui/views/import_stage_views.py"
+msgid "Colour"
+msgstr "اللون"
+
+msgctxt "ui/views/supplier_listing_views.py"
+msgid "Colour"
+msgstr "اللون"
+
+msgid "Colour (inside)"
+msgstr "اللون الداخلي"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Colour (inside)"
+msgstr "اللون الداخلي"
+
+msgid "Colour (outside)"
+msgstr "اللون الخارجي"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Colour (outside)"
+msgstr "اللون الخارجي"
+
+msgid "Colour wanted"
+msgstr "اللون المطلوب"
+
+msgctxt "ui/views/consignment_views.py"
+msgid "Comm. %"
+msgstr "العمولة %"
+
+msgid "Commercial import"
+msgstr "استيراد تجاري"
+
+msgid "Commercial register"
+msgstr "السجل التجاري"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Commercial register"
+msgstr "السجل التجاري"
+
+msgctxt "ui/views/consignment_views.py"
+msgid "Commission"
+msgstr "العمولة"
+
+msgid "Commission %"
+msgstr "العمولة %"
+
+msgctxt "ui/views/consignment_views.py"
+msgid "Commission %"
+msgstr "العمولة %"
+
+msgid "Commission % from"
+msgstr "العمولة % من"
+
+msgctxt "ui/views/reference_views.py"
+msgid "Commission % from"
+msgstr "العمولة % من"
+
+msgid "Commission % to"
+msgstr "العمولة % إلى"
+
+msgid "Commission due (EGP)"
+msgstr "العمولة المستحقة (ج.م)"
+
+msgctxt "ui/views/consignment_views.py"
+msgid "Commission due (EGP)"
+msgstr "العمولة المستحقة (ج.م)"
+
+msgctxt "ui/views/consignment_views.py"
+msgid "Commission not received"
+msgstr "العمولة لم تُستلم"
+
+msgid "Commission received"
+msgstr "العمولة استُلمت"
+
+msgctxt "ui/views/consignment_views.py"
+msgid "Commission received"
+msgstr "العمولة استُلمت"
+
+msgid "Commission — fixed instead (EGP)"
+msgstr "العمولة — مبلغ ثابت بدلاً من النسبة (ج.م)"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Company"
+msgstr "الشركة"
+
+msgid "Company instalments"
+msgstr "تقسيط الشركة"
+
+msgid "Company name"
+msgstr "اسم الشركة"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Company name"
+msgstr "اسم الشركة"
+
+msgid "Company name (English)"
+msgstr "اسم الشركة (بالإنجليزية)"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Company name (English)"
+msgstr "اسم الشركة (بالإنجليزية)"
+
+msgid "Condition"
+msgstr "الحالة"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Condition"
+msgstr "الحالة"
+
+msgid "Confidential"
+msgstr "سرّي"
+
+msgctxt "ui/views/document_views.py"
+msgid "Confidential"
+msgstr "سرّي"
+
+msgid "Configuration"
+msgstr "الإعدادات"
+
+msgid "Configuration number"
+msgstr "رقم الكونفيجريشن"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Configuration number"
+msgstr "رقم الكونفيجريشن"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Configuration number"
+msgstr "رقم الكونفيجريشن"
+
+msgctxt "ui/views/call_views.py"
+msgid "Consent"
+msgstr "الموافقة"
+
+msgid "Consent for photos and video"
+msgstr "الموافقة على الصور والفيديو"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Consent for photos and video"
+msgstr "الموافقة على الصور والفيديو"
+
+msgid "Consent on file"
+msgstr "الموافقة مسجّلة"
+
+msgctxt "ui/views/call_views.py"
+msgid "Consent on file"
+msgstr "الموافقة مسجّلة"
+
+msgid "Consignment (وساطة)"
+msgstr "وساطة"
+
+msgid "Consignment mandate"
+msgstr "توكيل وساطة"
+
+msgctxt "ui/views/consignment_views.py"
+msgid "Consignment mandate"
+msgstr "توكيل وساطة"
+
+msgid "Consignment mandates"
+msgstr "توكيلات الوساطة"
+
+msgctxt "ui/views/consignment_views.py"
+msgid "Consignment mandates"
+msgstr "توكيلات الوساطة"
+
+msgctxt "ui/views/consignment_views.py"
+msgid "Consignment search"
+msgstr "بحث الوساطة"
+
+msgid "Container"
+msgstr "حاوية"
+
+msgid "Contract"
+msgstr "العقد"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Contract"
+msgstr "العقد"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Contract"
+msgstr "العقد"
+
+msgid "Contract article"
+msgstr "بند العقد"
+
+msgid "Contract date"
+msgstr "تاريخ العقد"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Contract date"
+msgstr "تاريخ العقد"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Contract date"
+msgstr "تاريخ العقد"
+
+msgid "Contract issuer"
+msgstr "الجهة المُصدرة للعقد"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Contract issuer"
+msgstr "الجهة المُصدرة للعقد"
+
+msgid "Contract issuer and signatories"
+msgstr "جهة العقد والمفوّضون بالتوقيع"
+
+msgid "Contract issuers"
+msgstr "الجهات المُصدرة للعقد"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Contract issuers"
+msgstr "الجهات المُصدرة للعقد"
+
+msgid "Contract template"
+msgstr "قالب عقد"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Contract template"
+msgstr "قالب عقد"
+
+msgid "Contract templates"
+msgstr "قوالب العقود"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Contract templates"
+msgstr "قوالب العقود"
+
+msgid "Contract total (EUR)"
+msgstr "إجمالي العقد (يورو)"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Contract total (EUR)"
+msgstr "إجمالي العقد (يورو)"
+
+msgid "Contract voided. The file is kept."
+msgstr "تم إبطال العقد. الملف محفوظ."
+
+msgid "Contracts"
+msgstr "العقود"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Contracts"
+msgstr "العقود"
+
+msgctxt "ui/views/reference_views.py"
+msgid "Conversion commission % from"
+msgstr "عمولة التحويل % من"
+
+msgid "Convertible"
+msgstr "كشف"
+
+msgid "Country"
+msgstr "الدولة"
+
+msgctxt "ui/views/document_views.py"
+msgid "Country"
+msgstr "الدولة"
+
+msgctxt "ui/views/supplier_listing_views.py"
+msgid "Country"
+msgstr "الدولة"
+
+msgid "Country of residence"
+msgstr "دولة الإقامة"
+
+msgid "Coupé"
+msgstr "كوبيه"
+
+msgid "Created %(count)d car deal(s)"
+msgstr "تم إنشاء %(count)d صفقة"
+
+msgctxt "ui/views/approval_views.py"
+msgid "Cur."
+msgstr "العملة"
+
+msgid "Cure period (days)"
+msgstr "مهلة التصحيح (أيام)"
+
+msgctxt "ui/views/consignment_views.py"
+msgid "Cure period (days)"
+msgstr "مهلة التصحيح (أيام)"
+
+msgid "Currency"
+msgstr "العملة"
+
+msgctxt "ui/views/approval_views.py"
+msgid "Currency"
+msgstr "العملة"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Currency"
+msgstr "العملة"
+
+msgctxt "ui/views/reference_views.py"
+msgid "Currency"
+msgstr "العملة"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Current stage"
+msgstr "المرحلة الحالية"
+
+msgid "Customer"
+msgstr "العميل"
+
+msgctxt "ui/views/approval_views.py"
+msgid "Customer"
+msgstr "العميل"
+
+msgctxt "ui/views/call_views.py"
+msgid "Customer"
+msgstr "العميل"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Customer"
+msgstr "العميل"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Customer"
+msgstr "العميل"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Customer"
+msgstr "العميل"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Customer accepted"
+msgstr "العميل وافق"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Customer and car"
+msgstr "العميل والعربية"
+
+msgctxt "ui/views/dashboard_views.py"
+msgid "Customer messages"
+msgstr "رسائل العملاء"
+
+msgid "Customer messages are switched off."
+msgstr "رسائل العملاء مقفولة."
+
+msgid "Customer number"
+msgstr "رقم العميل"
+
+msgctxt "ui/views/call_views.py"
+msgid "Customer number"
+msgstr "رقم العميل"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Customer signed"
+msgstr "العميل وقّع"
+
+msgid "Customer-facing status"
+msgstr "الحالة كما يراها العميل"
+
+msgid "Customs released on"
+msgstr "تاريخ الإفراج الجمركي"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Customs released on"
+msgstr "تاريخ الإفراج الجمركي"
+
+msgid "Customs value"
+msgstr "القيمة الجمركية"
+
+msgid "Customs values"
+msgstr "القيم الجمركية"
+
+msgid "Dashboard"
+msgstr "لوحة المتابعة"
+
+msgid "Date"
+msgstr "التاريخ"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Date"
+msgstr "التاريخ"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Date"
+msgstr "التاريخ"
+
+msgid "Deal"
+msgstr "الصفقة"
+
+msgctxt "ui/views/approval_views.py"
+msgid "Deal"
+msgstr "الصفقة"
+
+msgctxt "ui/views/call_views.py"
+msgid "Deal"
+msgstr "الصفقة"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Deal"
+msgstr "الصفقة"
+
+msgctxt "ui/views/document_views.py"
+msgid "Deal"
+msgstr "الصفقة"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Deal"
+msgstr "الصفقة"
+
+msgctxt "ui/views/stage_change_log_views.py"
+msgid "Deal"
+msgstr "الصفقة"
+
+msgctxt "ui/views/supplier_listing_views.py"
+msgid "Deal"
+msgstr "الصفقة"
+
+msgid "Deal document"
+msgstr "مستند الصفقة"
+
+msgid "Deal documents"
+msgstr "مستندات الصفقة"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Deal pipeline"
+msgstr "مسار الصفقات"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Deal search"
+msgstr "بحث الصفقات"
+
+msgid "Dealer"
+msgstr "التاجر"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Dealer"
+msgstr "التاجر"
+
+msgid "Deals"
+msgstr "الصفقات"
+
+msgctxt "ui/views/dashboard_views.py"
+msgid "Deals per agent"
+msgstr "الصفقات لكل مندوب"
+
+msgid "Decided at"
+msgstr "تاريخ القرار"
+
+msgctxt "ui/views/approval_views.py"
+msgid "Decided at"
+msgstr "تاريخ القرار"
+
+msgid "Decided by"
+msgstr "القرار من"
+
+msgctxt "ui/views/approval_views.py"
+msgid "Decided by"
+msgstr "القرار من"
+
+msgid "Declined"
+msgstr "مرفوض"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Default"
+msgstr "افتراضي"
+
+msgctxt "ui/views/import_stage_views.py"
+msgid "Delay (min)"
+msgstr "تأخير (دقيقة)"
+
+msgid "Delay (minutes)"
+msgstr "تأخير (بالدقائق)"
+
+msgctxt "ui/views/import_stage_views.py"
+msgid "Delay (minutes)"
+msgstr "تأخير (بالدقائق)"
+
+msgid "Delivered"
+msgstr "تم التسليم"
+
+msgid "Delivered on"
+msgstr "تاريخ التسليم"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Delivered on"
+msgstr "تاريخ التسليم"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Delivery"
+msgstr "التسليم"
+
+msgid "Delivery receipt"
+msgstr "محضر الاستلام"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Delivery receipt"
+msgstr "محضر الاستلام"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Dep. %"
+msgstr "المقدم %"
+
+msgid "Deposit %"
+msgstr "المقدم %"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Deposit %"
+msgstr "المقدم %"
+
+msgctxt "ui/views/pricing_views.py"
+msgid "Deposit %"
+msgstr "المقدم %"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Deposit %"
+msgstr "المقدم %"
+
+msgid "Deposit (EUR)"
+msgstr "المقدم (يورو)"
+
+msgid "Deposit (USD)"
+msgstr "الوديعة (دولار)"
+
+msgctxt "ui/views/document_views.py"
+msgid "Deposit (USD)"
+msgstr "الوديعة (دولار)"
+
+msgctxt "ui/views/reference_views.py"
+msgid "Deposit (USD)"
+msgstr "الوديعة (دولار)"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Deposit (€)"
+msgstr "المقدم (€)"
+
+msgid "Deposit covered"
+msgstr "المقدم مغطّى"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Deposit covered"
+msgstr "المقدم مغطّى"
+
+msgid "Deposit marked as received on %(count)d deal(s)"
+msgstr "تم تسجيل استلام المقدم على %(count)d صفقة"
+
+msgid "Deposit paid"
+msgstr "المقدم مدفوع"
+
+msgid "Deposit paid on"
+msgstr "تاريخ دفع الوديعة"
+
+msgid "Deposit taken"
+msgstr "تم أخذ عربون"
+
+msgid "Deposit taken as agent (EGP)"
+msgstr "العربون المستلم بصفة وكيل (ج.م)"
+
+msgctxt "ui/views/consignment_views.py"
+msgid "Deposit taken as agent (EGP)"
+msgstr "العربون المستلم بصفة وكيل (ج.م)"
+
+msgid "Deposit value"
+msgstr "قيمة الوديعة"
+
+msgid "Deposit values"
+msgstr "قيم الودائع"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Deposit €"
+msgstr "المقدم €"
+
+msgid "Description"
+msgstr "الوصف"
+
+msgctxt "ui/views/listing_views.py"
+msgid "Description"
+msgstr "الوصف"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Digital cluster"
+msgstr "عداد ديجيتال"
+
+msgid "Digital cluster (عداد ديجيتال)"
+msgstr "عداد ديجيتال"
+
+msgid "Direction"
+msgstr "الاتجاه"
+
+msgctxt "ui/views/call_views.py"
+msgid "Direction"
+msgstr "الاتجاه"
+
+msgid "Discount %"
+msgstr "الخصم %"
+
+msgid "Discount on the admin fee (EUR)"
+msgstr "خصم على المصاريف الإدارية (يورو)"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Discount on the admin fee (€)"
+msgstr "خصم على المصاريف الإدارية (€)"
+
+msgid "Discount on the admin fee for %(customer)s"
+msgstr "خصم على المصاريف الإدارية للعميل %(customer)s"
+
+msgid "Discount on the car's price"
+msgstr "خصم على سعر العربية"
+
+msgid "Discount on the company's fees"
+msgstr "خصم على مصاريف الشركة"
+
+msgid "Document"
+msgstr "المستند"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Document"
+msgstr "المستند"
+
+msgctxt "ui/views/document_views.py"
+msgid "Document"
+msgstr "المستند"
+
+msgid "Document checklists"
+msgstr "قوائم المستندات"
+
+msgid "Document requirement"
+msgstr "مستند مطلوب"
+
+msgid "Document requirements"
+msgstr "المستندات المطلوبة"
+
+msgid "Documents"
+msgstr "المستندات"
+
+msgid "Documents complete"
+msgstr "المستندات مكتملة"
+
+msgid "Down payment %"
+msgstr "المقدم %"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Down payment %"
+msgstr "المقدم %"
+
+msgctxt "ui/views/reference_views.py"
+msgid "Down payment %"
+msgstr "المقدم %"
+
+msgid "Downloaded"
+msgstr "تم التنزيل"
+
+msgid "Draft"
+msgstr "مسودة"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Draft"
+msgstr "مسودة"
+
+msgid "Dropbox file id"
+msgstr "معرّف ملف Dropbox"
+
+msgid "Due on arrival (EGP)"
+msgstr "المستحق عند الوصول (ج.م)"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Due on arrival (EGP)"
+msgstr "المستحق عند الوصول (ج.م)"
+
+msgid "EGP per EUR"
+msgstr "الجنيه لكل يورو"
+
+msgctxt "ui/views/quote_views.py"
+msgid "EGP per EUR (indicative only)"
+msgstr "الجنيه لكل يورو (استرشادي فقط)"
+
+msgid "ETA"
+msgstr "الوصول المتوقع"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "ETA"
+msgstr "الوصول المتوقع"
+
+msgctxt "ui/views/quote_views.py"
+msgid "EUR 1"
+msgstr "يورو 1"
+
+msgid "EUR 1 (EUR)"
+msgstr "شهادة يورو 1 (يورو)"
+
+msgctxt "ui/views/quote_views.py"
+msgid "EUR 1 (€)"
+msgstr "شهادة يورو 1 (€)"
+
+msgid "EUR 1 certificate"
+msgstr "شهادة يورو 1"
+
+msgctxt "ui/views/quote_views.py"
+msgid "EUR 1 certificate"
+msgstr "شهادة يورو 1"
+
+msgid "EUR 1 eligible"
+msgstr "مؤهلة لشهادة يورو 1"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "EUR 1 eligible"
+msgstr "مؤهلة لشهادة يورو 1"
+
+msgid "EUR 1 rule"
+msgstr "قاعدة يورو 1"
+
+msgid "EUR 1 rules"
+msgstr "قواعد يورو 1"
+
+msgid "EURO norm"
+msgstr "معيار EURO"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "EURO norm"
+msgstr "معيار EURO"
+
+msgid "Egypt price (EGP)"
+msgstr "السعر في مصر (ج.م)"
+
+msgid "Egyptian abroad"
+msgstr "مصري بالخارج"
+
+msgid "Electric boot (شنطة كهرباء)"
+msgstr "شنطة كهرباء"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Electric seats"
+msgstr "كراسي كهرباء"
+
+msgid "Electric seats (كراسي كهرباء)"
+msgstr "كراسي كهرباء"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Electric trunk"
+msgstr "شنطة كهرباء"
+
+msgid "Eligibility"
+msgstr "الأهلية"
+
+msgid "Email"
+msgstr "البريد الإلكتروني"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Email"
+msgstr "البريد الإلكتروني"
+
+msgid "Empty means: as soon as the deal exists"
+msgstr "فاضية يعني: أول ما الصفقة تتعمل"
+
+msgid "Engine (cc)"
+msgstr "المحرك (cc)"
+
+msgctxt "ui/views/supplier_listing_views.py"
+msgid "Engine (cc)"
+msgstr "المحرك (cc)"
+
+msgid "Engine (cc, rounded)"
+msgstr "المحرك (cc، مقرّب)"
+
+msgid "Engine limit (cc)"
+msgstr "حد سعة المحرك (cc)"
+
+msgctxt "ui/views/reference_views.py"
+msgid "Engine limit (cc)"
+msgstr "حد سعة المحرك (cc)"
+
+msgid "Engine size (cc)"
+msgstr "سعة المحرك (cc)"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Engine size (cc)"
+msgstr "سعة المحرك (cc)"
+
+msgid "Enter the car's price with VAT."
+msgstr "اكتب سعر العربية شامل الضريبة."
+
+msgid "Entered by hand"
+msgstr "مُدخل يدوياً"
+
+msgid "Error"
+msgstr "خطأ"
+
+msgctxt "ui/views/call_views.py"
+msgid "Error"
+msgstr "خطأ"
+
+msgctxt "ui/views/stage_change_log_views.py"
+msgid "Error"
+msgstr "خطأ"
+
+msgid "Estate"
+msgstr "ستيشن"
+
+msgid "European"
+msgstr "أوروبية"
+
+msgid "Every deal"
+msgstr "كل صفقة"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Every open car, by shipping stage"
+msgstr "كل عربية شغالة، حسب مرحلة الشحن"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Exact displacement from the papers — the tax band switches at 1600 and 2000"
+msgstr "السعة بالظبط من الأوراق — شريحة الضريبة بتتغير عند 1600 و2000"
+
+msgid "Exchange rate"
+msgstr "سعر الصرف"
+
+msgid "Exchange rates"
+msgstr "أسعار الصرف"
+
+msgid "Exclusive"
+msgstr "حصري"
+
+msgctxt "ui/views/consignment_views.py"
+msgid "Exclusive"
+msgstr "حصري"
+
+msgid "Expired"
+msgstr "منتهي"
+
+msgctxt "ui/views/document_views.py"
+msgid "Expired"
+msgstr "منتهي"
+
+msgctxt "ui/views/document_views.py"
+msgid "Expires"
+msgstr "له تاريخ انتهاء"
+
+msgid "Expires on"
+msgstr "تاريخ الانتهاء"
+
+msgctxt "ui/views/document_views.py"
+msgid "Expires on"
+msgstr "تاريخ الانتهاء"
+
+msgctxt "ui/views/consignment_views.py"
+msgid "Expiring soonest"
+msgstr "الأقرب انتهاءً"
+
+msgid "Export port"
+msgstr "ميناء التصدير"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Export port"
+msgstr "ميناء التصدير"
+
+msgid "Exported from an EU port"
+msgstr "مصدّرة من ميناء أوروبي"
+
+msgid "Failed"
+msgstr "فشل"
+
+msgctxt "ui/views/stage_change_log_views.py"
+msgid "Failed"
+msgstr "فشل"
+
+msgid "Fee"
+msgstr "المصاريف"
+
+msgid "Fee schedule"
+msgstr "جدول المصاريف"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Fields"
+msgstr "الحقول"
+
+msgid "Fields in this template"
+msgstr "الحقول في هذا القالب"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Fields this template asks for"
+msgstr "الحقول اللي القالب بيطلبها"
+
+msgid "File"
+msgstr "الملف"
+
+msgctxt "ui/views/call_views.py"
+msgid "File"
+msgstr "الملف"
+
+msgctxt "ui/views/contract_views.py"
+msgid "File"
+msgstr "الملف"
+
+msgctxt "ui/views/document_views.py"
+msgid "File"
+msgstr "الملف"
+
+msgid "File name"
+msgstr "اسم الملف"
+
+msgctxt "ui/views/listing_views.py"
+msgid "Film"
+msgstr "فيلم الحماية"
+
+msgctxt "ui/views/import_stage_views.py"
+msgid "Final"
+msgstr "نهائية"
+
+msgid "Final stage"
+msgstr "المرحلة الأخيرة"
+
+msgctxt "ui/views/import_stage_views.py"
+msgid "Final stage"
+msgstr "المرحلة الأخيرة"
+
+msgid "Financing note"
+msgstr "ملاحظة التمويل"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Financing note"
+msgstr "ملاحظة التمويل"
+
+msgid "Financing plan"
+msgstr "خطة تمويل"
+
+msgid "Financing plans"
+msgstr "خطط التمويل"
+
+msgid "First instalment"
+msgstr "أول قسط"
+
+msgctxt "ui/views/reference_views.py"
+msgid "First instalment"
+msgstr "أول قسط"
+
+msgid "First owner"
+msgstr "أول مالك"
+
+msgid "First registration"
+msgstr "أول ترخيص"
+
+msgctxt "ui/views/supplier_listing_views.py"
+msgid "First registration"
+msgstr "أول ترخيص"
+
+msgid "First seen"
+msgstr "أول ظهور"
+
+msgid "First-owner discount"
+msgstr "خصم أول مالك"
+
+msgid "First-owner discounts"
+msgstr "خصومات أول مالك"
+
+msgid "Five years after the deposit was paid"
+msgstr "بعد 5 سنين من دفع الوديعة"
+
+msgid "Flat rate % per year"
+msgstr "فايدة ثابتة % سنوياً"
+
+msgctxt "ui/views/reference_views.py"
+msgid "Flat rate % per year"
+msgstr "فايدة ثابتة % سنوياً"
+
+msgid "Folded in kanban"
+msgstr "مطوية في الكانبان"
+
+msgctxt "ui/views/import_stage_views.py"
+msgid "Folded in the pipeline"
+msgstr "مطوية في المسار"
+
+msgctxt "ui/views/call_views.py"
+msgid "Folder"
+msgstr "المجلد"
+
+msgid "For a range, e.g. protection film"
+msgstr "لنطاق سعر، مثل فيلم الحماية"
+
+msgid "From"
+msgstr "من"
+
+msgctxt "ui/views/approval_views.py"
+msgid "From"
+msgstr "من"
+
+msgctxt "ui/views/contract_views.py"
+msgid "From"
+msgstr "من"
+
+msgctxt "ui/views/pricing_views.py"
+msgid "From"
+msgstr "من"
+
+msgctxt "ui/views/reference_views.py"
+msgid "From"
+msgstr "من"
+
+msgctxt "ui/views/stage_change_log_views.py"
+msgid "From"
+msgstr "من"
+
+msgctxt "ui/views/consignment_views.py"
+msgid "From (EGP)"
+msgstr "من (ج.م)"
+
+msgid "From (EUR)"
+msgstr "من (يورو)"
+
+msgctxt "ui/views/reference_views.py"
+msgid "From (EUR)"
+msgstr "من (يورو)"
+
+msgid "From (cc)"
+msgstr "من (cc)"
+
+msgctxt "ui/views/reference_views.py"
+msgid "From (cc)"
+msgstr "من (cc)"
+
+msgid "From (gross EUR)"
+msgstr "من (يورو شامل الضريبة)"
+
+msgctxt "ui/views/pricing_views.py"
+msgid "From (gross €)"
+msgstr "من (€ شامل الضريبة)"
+
+msgctxt "ui/views/pricing_views.py"
+msgid "From (gross €, with VAT)"
+msgstr "من (€ شامل الضريبة)"
+
+msgid "From stage"
+msgstr "من مرحلة"
+
+msgid "Fuel"
+msgstr "الوقود"
+
+msgctxt "ui/views/supplier_listing_views.py"
+msgid "Fuel"
+msgstr "الوقود"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Fuel"
+msgstr "الوقود"
+
+msgid "Full"
+msgstr "كاملة"
+
+msgid "Fully paid"
+msgstr "مدفوعة بالكامل"
+
+msgid "Funds ready on"
+msgstr "الفلوس جاهزة في"
+
+msgid "Gearbox"
+msgstr "ناقل الحركة"
+
+msgctxt "ui/views/supplier_listing_views.py"
+msgid "Gearbox"
+msgstr "ناقل الحركة"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Gearbox"
+msgstr "ناقل الحركة"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Generate the contract"
+msgstr "توليد العقد"
+
+msgid "Generated"
+msgstr "تم التوليد"
+
+msgid "Generated %(count)d contract(s)"
+msgstr "تم توليد %(count)d عقد"
+
+msgid "Generated at"
+msgstr "وقت التوليد"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Generated at"
+msgstr "وقت التوليد"
+
+msgid "Generated by"
+msgstr "ولّده"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Generated by"
+msgstr "ولّده"
+
+msgid "Generated contract"
+msgstr "العقد المولّد"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Generated contract"
+msgstr "العقد المولّد"
+
+msgid "Generated with these fields left blank: %(fields)s"
+msgstr "اتولّد والحقول دي فاضية: %(fields)s"
+
+msgid "German VAT %"
+msgstr "الضريبة الألمانية %"
+
+msgctxt "ui/views/supplier_listing_views.py"
+msgid "German VAT %"
+msgstr "الضريبة الألمانية %"
+
+msgid "Giving out bank account details"
+msgstr "إعطاء بيانات الحساب البنكي"
+
+msgid "Gone since"
+msgstr "اختفى منذ"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Gross invoices carry VAT we reclaim on export; net ones do not"
+msgstr "الفاتورة الإجمالية فيها ضريبة بنستردها عند التصدير؛ الصافية لأ"
+
+msgid "Gross — VAT shown and recoverable"
+msgstr "إجمالي — الضريبة ظاهرة وقابلة للاسترداد"
+
+msgid "Gulf"
+msgstr "خليجية"
+
+msgid "Has an expiry date"
+msgstr "له تاريخ انتهاء"
+
+msgctxt "ui/views/document_views.py"
+msgid "Has an expiry date"
+msgstr "له تاريخ انتهاء"
+
+msgid "Hatchback"
+msgstr "هاتشباك"
+
+msgid "Hold customer messages"
+msgstr "إيقاف رسائل العميل"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Hold customer messages"
+msgstr "إيقاف رسائل العميل"
+
+msgid "Holder"
+msgstr "صاحب المبادرة"
+
+msgctxt "ui/views/document_views.py"
+msgid "Holder"
+msgstr "صاحب المبادرة"
+
+msgid "Import Stage"
+msgstr "مرحلة استيراد"
+
+msgid "Import Stages"
+msgstr "مراحل الاستيراد"
+
+msgid "Import approval"
+msgstr "الموافقة الاستيرادية"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Import approval"
+msgstr "الموافقة الاستيرادية"
+
+msgid "Import programme"
+msgstr "برنامج استيراد"
+
+msgid "Import programmes"
+msgstr "برامج الاستيراد"
+
+msgctxt "ui/views/import_stage_views.py"
+msgid "Import stage"
+msgstr "مرحلة الاستيراد"
+
+msgctxt "ui/views/import_stage_views.py"
+msgid "Import stages"
+msgstr "مراحل الاستيراد"
+
+msgid "In force"
+msgstr "ساري"
+
+msgctxt "ui/views/approval_views.py"
+msgid "In force"
+msgstr "ساري"
+
+msgid "In force from"
+msgstr "ساري من"
+
+msgctxt "ui/views/approval_views.py"
+msgid "In force from"
+msgstr "ساري من"
+
+msgctxt "ui/views/document_views.py"
+msgid "In force from"
+msgstr "ساري من"
+
+msgctxt "ui/views/pricing_views.py"
+msgid "In force from"
+msgstr "ساري من"
+
+msgctxt "ui/views/reference_views.py"
+msgid "In force from"
+msgstr "ساري من"
+
+msgid "In force until"
+msgstr "ساري حتى"
+
+msgctxt "ui/views/approval_views.py"
+msgid "In force until"
+msgstr "ساري حتى"
+
+msgctxt "ui/views/document_views.py"
+msgid "In force until"
+msgstr "ساري حتى"
+
+msgctxt "ui/views/pricing_views.py"
+msgid "In force until"
+msgstr "ساري حتى"
+
+msgctxt "ui/views/reference_views.py"
+msgid "In force until"
+msgstr "ساري حتى"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "In stage since"
+msgstr "في المرحلة منذ"
+
+msgid "In this stage since"
+msgstr "في هذه المرحلة منذ"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "In this stage since"
+msgstr "في هذه المرحلة منذ"
+
+msgid "Incoming"
+msgstr "وارد"
+
+msgid "Indicative total (EGP)"
+msgstr "الإجمالي الاسترشادي (ج.م)"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Indicative total (EGP) — today's rate only"
+msgstr "الإجمالي الاسترشادي (ج.م) — بسعر اليوم فقط"
+
+msgid "Initiative"
+msgstr "المبادرة"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Initiative"
+msgstr "المبادرة"
+
+msgctxt "ui/views/listing_views.py"
+msgid "Initiative"
+msgstr "المبادرة"
+
+msgid "Initiative (المبادرة)"
+msgstr "المبادرة"
+
+msgid "Initiative for sale"
+msgstr "مبادرة للبيع"
+
+msgid "Initiative type"
+msgstr "نوع المبادرة"
+
+msgid "Initiatives"
+msgstr "المبادرات"
+
+msgid "Initiatives for sale"
+msgstr "مبادرات للبيع"
+
+msgid "Inside Europe"
+msgstr "داخل أوروبا"
+
+msgid "Inspection report"
+msgstr "تقرير الفحص"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Inspection report"
+msgstr "تقرير الفحص"
+
+msgctxt "ui/views/reference_views.py"
+msgid "Instalments"
+msgstr "تقسيط"
+
+msgid "Instalments instead of the standard schedule"
+msgstr "تقسيط بدلاً من الجدول القياسي"
+
+msgid "Instalments possible"
+msgstr "التقسيط متاح"
+
+msgctxt "ui/views/reference_views.py"
+msgid "Instalments possible"
+msgstr "التقسيط متاح"
+
+msgid "Internal reference"
+msgstr "مرجع داخلي"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Internal reference"
+msgstr "مرجع داخلي"
+
+msgid "Issued"
+msgstr "صادرة"
+
+msgid "Issued by"
+msgstr "صادر عن"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Issued by"
+msgstr "صادر عن"
+
+msgid "Issuer"
+msgstr "الجهة المُصدرة"
+
+msgctxt "ui/views/listing_views.py"
+msgid "Km"
+msgstr "كم"
+
+msgctxt "ui/views/supplier_listing_views.py"
+msgid "Km"
+msgstr "كم"
+
+msgid "Label"
+msgstr "الاسم"
+
+msgid "Language"
+msgstr "اللغة"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Largest"
+msgstr "الأكبر"
+
+msgid "Last seen"
+msgstr "آخر ظهور"
+
+msgctxt "ui/views/supplier_listing_views.py"
+msgid "Last seen"
+msgstr "آخر ظهور"
+
+msgid "Lead"
+msgstr "العميل المحتمل"
+
+msgctxt "ui/views/call_views.py"
+msgid "Lead"
+msgstr "العميل المحتمل"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Lead"
+msgstr "العميل المحتمل"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Leather seats"
+msgstr "كراسي جلد"
+
+msgid "Leather seats (كراسي جلد)"
+msgstr "كراسي جلد"
+
+msgid "Leave empty for the top band"
+msgstr "سيبها فاضية للفئة الأعلى"
+
+msgid "Leave empty to ask for it on every route"
+msgstr "سيبها فاضية عشان يتطلب في كل البرامج"
+
+msgid "Leave empty when the subject always needs approval"
+msgstr "سيبها فاضية لو الموضوع دايماً محتاج موافقة"
+
+msgid "Legal representative"
+msgstr "الممثل القانوني"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Legal representative"
+msgstr "الممثل القانوني"
+
+msgid "Length (s)"
+msgstr "المدة (ثانية)"
+
+msgctxt "ui/views/call_views.py"
+msgid "Length (s)"
+msgstr "المدة (ثانية)"
+
+msgid "Licensed"
+msgstr "مرخّصة"
+
+msgctxt "ui/views/listing_views.py"
+msgid "Licensed"
+msgstr "مرخّصة"
+
+msgid "Licensing"
+msgstr "الترخيص"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Licensing"
+msgstr "الترخيص"
+
+msgctxt "ui/views/supplier_listing_views.py"
+msgid "Link"
+msgstr "الرابط"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Listed (EUR)"
+msgstr "السعر المعلن (يورو)"
+
+msgid "Listed price (EUR)"
+msgstr "السعر المعلن (يورو)"
+
+msgctxt "ui/views/supplier_listing_views.py"
+msgid "Listed price (EUR)"
+msgstr "السعر المعلن (يورو)"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Listed price (EUR)"
+msgstr "السعر المعلن (يورو)"
+
+msgid "Listing URL"
+msgstr "رابط الإعلان"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Listing URL"
+msgstr "رابط الإعلان"
+
+msgid "Make"
+msgstr "الماركة"
+
+msgctxt "ui/views/reference_views.py"
+msgid "Make"
+msgstr "الماركة"
+
+msgctxt "ui/views/supplier_listing_views.py"
+msgid "Make"
+msgstr "الماركة"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Make"
+msgstr "الماركة"
+
+msgid "Mandatory"
+msgstr "إلزامي"
+
+msgctxt "ui/views/document_views.py"
+msgid "Mandatory"
+msgstr "إلزامي"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Mark as sent"
+msgstr "تعليم كمُرسل"
+
+msgctxt "ui/views/consignment_views.py"
+msgid "Mark as sold"
+msgstr "تعليم كمُباع"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Mark deposit received"
+msgstr "تسجيل استلام المقدم"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Mark fully paid"
+msgstr "تسجيل السداد الكامل"
+
+msgid "Marked %(count)d contract(s) as signed"
+msgstr "تم تعليم %(count)d عقد كموقّع"
+
+msgid "Marked %(count)d deal(s) as fully paid"
+msgstr "تم تعليم %(count)d صفقة كمدفوعة بالكامل"
+
+msgid "Marked %(count)d quotation(s) as sent"
+msgstr "تم تعليم %(count)d عرض سعر كمُرسل"
+
+msgid "Marked as due"
+msgstr "المسجّل كمستحق"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Marked as due"
+msgstr "المسجّل كمستحق"
+
+msgid "Marked as paid"
+msgstr "المسجّل كمدفوع"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Marked as paid"
+msgstr "المسجّل كمدفوع"
+
+msgid "Marked at"
+msgstr "وقت التسجيل"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Marked at"
+msgstr "وقت التسجيل"
+
+msgid "Marked by"
+msgstr "سجّله"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Marked by"
+msgstr "سجّله"
+
+msgid "Marketing agent for"
+msgstr "الوكيل التسويقي لـ"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Marketing agent for"
+msgstr "الوكيل التسويقي لـ"
+
+msgid "Marketing costs"
+msgstr "مصاريف التسويق"
+
+msgctxt "ui/views/consignment_views.py"
+msgid "Marketing costs"
+msgstr "مصاريف التسويق"
+
+msgid "Match"
+msgstr "المطابقة"
+
+msgctxt "ui/views/call_views.py"
+msgid "Match"
+msgstr "المطابقة"
+
+msgid "Match note"
+msgstr "ملاحظة المطابقة"
+
+msgid "Matched"
+msgstr "تمت المطابقة"
+
+msgctxt "ui/views/call_views.py"
+msgid "Matched"
+msgstr "تمت المطابقة"
+
+msgctxt "ui/views/listing_views.py"
+msgid "Matched"
+msgstr "تمت المطابقة"
+
+msgid "Matched by hand"
+msgstr "مطابقة يدوية"
+
+msgctxt "ui/views/reference_views.py"
+msgid "Max cc"
+msgstr "أقصى cc"
+
+msgid "May be quoted"
+msgstr "يجوز ذكره"
+
+msgctxt "ui/views/reference_views.py"
+msgid "May be quoted"
+msgstr "يجوز ذكره"
+
+msgctxt "ui/views/reference_views.py"
+msgid "May be quoted to a customer"
+msgstr "يجوز ذكره للعميل"
+
+msgid "May be transferred"
+msgstr "قابلة للتحويل"
+
+msgctxt "ui/views/document_views.py"
+msgid "May be transferred"
+msgstr "قابلة للتحويل"
+
+msgid "Medium"
+msgstr "متوسطة"
+
+msgid "Message"
+msgstr "الرسالة"
+
+msgctxt "ui/views/stage_change_log_views.py"
+msgid "Message"
+msgstr "الرسالة"
+
+msgid "Message id"
+msgstr "معرّف الرسالة"
+
+msgid "Message log"
+msgstr "سجل الرسائل"
+
+msgctxt "ui/views/stage_change_log_views.py"
+msgid "Message state"
+msgstr "حالة الرسالة"
+
+msgid "Message text (Arabic)"
+msgstr "نص الرسالة (عربي)"
+
+msgctxt "ui/views/import_stage_views.py"
+msgid "Message text (Arabic)"
+msgstr "نص الرسالة (عربي)"
+
+msgid "Message text (English)"
+msgstr "نص الرسالة (إنجليزي)"
+
+msgctxt "ui/views/import_stage_views.py"
+msgid "Message text (English)"
+msgstr "نص الرسالة (إنجليزي)"
+
+msgid "Message the customer"
+msgstr "إرسال للعميل"
+
+msgctxt "ui/views/import_stage_views.py"
+msgid "Message the customer"
+msgstr "إرسال للعميل"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Messages held"
+msgstr "الرسائل موقوفة"
+
+msgctxt "ui/views/import_stage_views.py"
+msgid "Messages the customer"
+msgstr "بترسل للعميل"
+
+msgid "Model"
+msgstr "الموديل"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Model"
+msgstr "الموديل"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Model"
+msgstr "الموديل"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Model"
+msgstr "الموديل"
+
+msgctxt "ui/views/reference_views.py"
+msgid "Model"
+msgstr "الموديل"
+
+msgctxt "ui/views/supplier_listing_views.py"
+msgid "Model"
+msgstr "الموديل"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Model"
+msgstr "الموديل"
+
+msgid "Model price range"
+msgstr "نطاق سعر الموديل"
+
+msgid "Model price ranges"
+msgstr "نطاقات أسعار الموديلات"
+
+msgid "Model wanted"
+msgstr "الموديل المطلوب"
+
+msgid "Model year"
+msgstr "سنة الموديل"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Model year"
+msgstr "سنة الموديل"
+
+msgctxt "ui/views/supplier_listing_views.py"
+msgid "Model year"
+msgstr "سنة الموديل"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Model year"
+msgstr "سنة الموديل"
+
+msgid "Model year wanted"
+msgstr "سنة الموديل المطلوبة"
+
+msgid "Modifications used"
+msgstr "التعديلات المستخدمة"
+
+msgctxt "ui/views/document_views.py"
+msgid "Modifications used (max 1)"
+msgstr "التعديلات المستخدمة (الحد الأقصى 1)"
+
+msgid "Modified"
+msgstr "معدّلة"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Move to next stage"
+msgstr "نقل للمرحلة التالية"
+
+msgid "Moved %(count)d deal(s)"
+msgstr "تم نقل %(count)d صفقة"
+
+msgid "Moved %(count)d deal(s) to the next stage"
+msgstr "تم نقل %(count)d صفقة للمرحلة التالية"
+
+msgid "Moved at"
+msgstr "وقت النقل"
+
+msgid "Moved by"
+msgstr "نقلها"
+
+msgctxt "ui/views/stage_change_log_views.py"
+msgid "Moved by"
+msgstr "نقلها"
+
+msgid "Must be a brand-new car"
+msgstr "لازم تكون عربية زيرو"
+
+msgctxt "ui/views/reference_views.py"
+msgid "Must be brand new"
+msgstr "لازم تكون زيرو"
+
+msgid "Must be this year's model"
+msgstr "لازم تكون موديل السنة الحالية"
+
+msgctxt "ui/views/reference_views.py"
+msgid "Must be this year's model"
+msgstr "لازم تكون موديل السنة الحالية"
+
+msgid "MwSt. ausweisbar — these listings rank first in a search"
+msgstr "MwSt. ausweisbar — الإعلانات دي بتيجي الأول في البحث"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "MwSt. ausweisbar — these rank first in a search"
+msgstr "MwSt. ausweisbar — دي بتيجي الأول في البحث"
+
+msgid "Name"
+msgstr "الاسم"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Name"
+msgstr "الاسم"
+
+msgctxt "ui/views/document_views.py"
+msgid "Name"
+msgstr "الاسم"
+
+msgctxt "ui/views/reference_views.py"
+msgid "Name"
+msgstr "الاسم"
+
+msgid "Name (English)"
+msgstr "الاسم (بالإنجليزية)"
+
+msgctxt "ui/views/document_views.py"
+msgid "Name (English)"
+msgstr "الاسم (بالإنجليزية)"
+
+msgctxt "ui/views/reference_views.py"
+msgid "Name (English)"
+msgstr "الاسم (بالإنجليزية)"
+
+msgid "Name as on the ID"
+msgstr "الاسم كما في البطاقة"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Name as on the ID"
+msgstr "الاسم كما في البطاقة"
+
+msgid "National ID"
+msgstr "الرقم القومي"
+
+msgctxt "ui/views/contract_views.py"
+msgid "National ID"
+msgstr "الرقم القومي"
+
+msgid "National ID number"
+msgstr "رقم البطاقة القومية"
+
+msgctxt "ui/views/contract_views.py"
+msgid "National ID number"
+msgstr "رقم البطاقة القومية"
+
+msgid "Nationality"
+msgstr "الجنسية"
+
+msgid "Needs approval above"
+msgstr "محتاج موافقة فوق"
+
+msgctxt "ui/views/approval_views.py"
+msgid "Needs approval above"
+msgstr "محتاج موافقة فوق"
+
+msgid "Needs management approval"
+msgstr "محتاج موافقة الإدارة"
+
+msgctxt "ui/views/reference_views.py"
+msgid "Needs management approval"
+msgstr "محتاج موافقة الإدارة"
+
+msgctxt "ui/views/call_views.py"
+msgid "Needs review"
+msgstr "محتاج مراجعة"
+
+msgid "Negotiable"
+msgstr "قابل للتفاوض"
+
+msgctxt "ui/views/listing_views.py"
+msgid "Negotiable"
+msgstr "قابل للتفاوض"
+
+msgid "Negotiated discount (EUR)"
+msgstr "الخصم المتفاوض عليه (يورو)"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Negotiated discount (EUR)"
+msgstr "الخصم المتفاوض عليه (يورو)"
+
+msgid "Net (EUR)"
+msgstr "الصافي (يورو)"
+
+msgid "Net of VAT (EUR)"
+msgstr "صافي بدون الضريبة (يورو)"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Net of VAT (EUR)"
+msgstr "صافي بدون الضريبة (يورو)"
+
+msgid "Net price (EUR)"
+msgstr "السعر الصافي (يورو)"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Net price (€)"
+msgstr "السعر الصافي (€)"
+
+msgid "Net — no recoverable VAT"
+msgstr "صافي — مفيش ضريبة تُسترد"
+
+msgid "Never more than the fee itself"
+msgstr "عمره ما يزيد عن المصاريف نفسها"
+
+msgctxt "ui/views/approval_views.py"
+msgid "Newest"
+msgstr "الأحدث"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Newest"
+msgstr "الأحدث"
+
+msgctxt "ui/views/consignment_views.py"
+msgid "Newest"
+msgstr "الأحدث"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Newest"
+msgstr "الأحدث"
+
+msgctxt "ui/views/stage_change_log_views.py"
+msgid "Newest"
+msgstr "الأحدث"
+
+msgid "No automatic updates"
+msgstr "بدون تحديثات تلقائية"
+
+msgctxt "ui/views/consignment_views.py"
+msgid "No commission agreed"
+msgstr "مفيش عمولة متفق عليها"
+
+msgid "No contact on: %(leads)s"
+msgstr "مفيش جهة اتصال على: %(leads)s"
+
+msgid "No customer found"
+msgstr "مفيش عميل"
+
+msgctxt "ui/views/quote_views.py"
+msgid "No price yet"
+msgstr "لسه مفيش سعر"
+
+msgid "Not applied"
+msgstr "لم يتم التقديم"
+
+msgid "Not available when"
+msgstr "غير متاح لما"
+
+msgctxt "ui/views/reference_views.py"
+msgid "Not available when"
+msgstr "غير متاح لما"
+
+msgid "Not known yet"
+msgstr "غير معروف بعد"
+
+msgid "Not paid"
+msgstr "غير مدفوع"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Not paid"
+msgstr "غير مدفوع"
+
+msgctxt "ui/views/dashboard_views.py"
+msgid "Not paid"
+msgstr "غير مدفوع"
+
+msgid "Not received"
+msgstr "لم يُستلم"
+
+msgid "Not sent — the customer opted out"
+msgstr "لم تُرسل — العميل طلب عدم الإرسال"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Not the same as where it was built — EUR 1 turns on this"
+msgstr "مش نفس بلد الصنع — شهادة يورو 1 بتعتمد على ده"
+
+msgid "Not the same as where it was built — EUR 1 turns on this one"
+msgstr "مش نفس بلد الصنع — شهادة يورو 1 بتعتمد على ده"
+
+msgctxt "ui/views/document_views.py"
+msgid "Not used yet"
+msgstr "لم تُستخدم بعد"
+
+msgid "Not yet confirmed"
+msgstr "لم يتأكد بعد"
+
+msgid "Note"
+msgstr "ملاحظة"
+
+msgctxt "ui/views/approval_views.py"
+msgid "Note"
+msgstr "ملاحظة"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Note"
+msgstr "ملاحظة"
+
+msgctxt "ui/views/document_views.py"
+msgid "Note"
+msgstr "ملاحظة"
+
+msgctxt "ui/views/reference_views.py"
+msgid "Note"
+msgstr "ملاحظة"
+
+msgid "Notes"
+msgstr "ملاحظات"
+
+msgctxt "ui/views/approval_views.py"
+msgid "Notes"
+msgstr "ملاحظات"
+
+msgctxt "ui/views/consignment_views.py"
+msgid "Notes"
+msgstr "ملاحظات"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Notes"
+msgstr "ملاحظات"
+
+msgctxt "ui/views/document_views.py"
+msgid "Notes"
+msgstr "ملاحظات"
+
+msgctxt "ui/views/listing_views.py"
+msgid "Notes"
+msgstr "ملاحظات"
+
+msgctxt "ui/views/pricing_views.py"
+msgid "Notes"
+msgstr "ملاحظات"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Notes"
+msgstr "ملاحظات"
+
+msgctxt "ui/views/reference_views.py"
+msgid "Notes"
+msgstr "ملاحظات"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Notes"
+msgstr "ملاحظات"
+
+msgid "Notice email"
+msgstr "بريد الإخطارات"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Notice email (clause 10)"
+msgstr "بريد الإخطارات (البند 10)"
+
+msgid "Notification (إخطار) date"
+msgstr "تاريخ الإخطار"
+
+msgctxt "ui/views/call_views.py"
+msgid "Number"
+msgstr "الرقم"
+
+msgid "Odometer (km)"
+msgstr "العداد (كم)"
+
+msgctxt "ui/views/listing_views.py"
+msgid "Odometer (km)"
+msgstr "العداد (كم)"
+
+msgctxt "ui/views/supplier_listing_views.py"
+msgid "Odometer (km)"
+msgstr "العداد (كم)"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Odometer (km)"
+msgstr "العداد (كم)"
+
+msgid "Of the final price. Blank in the client's template — ask before quoting"
+msgstr "من السعر النهائي. فاضية في قالب العميل — اسأل قبل ما تقول رقم"
+
+msgid "Off for internal stages. Cancellation never sends automatically"
+msgstr "مقفول للمراحل الداخلية. الإلغاء عمره ما يبعت تلقائياً"
+
+msgid "Offered for sale"
+msgstr "معروضة للبيع"
+
+msgctxt "ui/views/document_views.py"
+msgid "Offered for sale"
+msgstr "معروضة للبيع"
+
+msgctxt "ui/views/reference_views.py"
+msgid "Oldest model year"
+msgstr "أقدم سنة موديل"
+
+msgid "Oldest model year allowed"
+msgstr "أقدم سنة موديل مسموحة"
+
+msgctxt "ui/views/reference_views.py"
+msgid "Oldest year"
+msgstr "أقدم سنة"
+
+msgid "On hold"
+msgstr "معلّقة"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "On hold"
+msgstr "معلّقة"
+
+msgctxt "ui/views/dashboard_views.py"
+msgid "On hold"
+msgstr "معلّقة"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "On instalments"
+msgstr "بالتقسيط"
+
+msgid "On offer"
+msgstr "معروض"
+
+msgctxt "ui/views/reference_views.py"
+msgid "On offer"
+msgstr "معروض"
+
+msgid "On the website"
+msgstr "على الموقع"
+
+msgctxt "ui/views/listing_views.py"
+msgid "On the website"
+msgstr "على الموقع"
+
+msgid "On while migrating or bulk-loading, so nobody is messaged by accident"
+msgstr "شغّله أثناء الترحيل أو التحميل الجماعي، عشان محدش يتبعتله بالغلط"
+
+msgid "One is the maximum. The second request is refused."
+msgstr "الحد الأقصى واحد. الطلب الثاني مرفوض."
+
+msgid "Only one candidate car can be the chosen one."
+msgstr "عربية واحدة بس هي اللي تتعلّم كمختارة."
+
+msgid "Only when asked for"
+msgstr "عند الطلب فقط"
+
+msgid "Only with EUR 1"
+msgstr "مع شهادة يورو 1 فقط"
+
+msgid "Open"
+msgstr "مفتوحة"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Open"
+msgstr "مفتوحة"
+
+msgctxt "ui/views/dashboard_views.py"
+msgid "Open deals"
+msgstr "الصفقات المفتوحة"
+
+msgid "Optional extra"
+msgstr "إضافة اختيارية"
+
+msgid "Options"
+msgstr "المواصفات"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Options that decide the deposit tier"
+msgstr "المواصفات اللي بتحدد فئة الوديعة"
+
+msgid "Order"
+msgstr "الترتيب"
+
+msgctxt "ui/views/import_stage_views.py"
+msgid "Order"
+msgstr "الترتيب"
+
+msgctxt "ui/views/pricing_views.py"
+msgid "Order"
+msgstr "الترتيب"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Origin and price"
+msgstr "المنشأ والسعر"
+
+msgid "Original filename"
+msgstr "اسم الملف الأصلي"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Original filename"
+msgstr "اسم الملف الأصلي"
+
+msgid "Other"
+msgstr "أخرى"
+
+msgid "Outgoing"
+msgstr "صادر"
+
+msgid "Outside Europe"
+msgstr "خارج أوروبا"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Overpaid"
+msgstr "دفع زيادة"
+
+msgid "Overpaid (EUR)"
+msgstr "المدفوع زيادة (يورو)"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Overpaid (€)"
+msgstr "المدفوع زيادة (€)"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Owed €"
+msgstr "المستحق €"
+
+msgid "Owner"
+msgstr "المالك"
+
+msgctxt "ui/views/consignment_views.py"
+msgid "Owner"
+msgstr "المالك"
+
+msgid "Paid in full"
+msgstr "مدفوعة بالكامل"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Paid in full"
+msgstr "مدفوعة بالكامل"
+
+msgctxt "ui/views/document_views.py"
+msgid "Paid on"
+msgstr "تاريخ الدفع"
+
+msgid "Paid so far (EUR)"
+msgstr "المدفوع حتى الآن (يورو)"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Paid so far (€)"
+msgstr "المدفوع حتى الآن (€)"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Paid €"
+msgstr "المدفوع €"
+
+msgid "Panorama roof"
+msgstr "سقف بانوراما"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Panorama roof"
+msgstr "سقف بانوراما"
+
+msgid "Participation split"
+msgstr "نسبة المشاركة"
+
+msgctxt "ui/views/document_views.py"
+msgid "Participation split"
+msgstr "نسبة المشاركة"
+
+msgid "Partly paid"
+msgstr "مدفوع جزئياً"
+
+msgid "Passport number"
+msgstr "رقم الباسبور"
+
+msgid "Path"
+msgstr "المسار"
+
+msgid "Payment"
+msgstr "الدفع"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Payment"
+msgstr "الدفع"
+
+msgid "Payment 1 — amount"
+msgstr "الدفعة 1 — المبلغ"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Payment 1 — amount"
+msgstr "الدفعة 1 — المبلغ"
+
+msgid "Payment 1 — date"
+msgstr "الدفعة 1 — التاريخ"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Payment 1 — date"
+msgstr "الدفعة 1 — التاريخ"
+
+msgid "Payment 2 — amount"
+msgstr "الدفعة 2 — المبلغ"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Payment 2 — amount"
+msgstr "الدفعة 2 — المبلغ"
+
+msgid "Payment 2 — date"
+msgstr "الدفعة 2 — التاريخ"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Payment 2 — date"
+msgstr "الدفعة 2 — التاريخ"
+
+msgid "Payment 3 — amount"
+msgstr "الدفعة 3 — المبلغ"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Payment 3 — amount"
+msgstr "الدفعة 3 — المبلغ"
+
+msgid "Payment 3 — date"
+msgstr "الدفعة 3 — التاريخ"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Payment 3 — date"
+msgstr "الدفعة 3 — التاريخ"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Payment and plan"
+msgstr "الدفع والخطة"
+
+msgid "Payment plan"
+msgstr "خطة الدفع"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Payment plan"
+msgstr "خطة الدفع"
+
+msgid "Pending"
+msgstr "قيد الانتظار"
+
+msgid "Personal import"
+msgstr "استيراد شخصي"
+
+msgid "Photos"
+msgstr "الصور"
+
+msgctxt "ui/views/listing_views.py"
+msgid "Photos"
+msgstr "الصور"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Photos"
+msgstr "الصور"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Photos and documents"
+msgstr "الصور والمستندات"
+
+msgctxt "ui/views/dashboard_views.py"
+msgid "Pipeline by stage"
+msgstr "المسار حسب المرحلة"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Plan"
+msgstr "الخطة"
+
+msgctxt "ui/views/reference_views.py"
+msgid "Policy"
+msgstr "السياسة"
+
+msgid "Port"
+msgstr "الميناء"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Port"
+msgstr "الميناء"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Port"
+msgstr "الميناء"
+
+msgid "Port Said"
+msgstr "بورسعيد"
+
+msgid "Port fees (EGP)"
+msgstr "مصاريف الميناء (ج.م)"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Port fees (EGP)"
+msgstr "مصاريف الميناء (ج.م)"
+
+msgid "Port of arrival"
+msgstr "ميناء الوصول"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Port of arrival"
+msgstr "ميناء الوصول"
+
+msgid "Possible customers"
+msgstr "عملاء محتملون"
+
+msgctxt "ui/views/call_views.py"
+msgid "Possible customers"
+msgstr "عملاء محتملون"
+
+msgid "Power (hp)"
+msgstr "القوة (حصان)"
+
+msgctxt "ui/views/supplier_listing_views.py"
+msgid "Power (hp)"
+msgstr "القوة (حصان)"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Power (hp)"
+msgstr "القوة (حصان)"
+
+msgid "Power (kW)"
+msgstr "القوة (كيلوواط)"
+
+msgid "Previous stage"
+msgstr "المرحلة السابقة"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Previous stage"
+msgstr "المرحلة السابقة"
+
+msgid "Price (EGP)"
+msgstr "السعر (ج.م)"
+
+msgctxt "ui/views/listing_views.py"
+msgid "Price (EGP)"
+msgstr "السعر (ج.م)"
+
+msgctxt "ui/views/supplier_listing_views.py"
+msgid "Price (EUR)"
+msgstr "السعر (يورو)"
+
+msgctxt "ui/views/supplier_listing_views.py"
+msgid "Price and VAT"
+msgstr "السعر والضريبة"
+
+msgid "Price band — from (EGP)"
+msgstr "نطاق السعر — من (ج.م)"
+
+msgctxt "ui/views/consignment_views.py"
+msgid "Price band — from (EGP)"
+msgstr "نطاق السعر — من (ج.م)"
+
+msgid "Price band — to (EGP)"
+msgstr "نطاق السعر — إلى (ج.م)"
+
+msgctxt "ui/views/consignment_views.py"
+msgid "Price band — to (EGP)"
+msgstr "نطاق السعر — إلى (ج.م)"
+
+msgid "Price with VAT (EUR)"
+msgstr "السعر شامل الضريبة (يورو)"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Price with VAT (€)"
+msgstr "السعر شامل الضريبة (€)"
+
+msgid "Pricing band"
+msgstr "فئة تسعير"
+
+msgid "Pricing bands"
+msgstr "فئات التسعير"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Print the offer"
+msgstr "طباعة العرض"
+
+msgid "Private listings are already net of VAT (client, 2026-09-15)"
+msgstr "إعلانات الأفراد صافية من الضريبة أصلاً (العميل، 2026-09-15)"
+
+msgid "Private seller"
+msgstr "بائع فرد"
+
+msgid "Processing"
+msgstr "جاري المعالجة"
+
+msgctxt "ui/views/call_views.py"
+msgid "Processing"
+msgstr "جاري المعالجة"
+
+msgid "Production month"
+msgstr "شهر الإنتاج"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Production month"
+msgstr "شهر الإنتاج"
+
+msgid "Programme"
+msgstr "البرنامج"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Programme"
+msgstr "البرنامج"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Programme"
+msgstr "البرنامج"
+
+msgctxt "ui/views/document_views.py"
+msgid "Programme"
+msgstr "البرنامج"
+
+msgctxt "ui/views/reference_views.py"
+msgid "Programme"
+msgstr "البرنامج"
+
+msgid "Protection film"
+msgstr "فيلم الحماية"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Protection film"
+msgstr "فيلم الحماية"
+
+msgctxt "ui/views/listing_views.py"
+msgid "Protection film"
+msgstr "فيلم الحماية"
+
+msgid "Protection film fitted"
+msgstr "تم تركيب فيلم الحماية"
+
+msgid "Published"
+msgstr "منشورة"
+
+msgctxt "ui/views/listing_views.py"
+msgid "Published"
+msgstr "منشورة"
+
+msgid "Put %(count)d deal(s) on hold"
+msgstr "تم تعليق %(count)d صفقة"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Put on hold"
+msgstr "تعليق"
+
+msgid "Queued"
+msgstr "في الانتظار"
+
+msgid "Quotation"
+msgstr "عرض سعر"
+
+msgctxt "ui/views/approval_views.py"
+msgid "Quotation"
+msgstr "عرض سعر"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Quotation"
+msgstr "عرض سعر"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Quotation"
+msgstr "عرض سعر"
+
+msgid "Quotation line"
+msgstr "سطر عرض السعر"
+
+msgid "Quotation lines"
+msgstr "سطور عرض السعر"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Quotation search"
+msgstr "بحث عروض الأسعار"
+
+msgid "Quotations"
+msgstr "عروض الأسعار"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Quotations"
+msgstr "عروض الأسعار"
+
+msgid "Rate"
+msgstr "السعر"
+
+msgctxt "ui/views/reference_views.py"
+msgid "Rate"
+msgstr "السعر"
+
+msgid "Rate %"
+msgstr "النسبة %"
+
+msgctxt "ui/views/reference_views.py"
+msgid "Rate %"
+msgstr "النسبة %"
+
+msgctxt "ui/views/reference_views.py"
+msgid "Rate % / year"
+msgstr "النسبة % / سنة"
+
+msgid "Rate % a year (flat)"
+msgstr "الفايدة % سنوياً (ثابتة)"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Rate % a year (flat)"
+msgstr "الفايدة % سنوياً (ثابتة)"
+
+msgid "Raw response"
+msgstr "الاستجابة الخام"
+
+msgid "Re-sent by an agent"
+msgstr "أعاد إرسالها مندوب"
+
+msgid "Reaching it marks the deal done"
+msgstr "الوصول لها يعني الصفقة اكتملت"
+
+msgctxt "ui/views/supplier_listing_views.py"
+msgid "Real adverts only"
+msgstr "الإعلانات الحقيقية فقط"
+
+msgctxt "ui/views/call_views.py"
+msgid "Real recordings only"
+msgstr "التسجيلات الحقيقية فقط"
+
+msgid "Reason"
+msgstr "السبب"
+
+msgctxt "ui/views/approval_views.py"
+msgid "Reason"
+msgstr "السبب"
+
+msgid "Reason for cancelling"
+msgstr "سبب الإلغاء"
+
+msgid "Reason for hold"
+msgstr "سبب التعليق"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Recalculate"
+msgstr "إعادة الحساب"
+
+msgid "Received"
+msgstr "مستلم"
+
+msgctxt "ui/views/document_views.py"
+msgid "Received"
+msgstr "مستلم"
+
+msgid "Received at signing (EUR)"
+msgstr "المستلم عند التوقيع (يورو)"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Received at signing (EUR)"
+msgstr "المستلم عند التوقيع (يورو)"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Received at signing (€)"
+msgstr "المستلم عند التوقيع (€)"
+
+msgid "Received, not checked"
+msgstr "مستلم، لم يُراجع"
+
+msgid "Recorded at"
+msgstr "وقت التسجيل"
+
+msgid "Recording"
+msgstr "التسجيل"
+
+msgctxt "ui/views/call_views.py"
+msgid "Recording"
+msgstr "التسجيل"
+
+msgid "Reference"
+msgstr "المرجع"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Reference"
+msgstr "المرجع"
+
+msgctxt "ui/views/consignment_views.py"
+msgid "Reference"
+msgstr "المرجع"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Reference"
+msgstr "المرجع"
+
+msgctxt "ui/views/document_views.py"
+msgid "Refund due"
+msgstr "الاسترداد مستحق"
+
+msgid "Refund due on"
+msgstr "تاريخ استحقاق الاسترداد"
+
+msgctxt "ui/views/document_views.py"
+msgid "Refund due on"
+msgstr "تاريخ استحقاق الاسترداد"
+
+msgid "Refunded on"
+msgstr "تاريخ الاسترداد"
+
+msgctxt "ui/views/document_views.py"
+msgid "Refunded on"
+msgstr "تاريخ الاسترداد"
+
+msgctxt "ui/views/approval_views.py"
+msgid "Refuse"
+msgstr "رفض"
+
+msgid "Refused"
+msgstr "مرفوض"
+
+msgctxt "ui/views/approval_views.py"
+msgid "Refused"
+msgstr "مرفوض"
+
+msgid "Refused %(count)d request(s)"
+msgstr "تم رفض %(count)d طلب"
+
+msgid "Region"
+msgstr "المنطقة"
+
+msgctxt "ui/views/reference_views.py"
+msgid "Region"
+msgstr "المنطقة"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Register"
+msgstr "السجل"
+
+msgid "Rejected"
+msgstr "مرفوض"
+
+msgctxt "ui/views/document_views.py"
+msgid "Rejected"
+msgstr "مرفوض"
+
+msgid "Renews automatically"
+msgstr "يتجدد تلقائياً"
+
+msgctxt "ui/views/consignment_views.py"
+msgid "Renews automatically"
+msgstr "يتجدد تلقائياً"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Reopen"
+msgstr "إعادة فتح"
+
+msgid "Reopened %(count)d deal(s)"
+msgstr "تمت إعادة فتح %(count)d صفقة"
+
+msgid "Repriced %(count)d quotation(s)"
+msgstr "تمت إعادة تسعير %(count)d عرض"
+
+msgid "Requirement"
+msgstr "المستند المطلوب"
+
+msgctxt "ui/views/document_views.py"
+msgid "Requirement"
+msgstr "المستند المطلوب"
+
+msgid "Reserved"
+msgstr "محجوزة"
+
+msgid "Reserved for"
+msgstr "محجوزة لـ"
+
+msgctxt "ui/views/listing_views.py"
+msgid "Reserved for"
+msgstr "محجوزة لـ"
+
+msgid "Residencies that qualify"
+msgstr "الإقامات المؤهلة"
+
+msgid "Rule"
+msgstr "القاعدة"
+
+msgctxt "ui/views/approval_views.py"
+msgid "Rule"
+msgstr "القاعدة"
+
+msgid "Runs until"
+msgstr "ساري حتى"
+
+msgctxt "ui/views/consignment_views.py"
+msgid "Runs until"
+msgstr "ساري حتى"
+
+msgid "SUV"
+msgstr "SUV"
+
+msgid "Sailed on"
+msgstr "تاريخ الإبحار"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Sailed on"
+msgstr "تاريخ الإبحار"
+
+msgid "Sales agent"
+msgstr "مندوب المبيعات"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Sales agent"
+msgstr "مندوب المبيعات"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Sales agent"
+msgstr "مندوب المبيعات"
+
+msgid "Saloon"
+msgstr "سيدان"
+
+msgid "Select a contract first."
+msgstr "اختار عقد الأول."
+
+msgid "Select a quotation first."
+msgstr "اختار عرض سعر الأول."
+
+msgid "Seller"
+msgstr "البائع"
+
+msgctxt "ui/views/supplier_listing_views.py"
+msgid "Seller"
+msgstr "البائع"
+
+msgid "Seller type"
+msgstr "نوع البائع"
+
+msgctxt "ui/views/supplier_listing_views.py"
+msgid "Seller type"
+msgstr "نوع البائع"
+
+msgid "Selling below the agreed price band"
+msgstr "البيع تحت نطاق السعر المتفق عليه"
+
+msgctxt "ui/views/document_views.py"
+msgid "Selling the right"
+msgstr "بيع الحق"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Send the offer to the customer"
+msgstr "إرسال العرض للعميل"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Send to the customer"
+msgstr "إرسال للعميل"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Send update to customer"
+msgstr "إرسال تحديث للعميل"
+
+msgid "Sent"
+msgstr "مُرسل"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Sent"
+msgstr "مُرسل"
+
+msgctxt "ui/views/stage_change_log_views.py"
+msgid "Sent"
+msgstr "مُرسل"
+
+msgid "Sent %(count)d contract(s)"
+msgstr "تم إرسال %(count)d عقد"
+
+msgid "Sent %(count)d offer(s)"
+msgstr "تم إرسال %(count)d عرض"
+
+msgid "Sent at"
+msgstr "وقت الإرسال"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Sent at"
+msgstr "وقت الإرسال"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Sent at"
+msgstr "وقت الإرسال"
+
+msgid "Sent the current stage update to %(count)d customer(s)"
+msgstr "تم إرسال تحديث المرحلة الحالية لـ %(count)d عميل"
+
+msgid "Sent to the customer"
+msgstr "أُرسل للعميل"
+
+msgctxt "ui/views/call_views.py"
+msgid "Sent to the customer"
+msgstr "أُرسل للعميل"
+
+msgid "Sequence"
+msgstr "الترتيب"
+
+msgctxt "ui/views/document_views.py"
+msgid "Sequence"
+msgstr "الترتيب"
+
+msgctxt "ui/views/reference_views.py"
+msgid "Sequence"
+msgstr "الترتيب"
+
+msgid "Set by"
+msgstr "حدده"
+
+msgid "Set only when the deposit sheet disagrees with the option count"
+msgstr "حدده بس لو شيت الودائع مختلف عن عدد المواصفات"
+
+msgid "Set stage"
+msgstr "تغيير المرحلة"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Set stage…"
+msgstr "تغيير المرحلة…"
+
+msgid "Several customers match"
+msgstr "أكثر من عميل مطابق"
+
+msgid "Shipping"
+msgstr "الشحن"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Shipping"
+msgstr "الشحن"
+
+msgid "Shipping (EUR)"
+msgstr "الشحن (يورو)"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Shipping (€)"
+msgstr "الشحن (€)"
+
+msgid "Shipping only"
+msgstr "شحن فقط"
+
+msgid "Shipping option (EUR)"
+msgstr "نوع الشحن (يورو)"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Shipping option (€)"
+msgstr "نوع الشحن (€)"
+
+msgid "Ships in the name of"
+msgstr "تُشحن باسم"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Ships in the name of"
+msgstr "تُشحن باسم"
+
+msgid "Showroom car"
+msgstr "عربية معرض"
+
+msgid "Showroom car in Egypt"
+msgstr "عربية من المعرض في مصر"
+
+msgid "Showroom cars"
+msgstr "عربيات المعرض"
+
+msgid "Showroom collection (EGP)"
+msgstr "الاستلام من المعرض (ج.م)"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Showroom collection (EGP)"
+msgstr "الاستلام من المعرض (ج.م)"
+
+msgid "Signed"
+msgstr "موقّع"
+
+msgid "Signed copy"
+msgstr "النسخة الموقّعة"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Signed copy"
+msgstr "النسخة الموقّعة"
+
+msgid "Signed for the company by"
+msgstr "وقّع عن الشركة"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Signed for the company by"
+msgstr "وقّع عن الشركة"
+
+msgid "Signed on"
+msgstr "تاريخ التوقيع"
+
+msgctxt "ui/views/consignment_views.py"
+msgid "Signed on"
+msgstr "تاريخ التوقيع"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Signed on"
+msgstr "تاريخ التوقيع"
+
+msgid "Signing the contract"
+msgstr "التوقيع على العقد"
+
+msgid "Signs by default"
+msgstr "يوقّع افتراضياً"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Signs by default"
+msgstr "يوقّع افتراضياً"
+
+msgid "Simulated"
+msgstr "محاكاة"
+
+msgctxt "ui/views/call_views.py"
+msgid "Simulated"
+msgstr "محاكاة"
+
+msgctxt "ui/views/supplier_listing_views.py"
+msgid "Simulated"
+msgstr "محاكاة"
+
+msgid "Size"
+msgstr "الحجم"
+
+msgid "Skipped"
+msgstr "تم التخطي"
+
+msgid "Skipped — the stage does not notify"
+msgstr "تم التخطي — المرحلة لا ترسل"
+
+msgid "So a late-night stage move does not wake the customer"
+msgstr "عشان نقلة مرحلة بالليل ما تصحّيش العميل"
+
+msgid "Sold"
+msgstr "مُباعة"
+
+msgctxt "ui/views/consignment_views.py"
+msgid "Sold"
+msgstr "مُباعة"
+
+msgid "Sold by a dealer"
+msgstr "بائعها تاجر"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Sold by a dealer"
+msgstr "بائعها تاجر"
+
+msgctxt "ui/views/consignment_views.py"
+msgid "Sold for"
+msgstr "بيعت بـ"
+
+msgid "Sold for (EGP)"
+msgstr "بيعت بـ (ج.م)"
+
+msgctxt "ui/views/consignment_views.py"
+msgid "Sold for (EGP)"
+msgstr "بيعت بـ (ج.م)"
+
+msgid "Sold on"
+msgstr "تاريخ البيع"
+
+msgctxt "ui/views/consignment_views.py"
+msgid "Sold on"
+msgstr "تاريخ البيع"
+
+msgid "Sold on deal"
+msgstr "بيعت في صفقة"
+
+msgctxt "ui/views/listing_views.py"
+msgid "Sold on deal"
+msgstr "بيعت في صفقة"
+
+msgctxt "ui/views/supplier_listing_views.py"
+msgid "Sold or removed"
+msgstr "بيعت أو اتشالت"
+
+msgid "Source"
+msgstr "المصدر"
+
+msgctxt "ui/views/reference_views.py"
+msgid "Source"
+msgstr "المصدر"
+
+msgctxt "ui/views/supplier_listing_views.py"
+msgid "Source"
+msgstr "المصدر"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Source"
+msgstr "المصدر"
+
+msgid "Sourcing outside Germany or the EU"
+msgstr "الشراء من خارج ألمانيا أو الاتحاد الأوروبي"
+
+msgid "Stable identifier used by the stage machine, e.g. contract_reserved"
+msgstr "معرّف ثابت للكود، مثال: contract_reserved"
+
+msgid "Stage"
+msgstr "المرحلة"
+
+msgctxt "ui/views/approval_views.py"
+msgid "Stage"
+msgstr "المرحلة"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Stage"
+msgstr "المرحلة"
+
+msgctxt "ui/views/stage_change_log_views.py"
+msgid "Stage"
+msgstr "المرحلة"
+
+msgctxt "ui/views/import_stage_views.py"
+msgid "Stage (English)"
+msgstr "المرحلة (بالإنجليزية)"
+
+msgid "Stage 6 sends the Berlin photos and video"
+msgstr "المرحلة 6 بتبعت صور وفيديو برلين"
+
+msgid "Stage Change"
+msgstr "تغيير مرحلة"
+
+msgid "Stage Changes"
+msgstr "تغييرات المراحل"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Stage and shipping"
+msgstr "المرحلة والشحن"
+
+msgctxt "ui/views/stage_change_log_views.py"
+msgid "Stage message search"
+msgstr "بحث رسائل المراحل"
+
+msgctxt "ui/views/stage_change_log_views.py"
+msgid "Stage messages"
+msgstr "رسائل المراحل"
+
+msgid "Stage name"
+msgstr "اسم المرحلة"
+
+msgctxt "ui/views/import_stage_views.py"
+msgid "Stage name"
+msgstr "اسم المرحلة"
+
+msgid "Stage set by hand to %(stage)s. Reason: %(reason)s"
+msgstr "تم تغيير المرحلة يدوياً إلى %(stage)s. السبب: %(reason)s"
+
+msgid "Stages and messages"
+msgstr "المراحل والرسائل"
+
+msgid "Standard"
+msgstr "عادي"
+
+msgid "State"
+msgstr "الحالة"
+
+msgctxt "ui/views/document_views.py"
+msgid "State"
+msgstr "الحالة"
+
+msgctxt "ui/views/listing_views.py"
+msgid "State"
+msgstr "الحالة"
+
+msgid "Status"
+msgstr "الحالة"
+
+msgctxt "ui/views/approval_views.py"
+msgid "Status"
+msgstr "الحالة"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Status"
+msgstr "الحالة"
+
+msgctxt "ui/views/consignment_views.py"
+msgid "Status"
+msgstr "الحالة"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Status"
+msgstr "الحالة"
+
+msgctxt "ui/views/document_views.py"
+msgid "Status"
+msgstr "الحالة"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Status"
+msgstr "الحالة"
+
+msgid "Still listed"
+msgstr "لسه معروضة"
+
+msgctxt "ui/views/supplier_listing_views.py"
+msgid "Still listed"
+msgstr "لسه معروضة"
+
+msgctxt "ui/views/document_views.py"
+msgid "Still missing"
+msgstr "لسه ناقص"
+
+msgid "Still outstanding: %(names)s"
+msgstr "لسه ناقص: %(names)s"
+
+msgid "Still owed (EUR)"
+msgstr "الباقي المستحق (يورو)"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Still owed (€)"
+msgstr "الباقي المستحق (€)"
+
+msgid "Subject"
+msgstr "الموضوع"
+
+msgctxt "ui/views/approval_views.py"
+msgid "Subject"
+msgstr "الموضوع"
+
+msgid "Summarised"
+msgstr "تم التلخيص"
+
+msgctxt "ui/views/call_views.py"
+msgid "Summarised"
+msgstr "تم التلخيص"
+
+msgid "Summary"
+msgstr "الملخص"
+
+msgctxt "ui/views/call_views.py"
+msgid "Summary"
+msgstr "الملخص"
+
+msgid "Sunroof"
+msgstr "فتحة سقف"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Sunroof"
+msgstr "فتحة سقف"
+
+msgid "Supplier invoice"
+msgstr "فاتورة المورد"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Supplier invoice"
+msgstr "فاتورة المورد"
+
+msgid "Supplier listing"
+msgstr "إعلان مورد"
+
+msgid "Supplier listings"
+msgstr "إعلانات الموردين"
+
+msgid "Suppressed — held by a switch"
+msgstr "موقوفة — بمفتاح"
+
+msgid "Suspended"
+msgstr "موقوف"
+
+msgctxt "ui/views/reference_views.py"
+msgid "Suspended"
+msgstr "موقوف"
+
+msgid "Switched the AI on or off for %(count)d conversation(s)"
+msgstr "تم تشغيل/إيقاف المساعد لـ %(count)d محادثة"
+
+msgid "Tail (days)"
+msgstr "الذيل (أيام)"
+
+msgctxt "ui/views/consignment_views.py"
+msgid "Tail (days)"
+msgstr "الذيل (أيام)"
+
+msgid "Tax card"
+msgstr "البطاقة الضريبية"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Tax card"
+msgstr "البطاقة الضريبية"
+
+msgid "Tax rule"
+msgstr "قاعدة ضريبية"
+
+msgid "Tax rules"
+msgstr "القواعد الضريبية"
+
+msgid "Tell the customer too"
+msgstr "بلّغ العميل كمان"
+
+msgctxt "ui/views/approval_views.py"
+msgid "Tell the customer too"
+msgstr "بلّغ العميل كمان"
+
+msgid "Template"
+msgstr "القالب"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Template"
+msgstr "القالب"
+
+msgid "Template file"
+msgstr "ملف القالب"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Template file"
+msgstr "ملف القالب"
+
+msgid "Term (months)"
+msgstr "المدة (شهور)"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Term (months)"
+msgstr "المدة (شهور)"
+
+msgid "Terms"
+msgstr "الشروط"
+
+msgctxt "ui/views/listing_views.py"
+msgid "Terms"
+msgstr "الشروط"
+
+msgid "Terms (months)"
+msgstr "المدد (شهور)"
+
+msgctxt "ui/views/supplier_listing_views.py"
+msgid "The advert"
+msgstr "الإعلان"
+
+msgid "The amount payable"
+msgstr "المبلغ المدفوع"
+
+msgctxt "ui/views/call_views.py"
+msgid "The call"
+msgstr "المكالمة"
+
+msgctxt "ui/views/contract_views.py"
+msgid "The car"
+msgstr "العربية"
+
+msgctxt "ui/views/listing_views.py"
+msgid "The car"
+msgstr "العربية"
+
+msgctxt "ui/views/supplier_listing_views.py"
+msgid "The car"
+msgstr "العربية"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "The car"
+msgstr "العربية"
+
+msgctxt "ui/views/reference_views.py"
+msgid "The charge"
+msgstr "الرسوم"
+
+msgctxt "ui/views/document_views.py"
+msgid "The check"
+msgstr "الفحص"
+
+msgctxt "ui/views/consignment_views.py"
+msgid "The commission"
+msgstr "العمولة"
+
+msgid "The company photographs delivered cars; consent is taken in the contract"
+msgstr "الشركة بتصوّر العربيات بعد التسليم؛ الموافقة بتتاخد في العقد"
+
+msgid "The contract was sent to the customer."
+msgstr "تم إرسال العقد للعميل."
+
+msgid "The customer agreed in the contract that their car may appear in content"
+msgstr "العميل وافق في العقد إن عربيته تظهر في المحتوى"
+
+msgid "The customer chose this one"
+msgstr "العميل اختار دي"
+
+msgid "The customer holds the initiative"
+msgstr "العميل هو صاحب المبادرة"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "The customer holds the initiative"
+msgstr "العميل هو صاحب المبادرة"
+
+msgctxt "ui/views/import_stage_views.py"
+msgid "The customer's message"
+msgstr "رسالة العميل"
+
+msgctxt "ui/views/contract_views.py"
+msgid "The customer, exactly as their ID reads"
+msgstr "العميل، بالظبط زي ما بطاقته مكتوبة"
+
+msgid "The date that decides whether the tail applies"
+msgstr "التاريخ اللي بيحدد هل الذيل ينطبق"
+
+msgctxt "ui/views/contract_views.py"
+msgid "The deal"
+msgstr "الصفقة"
+
+msgctxt "ui/views/approval_views.py"
+msgid "The decision"
+msgstr "القرار"
+
+msgctxt "ui/views/document_views.py"
+msgid "The deposit"
+msgstr "الوديعة"
+
+msgctxt "ui/views/contract_views.py"
+msgid "The document"
+msgstr "المستند"
+
+msgctxt "ui/views/document_views.py"
+msgid "The document"
+msgstr "المستند"
+
+msgid "The factory list the supplier sends against the VIN"
+msgstr "قائمة المصنع اللي المورد بيبعتها على رقم الشاسيه"
+
+msgctxt "ui/views/document_views.py"
+msgid "The holder"
+msgstr "صاحب المبادرة"
+
+msgid "The message waits for an agent instead of going out automatically"
+msgstr "الرسالة بتستنى المندوب بدل ما تتبعت تلقائياً"
+
+msgctxt "ui/views/contract_views.py"
+msgid "The money"
+msgstr "الفلوس"
+
+msgid "The number on the German advert — everything else follows from it"
+msgstr "الرقم اللي على الإعلان الألماني — كل حاجة تانية بتتحسب منه"
+
+msgctxt "ui/views/listing_views.py"
+msgid "The offer"
+msgstr "العرض"
+
+msgid "The offer is ready — print it or save it as PDF."
+msgstr "العرض جاهز — اطبعه أو احفظه PDF."
+
+msgid "The offer was sent to the customer."
+msgstr "تم إرسال العرض للعميل."
+
+msgctxt "ui/views/dashboard_views.py"
+msgid "The pipeline, what is stuck, and what the customer was told"
+msgstr "المسار، وإيه اللي واقف، وإيه اللي اتقال للعميل"
+
+msgctxt "ui/views/reference_views.py"
+msgid "The plan"
+msgstr "الخطة"
+
+msgid "The price band runs backwards."
+msgstr "نطاق السعر مقلوب."
+
+msgctxt "ui/views/quote_views.py"
+msgid "The price, as the customer sees it"
+msgstr "السعر كما يراه العميل"
+
+msgctxt "ui/views/reference_views.py"
+msgid "The rate of the day"
+msgstr "سعر اليوم"
+
+msgctxt "ui/views/reference_views.py"
+msgid "The route"
+msgstr "البرنامج"
+
+msgctxt "ui/views/approval_views.py"
+msgid "The rule"
+msgstr "القاعدة"
+
+msgctxt "ui/views/consignment_views.py"
+msgid "The sale"
+msgstr "البيع"
+
+msgid "The scan or photo the customer sent"
+msgstr "الصورة أو المسح اللي العميل بعته"
+
+msgctxt "ui/views/listing_views.py"
+msgid "The shop window"
+msgstr "الواجهة"
+
+msgctxt "ui/views/import_stage_views.py"
+msgid "The stage"
+msgstr "المرحلة"
+
+msgid "The supplier's order reference, printed on the contract"
+msgstr "مرجع طلبية المورد، بيتطبع في العقد"
+
+msgctxt "ui/views/contract_views.py"
+msgid "The template"
+msgstr "القالب"
+
+msgid "The transfer rate and its commission"
+msgstr "سعر التحويل وعمولته"
+
+msgid "The value the rate applies to"
+msgstr "القيمة اللي النسبة بتتحسب عليها"
+
+msgid "Their national ID"
+msgstr "رقمه القومي"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Their national ID"
+msgstr "رقمه القومي"
+
+msgid "There is no price to print."
+msgstr "مفيش سعر يتطبع."
+
+msgid "There is no price yet. %(why)s"
+msgstr "لسه مفيش سعر. %(why)s"
+
+msgid "This deal has no car, so there is nothing to specify."
+msgstr "الصفقة دي مالهاش عربية، فمفيش مواصفات تتكتب."
+
+msgid "This deal is already at the last stage."
+msgstr "الصفقة دي في آخر مرحلة أصلاً."
+
+msgid "This deal is blocked: %(reason)s"
+msgstr "الصفقة دي متوقفة: %(reason)s"
+
+msgid "This deal is cancelled. Reopen it before moving stages."
+msgstr "الصفقة دي ملغية. افتحها تاني قبل ما تنقل المراحل."
+
+msgid "This number is"
+msgstr "الرقم ده هو"
+
+msgctxt "ui/views/reference_views.py"
+msgid "This number is"
+msgstr "الرقم ده هو"
+
+msgid "Tier"
+msgstr "الفئة"
+
+msgctxt "ui/views/document_views.py"
+msgid "Tier"
+msgstr "الفئة"
+
+msgctxt "ui/views/reference_views.py"
+msgid "Tier"
+msgstr "الفئة"
+
+msgid "Tier override"
+msgstr "تجاوز الفئة"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Tier override"
+msgstr "تجاوز الفئة"
+
+msgid "Title"
+msgstr "العنوان"
+
+msgctxt "ui/views/listing_views.py"
+msgid "Title"
+msgstr "العنوان"
+
+msgid "To"
+msgstr "إلى"
+
+msgctxt "ui/views/reference_views.py"
+msgid "To"
+msgstr "إلى"
+
+msgctxt "ui/views/stage_change_log_views.py"
+msgid "To"
+msgstr "إلى"
+
+msgctxt "ui/views/consignment_views.py"
+msgid "To (EGP)"
+msgstr "إلى (ج.م)"
+
+msgid "To (EUR)"
+msgstr "إلى (يورو)"
+
+msgctxt "ui/views/reference_views.py"
+msgid "To (EUR)"
+msgstr "إلى (يورو)"
+
+msgid "To (cc)"
+msgstr "إلى (cc)"
+
+msgctxt "ui/views/reference_views.py"
+msgid "To (cc)"
+msgstr "إلى (cc)"
+
+msgid "To (gross EUR)"
+msgstr "إلى (يورو شامل الضريبة)"
+
+msgctxt "ui/views/pricing_views.py"
+msgid "To (gross €)"
+msgstr "إلى (€ شامل الضريبة)"
+
+msgctxt "ui/views/pricing_views.py"
+msgid "To (gross €) — empty means no ceiling"
+msgstr "إلى (€ شامل الضريبة) — فاضية يعني مفيش حد أعلى"
+
+msgid "To stage"
+msgstr "إلى مرحلة"
+
+msgid "Total (EUR)"
+msgstr "الإجمالي (يورو)"
+
+msgid "Total contract value (EUR)"
+msgstr "إجمالي قيمة العقد (يورو)"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Total contract value (€)"
+msgstr "إجمالي قيمة العقد (€)"
+
+msgid "Total selling price (EUR)"
+msgstr "إجمالي سعر البيع (يورو)"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Total selling price (€)"
+msgstr "إجمالي سعر البيع (€)"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Total €"
+msgstr "الإجمالي €"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Total €"
+msgstr "الإجمالي €"
+
+msgid "Tracking link"
+msgstr "رابط التتبع"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Tracking link"
+msgstr "رابط التتبع"
+
+msgid "Tracking token"
+msgstr "رمز التتبع"
+
+msgid "Transcribed"
+msgstr "تم التفريغ"
+
+msgid "Transcript"
+msgstr "التفريغ النصي"
+
+msgctxt "ui/views/call_views.py"
+msgid "Transcript"
+msgstr "التفريغ النصي"
+
+msgctxt "ui/views/document_views.py"
+msgid "Transferable"
+msgstr "قابلة للتحويل"
+
+msgid "Transferred"
+msgstr "تم التحويل"
+
+msgid "Trim"
+msgstr "الفئة"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Trim"
+msgstr "الفئة"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Trim"
+msgstr "الفئة"
+
+msgid "Trim wanted"
+msgstr "الفئة المطلوبة"
+
+msgid "Type"
+msgstr "النوع"
+
+msgctxt "ui/views/document_views.py"
+msgid "Type"
+msgstr "النوع"
+
+msgid "Unknown"
+msgstr "غير معروف"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Until"
+msgstr "حتى"
+
+msgctxt "ui/views/pricing_views.py"
+msgid "Until"
+msgstr "حتى"
+
+msgid "Up to"
+msgstr "حتى"
+
+msgctxt "ui/views/reference_views.py"
+msgid "Up to"
+msgstr "حتى"
+
+msgctxt "ui/views/reference_views.py"
+msgid "Up to (for a range)"
+msgstr "حتى (لنطاق)"
+
+msgid "Upholstery"
+msgstr "الفرش"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Upholstery"
+msgstr "الفرش"
+
+msgid "Use by default"
+msgstr "الاستخدام الافتراضي"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Use by default"
+msgstr "الاستخدام الافتراضي"
+
+msgid "Used"
+msgstr "مستعملة"
+
+msgctxt "ui/views/document_views.py"
+msgid "Used on"
+msgstr "استُخدمت في"
+
+msgid "Used on deal"
+msgstr "استُخدمت في صفقة"
+
+msgctxt "ui/views/document_views.py"
+msgid "Used on deal"
+msgstr "استُخدمت في صفقة"
+
+msgid "Used outside the 24-hour WhatsApp window"
+msgstr "يُستخدم خارج نافذة الـ24 ساعة في واتساب"
+
+msgctxt "ui/views/import_stage_views.py"
+msgid "Used outside the 24-hour WhatsApp window"
+msgstr "يُستخدم خارج نافذة الـ24 ساعة في واتساب"
+
+msgid "VAT %"
+msgstr "الضريبة %"
+
+msgctxt "ui/views/quote_views.py"
+msgid "VAT %"
+msgstr "الضريبة %"
+
+msgid "VAT deductible"
+msgstr "الضريبة قابلة للخصم"
+
+msgctxt "ui/views/supplier_listing_views.py"
+msgid "VAT deductible"
+msgstr "الضريبة قابلة للخصم"
+
+msgid "VAT reclaimed (EUR)"
+msgstr "الضريبة المستردة (يورو)"
+
+msgctxt "ui/views/quote_views.py"
+msgid "VAT reclaimed (€)"
+msgstr "الضريبة المستردة (€)"
+
+msgid "VAT recoverable"
+msgstr "الضريبة قابلة للاسترداد"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "VAT recoverable"
+msgstr "الضريبة قابلة للاسترداد"
+
+msgid "VIN"
+msgstr "رقم الشاسيه (VIN)"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "VIN"
+msgstr "رقم الشاسيه (VIN)"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "VIN"
+msgstr "رقم الشاسيه (VIN)"
+
+msgid "VIN option list"
+msgstr "قائمة مواصفات الشاسيه"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "VIN option list"
+msgstr "قائمة مواصفات الشاسيه"
+
+msgid "VIP RORO"
+msgstr "VIP RORO"
+
+msgid "Valid until"
+msgstr "ساري حتى"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Valid until"
+msgstr "ساري حتى"
+
+msgctxt "ui/views/approval_views.py"
+msgid "Validity"
+msgstr "الصلاحية"
+
+msgctxt "ui/views/document_views.py"
+msgid "Validity"
+msgstr "الصلاحية"
+
+msgctxt "ui/views/pricing_views.py"
+msgid "Validity"
+msgstr "الصلاحية"
+
+msgctxt "ui/views/reference_views.py"
+msgid "Validity"
+msgstr "الصلاحية"
+
+msgctxt "ui/views/pricing_views.py"
+msgid "Value"
+msgstr "القيمة"
+
+msgid "Value (EUR)"
+msgstr "القيمة (يورو)"
+
+msgctxt "ui/views/reference_views.py"
+msgid "Value (EUR)"
+msgstr "القيمة (يورو)"
+
+msgid "Van"
+msgstr "فان"
+
+msgid "Vehicle"
+msgstr "العربية"
+
+msgid "Vehicles"
+msgstr "العربيات"
+
+msgid "Verified"
+msgstr "تم التحقق"
+
+msgid "Version"
+msgstr "الإصدار"
+
+msgctxt "ui/views/supplier_listing_views.py"
+msgid "Version"
+msgstr "الإصدار"
+
+msgid "Vessel"
+msgstr "الباخرة"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Vessel"
+msgstr "الباخرة"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Void"
+msgstr "إبطال"
+
+msgid "Voided %(count)d contract(s)"
+msgstr "تم إبطال %(count)d عقد"
+
+msgid "Waiting"
+msgstr "في الانتظار"
+
+msgctxt "ui/views/approval_views.py"
+msgid "Waiting"
+msgstr "في الانتظار"
+
+msgctxt "ui/views/stage_change_log_views.py"
+msgid "Waiting for an agent"
+msgstr "في انتظار مندوب"
+
+msgid "Waiting for an agent to send"
+msgstr "في انتظار المندوب يبعت"
+
+msgctxt "ui/views/dashboard_views.py"
+msgid "Waiting on paperwork"
+msgstr "في انتظار الأوراق"
+
+msgctxt "ui/views/document_views.py"
+msgid "Waiting to be checked"
+msgstr "في انتظار المراجعة"
+
+msgid "Walk-around video"
+msgstr "فيديو العربية"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Walk-around video"
+msgstr "فيديو العربية"
+
+msgid "Warranty activated"
+msgstr "الضمان مفعّل"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Warranty activated"
+msgstr "الضمان مفعّل"
+
+msgctxt "ui/views/consignment_views.py"
+msgid "What decides the commission"
+msgstr "اللي بيحدد العمولة"
+
+msgctxt "ui/views/approval_views.py"
+msgid "What is being asked"
+msgstr "المطلوب"
+
+msgctxt "ui/views/reference_views.py"
+msgid "What it allows"
+msgstr "اللي بيسمح بيه"
+
+msgctxt "ui/views/pricing_views.py"
+msgid "What it charges"
+msgstr "اللي بيتحاسب عليه"
+
+msgid "What it covers"
+msgstr "اللي بيغطيه"
+
+msgctxt "ui/views/reference_views.py"
+msgid "What it covers"
+msgstr "اللي بيغطيه"
+
+msgctxt "ui/views/quote_views.py"
+msgid "What the customer has paid"
+msgstr "اللي العميل دفعه"
+
+msgctxt "ui/views/quote_views.py"
+msgid "What the salesman enters"
+msgstr "اللي المندوب بيدخله"
+
+msgctxt "ui/views/call_views.py"
+msgid "What was said"
+msgstr "اللي اتقال"
+
+msgid "What was sent"
+msgstr "اللي اتبعت"
+
+msgid "WhatsApp template"
+msgstr "قالب واتساب"
+
+msgctxt "ui/views/import_stage_views.py"
+msgid "WhatsApp template"
+msgstr "قالب واتساب"
+
+msgctxt "ui/views/call_views.py"
+msgid "When"
+msgstr "متى"
+
+msgctxt "ui/views/stage_change_log_views.py"
+msgid "When"
+msgstr "متى"
+
+msgid "When several numbers matched, rather than guessing"
+msgstr "لما أكثر من رقم يطابق، بدل ما نخمّن"
+
+msgid "When the car is not one of ours — most of them are not"
+msgstr "لما العربية مش بتاعتنا — وأغلبها كده"
+
+msgctxt "ui/views/listing_views.py"
+msgid "Where"
+msgstr "أين"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Where it came from"
+msgstr "جاية منين"
+
+msgid "Where it is"
+msgstr "موجودة فين"
+
+msgctxt "ui/views/listing_views.py"
+msgid "Where it is"
+msgstr "موجودة فين"
+
+msgid "Where this came from"
+msgstr "مصدر الرقم"
+
+msgctxt "ui/views/approval_views.py"
+msgid "Where this came from"
+msgstr "مصدر الرقم"
+
+msgctxt "ui/views/document_views.py"
+msgid "Where this came from"
+msgstr "مصدر الرقم"
+
+msgctxt "ui/views/pricing_views.py"
+msgid "Where this came from"
+msgstr "مصدر الرقم"
+
+msgctxt "ui/views/reference_views.py"
+msgid "Where this came from"
+msgstr "مصدر الرقم"
+
+msgctxt "ui/views/pricing_views.py"
+msgid "Which prices this band covers"
+msgstr "الأسعار اللي الفئة دي بتغطيها"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Who and what"
+msgstr "مين وإيه"
+
+msgctxt "ui/views/reference_views.py"
+msgid "Who computes the amount"
+msgstr "مين بيحسب المبلغ"
+
+msgid "Who computes the instalment"
+msgstr "مين بيحسب القسط"
+
+msgctxt "ui/views/call_views.py"
+msgid "Who it was with"
+msgstr "مع مين"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Who represents it"
+msgstr "مين بيمثلها"
+
+msgctxt "ui/views/consignment_views.py"
+msgid "Whose car"
+msgstr "عربية مين"
+
+msgid "Why"
+msgstr "السبب"
+
+msgctxt "ui/views/approval_views.py"
+msgid "Why"
+msgstr "السبب"
+
+msgid "Why it is blocked"
+msgstr "سبب التوقف"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Why it is blocked"
+msgstr "سبب التوقف"
+
+msgctxt "ui/views/call_views.py"
+msgid "Why it needs review"
+msgstr "سبب المراجعة"
+
+msgid "Why it was rejected"
+msgstr "سبب الرفض"
+
+msgctxt "ui/views/document_views.py"
+msgid "Why it was rejected"
+msgstr "سبب الرفض"
+
+msgid "Why it was voided"
+msgstr "سبب الإبطال"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Why it was voided"
+msgstr "سبب الإبطال"
+
+msgid "Why suspended"
+msgstr "سبب الإيقاف"
+
+msgctxt "ui/views/reference_views.py"
+msgid "Why suspended"
+msgstr "سبب الإيقاف"
+
+msgid "Why there is no price"
+msgstr "ليه مفيش سعر"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Why there is no price"
+msgstr "ليه مفيش سعر"
+
+msgctxt "ui/views/reference_views.py"
+msgid "With EUR 1"
+msgstr "مع يورو 1"
+
+msgid "With EUR 1 certificate"
+msgstr "مع شهادة يورو 1"
+
+msgctxt "ui/views/quote_views.py"
+msgid "With VAT €"
+msgstr "شامل الضريبة €"
+
+msgid "Withdrawn"
+msgstr "مسحوبة"
+
+msgctxt "ui/views/reference_views.py"
+msgid "Year"
+msgstr "السنة"
+
+msgctxt "ui/views/supplier_listing_views.py"
+msgid "Year"
+msgstr "السنة"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Year"
+msgstr "السنة"
+
+msgid "Years owned"
+msgstr "سنوات الملكية"
+
+msgid "Zero (under 50 km)"
+msgstr "زيرو (أقل من 50 كم)"
+
+msgctxt "ui/views/reference_views.py"
+msgid "Zero km"
+msgstr "زيرو كم"
+
+msgid "Zero or used"
+msgstr "زيرو أو مستعملة"
+
+msgid "always"
+msgstr "دائماً"
+
+msgctxt "ui/views/reference_views.py"
+msgid "cc"
+msgstr "cc"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "cc"
+msgstr "cc"
+
+msgid "e.g. owner's answers 2026-09-14, the values workbook"
+msgstr "مثال: إجابات المالك 2026-09-14، شيت القيم"
+
+msgid "generate it first"
+msgstr "ولّده الأول"
+
+msgctxt "ui/views/reference_views.py"
+msgid "hp"
+msgstr "حصان"
+
+msgid "initiative / personal / commercial / first_owner / showroom / shipping_only"
+msgstr "initiative / personal / commercial / first_owner / showroom / shipping_only"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "km"
+msgstr "كم"
+
+msgid "no car yet"
+msgstr "لسه مفيش عربية"
+
+msgid "no customer on this deal"
+msgstr "مفيش عميل على الصفقة دي"
+
+msgid "no customer on this quotation"
+msgstr "مفيش عميل على عرض السعر ده"
+
+msgid "no price yet"
+msgstr "لسه مفيش سعر"
+
+msgid "no reason given"
+msgstr "مفيش سبب مكتوب"
+
+msgid "none / gulf / european — drives eligibility and the deposit"
+msgstr "none / gulf / european — بتحدد الأهلية والوديعة"
+
+msgid "there is no price to accept"
+msgstr "مفيش سعر يتقبل"
+
+msgid "there is no price to send"
+msgstr "مفيش سعر يتبعت"
+
+msgid "this customer asked not to be messaged"
+msgstr "العميل ده طلب عدم الإرسال"
+
+msgctxt "ui/views/reference_views.py"
+msgid "to"
+msgstr "إلى"
+
+msgid "عقد الاستيراد — برجاء المراجعة والتوقيع"
+msgstr "عقد الاستيراد — برجاء المراجعة والتوقيع"
+
+msgid "كاملة"
+msgstr "كاملة"
+
+msgid "كسر زيرو"
+msgstr "كسر زيرو"
+
+msgid "متوسطة"
+msgstr "متوسطة"
+
+msgid "ملحق 2 — مواصفات السيارة"
+msgstr "ملحق 2 — مواصفات السيارة"
+
+msgctxt "ui/views/reference_views.py"
+msgid "… to"
+msgstr "… إلى"
+
+msgctxt "ui/views/consignment_views.py"
+msgid "…or a fixed amount (EGP)"
+msgstr "…أو مبلغ ثابت (ج.م)"
+
+msgctxt "ui/views/consignment_views.py"
+msgid "…or one of our cars"
+msgstr "…أو واحدة من عربياتنا"
+
