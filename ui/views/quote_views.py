@@ -35,6 +35,25 @@ _QUOTE_ACTIONS = [
         "invisible": {"field": "state", "operator": "ne", "value": "draft"},
     },
     {
+        "name": "action_print_offer",
+        "string": _("Print the offer"),
+        "icon": "Printer",
+        "type": "server",
+        "as": "button",
+        "variant": "secondary",
+        "view_type": ["form"],
+    },
+    {
+        "name": "action_send_offer",
+        "string": _("Send the offer to the customer"),
+        "icon": "MessageCircle",
+        "type": "server",
+        "as": "dropdown",
+        "view_type": ["form", "list"],
+        # It messages a real customer. Nobody presses this by accident.
+        "confirm_required": True,
+    },
+    {
         "name": "action_accept",
         "string": _("Customer accepted"),
         "icon": "BadgeCheck",

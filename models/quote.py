@@ -341,6 +341,95 @@ class Quote(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
                 'data': {}, 'on_success': {'type': 'refresh'}}
 
     @action
+    def action_print_offer(queryset):
+        """Open the offer as a page the salesman can print or save as PDF.
+
+        Written as HTML rather than rendered through the PDF engine on purpose.
+        The document is right-to-left Arabic, and a browser lays that out
+        correctly with the fonts already on the machine — a PDF engine needs an
+        embedded Arabic font and a shaping library, and gets the joins wrong
+        when it does not have them. Ctrl+P from the tab produces the same PDF,
+        with the text intact.
+        """
+        from django.core.files.base import ContentFile
+        from django.core.files.storage import default_storage
+
+        from car_import.services import quote_document
+
+        quote = queryset.first() if hasattr(queryset, 'first') else list(queryset)[0]
+        if quote is None:
+            return {'status': False, 'open_mode': 'message',
+                    'message': _("Select a quotation first."), 'data': {}}
+        if not quote.total_eur:
+            return {'status': False, 'open_mode': 'message',
+                    'message': quote.pricing_error or _("There is no price to print."),
+                    'data': {}}
+
+        html = quote_document.as_html(quote)
+        safe_ref = (quote.name or f'quote-{quote.pk}').replace('/', '-')
+        stamp = timezone.now().strftime('%Y%m%d%H%M%S')
+        path = default_storage.save(f'car_import/quotes/{safe_ref}-{stamp}.html',
+                                    ContentFile(html.encode('utf-8')))
+        return {
+            'status': True,
+            # 'pdf' is this platform's "open it in a new tab" mode. The file
+            # behind the URL is HTML, and the tab prints it the same way.
+            'open_mode': 'pdf',
+            'message': _("The offer is ready — print it or save it as PDF."),
+            'data': {'pdf_url': default_storage.url(path),
+                     'filename': f'{safe_ref}.html'},
+        }
+
+    @action
+    def action_send_offer(queryset):
+        """Send the offer to the customer on whatever channel they already use.
+
+        Goes through the same omnichannel sender and the same kill switch as
+        the stage messages. A quote is money, and money is the one subject this
+        module refuses to let the AI handle — so this is a button a person
+        presses, never something that fires on its own.
+        """
+        from car_import.services import quote_document, stage_notifier
+
+        if not stage_notifier.messages_enabled():
+            return {'status': False, 'open_mode': 'message', 'data': {},
+                    'message': _("Customer messages are switched off "
+                                 "(car_import.stage_messages_enabled).")}
+
+        sent, refused = 0, []
+        for quote in queryset:
+            label = quote.name or quote.pk
+            if not quote.total_eur:
+                refused.append(f"{label}: {quote.pricing_error or _('no price yet')}")
+                continue
+            if quote.partner_id is None:
+                refused.append(f"{label}: {_('no customer on this quotation')}")
+                continue
+            if stage_notifier.customer_opted_out(quote.partner):
+                refused.append(f"{label}: {_('this customer asked not to be messaged')}")
+                continue
+            try:
+                result = stage_notifier._send_free_text(
+                    quote.partner, quote_document.as_text(quote)) or {}
+            except Exception as exc:  # noqa: BLE001 — the outcome belongs in the message
+                refused.append(f"{label}: {exc}")
+                continue
+            if result.get('success') is False or result.get('status') is False:
+                refused.append(f"{label}: {result.get('error') or result.get('message') or 'send failed'}")
+                continue
+            quote.state = 'sent'
+            quote.sent_at = timezone.now()
+            quote.save()
+            quote.message_post(body=_("The offer was sent to the customer."))
+            sent += 1
+
+        message = _("Sent %(count)d offer(s)") % {'count': sent}
+        if refused:
+            message += "\n" + "\n".join(refused)
+        return {'status': bool(sent), 'open_mode': 'message', 'message': message,
+                'data': {}, 'on_success': {'type': 'refresh'}}
+
+    @action
     def action_accept(queryset):
         """The customer said yes — copy the total onto the deal."""
         accepted, refused = 0, []
