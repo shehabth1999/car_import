@@ -153,17 +153,8 @@ def _sla_minutes():
 
 def _warn_about(conversation, waited_minutes):
     """Tell whoever owns this customer that they are still waiting."""
-    from car_import.models import CarDeal
-
     partner = conversation.social_partner
-    deal = (CarDeal.all_objects.filter(partner=partner)
-            .exclude(state='cancelled').order_by('-id').first())
-
-    recipients = []
-    if deal is not None and deal.assigned_to_id:
-        recipients = [deal.assigned_to.partner_id] if getattr(deal.assigned_to, 'partner_id', None) else []
-    if not recipients:
-        recipients = _sales_team_partner_ids()
+    recipients = _recipients_for_partner(partner)
     if not recipients:
         return
 
@@ -184,6 +175,24 @@ def _warn_about(conversation, waited_minutes):
     except Exception:
         logger.exception('car_import: could not warn about conversation %s', conversation.pk)
         return False
+
+
+def _recipients_for_partner(partner):
+    """Partner ids to notify about this customer: their agent, else the team.
+
+    Extracted so the escalation path and the chaser cannot drift apart — they
+    are answering the same question ("who owns this customer?") and a second
+    copy of that answer is a second place for it to go stale.
+    """
+    from car_import.models import CarDeal
+
+    if partner is None:
+        return _sales_team_partner_ids()
+    deal = (CarDeal.all_objects.filter(partner=partner)
+            .exclude(state='cancelled').order_by('-id').first())
+    if deal is not None and getattr(deal.assigned_to, 'partner_id', None):
+        return [deal.assigned_to.partner_id]
+    return _sales_team_partner_ids()
 
 
 #: Who to tell, best first. The last entry is the point: on a tenant where

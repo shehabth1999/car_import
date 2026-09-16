@@ -537,6 +537,14 @@ def ka_escalate_conversation_to_staff(context, reason: str, topic: Optional[str]
         from modules.chat.services.omnichannel_send_service import OmnichannelSendService
         OmnichannelSendService().send_and_broadcast(partner, {'text': holding}, message_type='text')
 
+        # The client's decision of 2026-09-16: the assistant stays closed AND
+        # the colleague picking this up is shown the approved figures to check
+        # — "مع اضهار اقتراح لمطابقة الارقام هل هي صحيحة ام لا". Internal only,
+        # and it never reaches the customer.
+        from car_import.services import money_briefing
+        briefed = money_briefing.notify(partner, conversation=conversation,
+                                        topic=topic, reason=reason)
+
         logger.info("car_import: escalated conversation for partner %s (%s): %s", partner.pk, topic, reason)
         return {
             "success": True,
@@ -546,6 +554,7 @@ def ka_escalate_conversation_to_staff(context, reason: str, topic: Optional[str]
                 "topic": topic or 'other',
                 "reason": reason,
                 "holding_message_sent": True,
+                "team_briefed_with_figures": briefed,
                 "note": "A human must switch the AI back on when the case is resolved.",
             },
         }

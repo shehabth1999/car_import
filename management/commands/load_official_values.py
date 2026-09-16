@@ -107,7 +107,9 @@ class Command(BaseCommand):
                     if not dry:
                         CustomsValuation.objects.update_or_create(
                             make=make, model=model, model_year=year,
-                            defaults={'value_eur': customs_value, 'basis': 'unknown',
+                            # 'payable', not 'unknown': the client confirmed on
+                            # 2026-09-16 that these are the amounts actually paid.
+                            defaults={'value_eur': customs_value, 'basis': 'payable',
                                       'effective_from': CONFIRMED, 'source_note': SOURCE})
                     customs += 1
 

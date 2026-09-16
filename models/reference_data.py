@@ -151,23 +151,34 @@ class DepositTier(BaseModel, EffectiveMixin):
 class CustomsValuation(BaseModel, EffectiveMixin):
     """The official customs figure per model and year.
 
-    `basis` is deliberately allowed to be unknown: whether this number is the
-    amount payable or the value the rate applies to is open question V1, and
-    the pricing engine refuses to compute until it is answered rather than
-    guessing and being wrong by a factor.
+    Question V1 is answered (client, 2026-09-16): this number is **the amount
+    actually paid**, not a value a rate is applied to. So 15,800 € against a
+    C200 is 15,800 € of customs, full stop — and the engine may use it
+    directly instead of refusing.
+
+    The same answer carried a warning worth keeping in the model rather than
+    in somebody's memory: *"القيم متغيرة على حسب تحديثات الحكومة"*. The figure
+    moves when the government moves it, which is exactly why these rows are
+    dated. A new government table closes the old rows and opens new ones; it
+    never overwrites them, so a deal quoted under last quarter's table can
+    still be explained under this quarter's.
     """
 
     BASIS = [
-        ('unknown', _("Not yet confirmed")),
         ('payable', _("The amount payable")),
         ('valuation', _("The value the rate applies to")),
+        ('unknown', _("Not yet confirmed")),
     ]
 
     make = models.CharField(max_length=64, verbose_name=_("Make"))
     model = models.CharField(max_length=128, verbose_name=_("Model"))
     model_year = models.PositiveIntegerField(verbose_name=_("Model year"))
     value_eur = models.DecimalField(max_digits=12, decimal_places=2, verbose_name=_("Value (EUR)"))
-    basis = models.CharField(max_length=16, choices=BASIS, default='unknown', verbose_name=_("This number is"))
+    basis = models.CharField(max_length=16, choices=BASIS, default='payable',
+                             verbose_name=_("This number is"),
+                             help_text=_("Confirmed by the client on 16 September 2026: the "
+                                         "figures in the initiative workbook are the amount "
+                                         "actually paid"))
 
     class Meta:
         verbose_name = _("Customs value")
