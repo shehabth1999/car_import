@@ -17,6 +17,11 @@ menu_dict = {
                 "module": "car_import",
                 "model": "car_import.cardeal",
                 "view_types": "dashboard",
+                # Dashboards render as tabs of /dashboard/, keyed by the view's
+                # key. EntryView (/genie/<id>/) has no dashboard strategy and
+                # quietly falls back to the LIST — which is what this menu
+                # showed until now: a table of deals under a dashboard title.
+                "url": "/dashboard/?tab=car_import_dashboard_view",
                 "sequence": 5,
                 "allowed_groups": ["car_import.sales_manager", "car_import.operations",
                                    "car_import.management"],

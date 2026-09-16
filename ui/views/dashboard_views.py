@@ -105,7 +105,7 @@ car_import_dashboard_view = {
         "kpis": [
             {
                 "name": "pipeline_agreed",
-                "title": _("Pipeline value"),
+                "title": _("Pipeline value (€)"),
                 "subtitle": _("Agreed amounts on open deals, per agent"),
                 "type": "revenue",
                 "aggregation": "sum",
@@ -118,11 +118,11 @@ car_import_dashboard_view = {
                 "record_subtitle_field": "assigned_to__email",
                 "max_type": "auto",
                 "min_field": 0,
-                "format": "currency",
+                "format": "number",
             },
             {
                 "name": "collected_vs_agreed",
-                "title": _("Collected"),
+                "title": _("Collected (€)"),
                 "subtitle": _("Marked as paid, against everything agreed"),
                 "type": "circular",
                 "aggregation": "sum",
@@ -130,11 +130,11 @@ car_import_dashboard_view = {
                 "domain": _OPEN,
                 "max_type": "auto",
                 "min_field": 0,
-                "format": "currency",
+                "format": "number",
             },
             {
                 "name": "outstanding",
-                "title": _("Still owed"),
+                "title": _("Still owed (€)"),
                 "subtitle": _("Marked as due on open deals"),
                 "type": "linear",
                 "aggregation": "sum",
@@ -142,7 +142,7 @@ car_import_dashboard_view = {
                 "domain": _OPEN,
                 "max_type": "auto",
                 "min_field": 0,
-                "format": "currency",
+                "format": "number",
             },
         ],
         "sections": [
@@ -157,7 +157,7 @@ car_import_dashboard_view = {
                         "on_click": "kanban",
                         "field": "import_stage__name", "measure": "id", "aggregation": "count",
                         "group_by": ["import_stage__name"], "domain": _OPEN}]},
-                    {"title": _("Agreed value by stage"), "components": [{
+                    {"title": _("Agreed value by stage (€)"), "components": [{
                         "type": "donut", "name": "value_by_stage",
                         "subtitle": "Where the money sits",
                         "field": "import_stage__name", "measure": "amount_agreed",
