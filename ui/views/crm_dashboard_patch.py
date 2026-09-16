@@ -24,8 +24,11 @@ constraints apply here unchanged:
 
 Scoped to the car-import leads (`ka_program` set, an extension field) so the
 tenant's other funnels do not pile into these charts.
+
+Labels are `{"en", "ar"}` dicts, not `_()`: the sync translates only a view's
+own body, never the strings inside `inheritance_operations`, so a gettext
+label here would stay English in the Arabic UI.
 """
-from django.utils.translation import gettext as _
 
 _KA = {"operator": "and", "filters": [{"field": "ka_program", "operator": "is_not_null"}]}
 _KA_WON = {"operator": "and", "filters": [
@@ -51,48 +54,48 @@ crm_dashboard_car_import_batch = {
             "target": "sections.4",
             "content": {
                     "name": "car_import_funnel",
-                    "title": _("Car import — the funnel"),
-                    "subtitle": "Only leads on a car-import programme",
+                    "title": {"en": "Car import — the funnel", "ar": "استيراد السيارات — القمع البيعي"},
+                    "subtitle": {"en": "Only leads on a car-import programme", "ar": "العملاء المحتملون على برامج استيراد السيارات فقط"},
                     "groups": [
-                        {"title": _("Leads by stage"), "components": [{
+                        {"title": {"en": "Leads by stage", "ar": "العملاء المحتملون حسب المرحلة"}, "components": [{
                             "type": "bar", "name": "ka_funnel_by_stage",
-                            "subtitle": "Where the car-import leads are",
+                            "subtitle": {"en": "Where the car-import leads are", "ar": "أين يقف عملاء الاستيراد المحتملون"},
                             "on_click": "kanban",
                             "field": "stage__name", "measure": "id", "aggregation": "count",
                             "group_by": ["stage__name"], "domain": _KA}]},
-                        {"title": _("Leads by programme"), "components": [{
+                        {"title": {"en": "Leads by programme", "ar": "العملاء المحتملون حسب البرنامج"}, "components": [{
                             "type": "pie", "name": "ka_leads_by_program",
-                            "subtitle": "Initiative, personal, commercial, showroom…",
+                            "subtitle": {"en": "Initiative, personal, commercial, showroom…", "ar": "مبادرة، شخصي، تجاري، معرض…"},
                             "field": "ka_program", "measure": "id", "aggregation": "count",
                             "group_by": ["ka_program"], "domain": _KA}]},
-                        {"title": _("Paid or organic"), "components": [{
+                        {"title": {"en": "Paid or organic", "ar": "من إعلان أم بشكل طبيعي"}, "components": [{
                             "type": "donut", "name": "ka_leads_by_origin",
-                            "subtitle": "Did an advert bring this lead, or did they find us?",
+                            "subtitle": {"en": "Did an advert bring this lead, or did they find us?", "ar": "هل جاء العميل من إعلان أم وجدنا بنفسه؟"},
                             "field": "lead_origin", "measure": "id", "aggregation": "count",
                             "group_by": ["lead_origin"], "domain": _KA}]},
-                        {"title": _("Leads by campaign"), "components": [{
+                        {"title": {"en": "Leads by campaign", "ar": "العملاء المحتملون حسب الحملة"}, "components": [{
                             "type": "bar", "name": "ka_leads_by_campaign",
-                            "subtitle": "Which advert produced the lead",
+                            "subtitle": {"en": "Which advert produced the lead", "ar": "أي إعلان جاء بالعميل"},
                             "on_click": "kanban",
                             "field": "utm_campaign__name", "measure": "id", "aggregation": "count",
                             "group_by": ["utm_campaign__name"], "domain": _KA_ATTRIBUTED}]},
-                        {"title": _("Won deals by agent"), "components": [{
+                        {"title": {"en": "Won deals by agent", "ar": "الصفقات المكسوبة حسب المندوب"}, "components": [{
                             "type": "bar", "name": "ka_won_by_agent",
-                            "subtitle": "Closed-won car-import leads per agent",
+                            "subtitle": {"en": "Closed-won car-import leads per agent", "ar": "صفقات الاستيراد المكسوبة لكل مندوب"},
                             "field": "assigned_to__name", "measure": "id", "aggregation": "count",
                             "group_by": ["assigned_to__name"], "domain": _KA_WON}]},
-                        {"title": _("Won deals by campaign"), "fullWidth": True, "components": [{
+                        {"title": {"en": "Won deals by campaign", "ar": "الصفقات المكسوبة حسب الحملة"}, "fullWidth": True, "components": [{
                             # Won counts need their own table: one aggregation per
                             # column over the whole group, so "leads AND won in
                             # one row" is not expressible (table_strategy.py:81).
                             "type": "table", "name": "ka_won_by_campaign",
-                            "subtitle": "The adverts that turned into cars",
+                            "subtitle": {"en": "The adverts that turned into cars", "ar": "الإعلانات التي تحولت إلى سيارات"},
                             "fields": [
-                                {"name": "utm_campaign__name", "string": _("Campaign"), "format": "text"},
-                                {"name": "utm_source__name", "string": _("Source"), "format": "text"},
-                                {"name": "id", "string": _("Won"), "format": "number",
+                                {"name": "utm_campaign__name", "string": {"en": "Campaign", "ar": "الحملة"}, "format": "text"},
+                                {"name": "utm_source__name", "string": {"en": "Source", "ar": "المصدر"}, "format": "text"},
+                                {"name": "id", "string": {"en": "Won", "ar": "مكسوب"}, "format": "number",
                                  "aggregation": "count", "align": "right"},
-                                {"name": "expected_revenue", "string": _("Revenue"),
+                                {"name": "expected_revenue", "string": {"en": "Revenue", "ar": "الإيراد"},
                                  "format": "currency", "aggregation": "sum", "align": "right"},
                             ],
                             "group_by": ["utm_campaign__name", "utm_source__name"],
