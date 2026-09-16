@@ -310,11 +310,48 @@ past the limit the agent simply stops replying, with nothing in the conversation
 
 ## 5. Migrating the open deals
 
-Import them with **`notifications_suppressed` on**, so nobody is messaged about a stage
-they reached weeks ago. Switch it off per deal as each customer is confirmed — the next
-real stage move is then their first automatic message.
+The single most dangerous hour of the go-live: every deal in flight has to arrive at
+the stage it is really at, and writing a stage fires the save hook that messages the
+customer. So the import holds every message, and lifting the hold is a per-deal human
+act, in this order:
 
----
+```bash
+# 1. the client's sheet, one row per open deal — columns in import_open_deals.py
+uv run python manage.py import_open_deals --file deals.csv --dry-run   # read the problems
+uv run python manage.py import_open_deals --file deals.csv             # creates them SUPPRESSED
+# 2. an agent opens each deal, checks the stage and the customer, and — once the
+#    customer has been told a system now sends these — unticks "Hold customer messages"
+# 3. the next real stage move is that customer's first automatic message
+```
+
+There is no command that lifts the hold in bulk, on purpose. `import_open_deals
+--release-messages` refuses.
+
+## 6. The last mile: backups, contacts, demo data, people
+
+```bash
+# backups — on the host, nightly at 03:30 host time, fourteen days, never copied off
+install -m 755 <(tr -d '\r' < ops/backup/genie-backup.sh) /usr/local/bin/genie-backup
+install -m 644 ops/backup/genie-backup@.service ops/backup/genie-backup@.timer /etc/systemd/system/
+systemctl daemon-reload && systemctl enable --now genie-backup@<slug>.timer
+systemctl start genie-backup@<slug>.service && ls -lh /var/backups/genie/<slug>/
+
+# the company's contact list, deduplicated on the canonical phone
+uv run python manage.py import_contacts --file contacts.csv --dry-run
+uv run python manage.py import_contacts --file contacts.csv
+
+# the people, into their groups (no passwords — they use the reset link)
+uv run python manage.py setup_car_import_org --csv people.csv --dry-run
+uv run python manage.py setup_car_import_org --csv people.csv
+uv run python manage.py setup_car_import_org --report
+
+# the demo rows, LAST, once the real data is in and before the first agent logs in
+uv run python manage.py purge_demo_data                    # what would go
+uv run python manage.py purge_demo_data --deal KA/2026/0002 --confirm
+```
+
+`purge_demo_data` refuses on a database whose name lacks `test` unless
+`--i-mean-production` is passed. Restore notes are in `ops/backup/README.md`.
 
 ## What this release does
 

@@ -1,0 +1,8 @@
+[Unit]
+Description=Genie tenant backup for %i (database, langgraph, media, env)
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/genie-backup %i
+Nice=10
+IOSchedulingClass=idle

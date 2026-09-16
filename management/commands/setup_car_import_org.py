@@ -9,6 +9,13 @@ security model with empty groups is not a security model.
     uv run python manage.py setup_car_import_org --report
     uv run python manage.py setup_car_import_org --assign owner@example.com=management
     uv run python manage.py setup_car_import_org --branches
+    uv run python manage.py setup_car_import_org --csv people.csv --dry-run
+    uv run python manage.py setup_car_import_org --csv people.csv
+
+The CSV is the client's list: `name, email, phone, group` per line, group one of
+sales_agent, sales_manager, operations, germany_team, showroom, management. A
+person who has no user yet gets one with **no password** — they set it through
+the reset link — and lands in the group; an existing user only joins the group.
 
 Nobody is assigned automatically. Who sees a customer's national ID is the
 client's decision, not a default.
@@ -44,6 +51,10 @@ class Command(BaseCommand):
                             help="e.g. --assign ramy@example.com=sales_manager (repeatable)")
         parser.add_argument('--branches', action='store_true',
                             help="Create the three branches if they are missing")
+        parser.add_argument('--csv', metavar='FILE',
+                            help="name,email,phone,group per line — create users and assign")
+        parser.add_argument('--dry-run', action='store_true',
+                            help="With --csv: report what would happen, write nothing")
 
     def handle(self, *args, **options):
         from modules.base.models.user import User
@@ -51,10 +62,59 @@ class Command(BaseCommand):
 
         if options['assign']:
             self._assign(User, Group, options['assign'])
+        if options['csv']:
+            self._from_csv(User, Group, options['csv'], options['dry_run'])
         if options['branches']:
             self._branches()
-        if options['report'] or not (options['assign'] or options['branches']):
+        if options['report'] or not (options['assign'] or options['branches'] or options['csv']):
             self._report(User, Group)
+
+    # ------------------------------------------------------------------
+    def _from_csv(self, User, Group, path, dry_run):
+        import csv
+        from django.core.management.base import CommandError
+        from django.db import transaction
+        try:
+            handle = open(path, encoding='utf-8-sig', newline='')
+        except OSError as exc:
+            raise CommandError(f'Cannot read {path}: {exc}')
+        self.stdout.write(self.style.NOTICE('\nPeople from ' + path))
+        landed, problems = [], []
+        users = User.all_objects if hasattr(User, 'all_objects') else User.objects
+        with handle, transaction.atomic():
+            for line_no, row in enumerate(csv.DictReader(handle), start=2):
+                name = (row.get('name') or '').strip()
+                email = (row.get('email') or '').strip().lower()
+                short = (row.get('group') or '').strip()
+                technical_name = short if short.startswith('car_import.') else f'car_import.{short}'
+                if not (name and email and short):
+                    problems.append((line_no, name or email or '?', 'name, email and group are required'))
+                    continue
+                if technical_name not in GROUPS:
+                    problems.append((line_no, email, f'{short} is not a car_import group'))
+                    continue
+                group = Group.objects.filter(technical_name=technical_name).first()
+                if group is None:
+                    problems.append((line_no, email, f'{technical_name} missing — run sync_all'))
+                    continue
+                user = users.filter(email__iexact=email).first()
+                created = False
+                if user is None:
+                    # No password on purpose: nobody types a colleague's password
+                    # into a spreadsheet. The reset link is how they get in.
+                    user = User.objects.create_user(email, None, name=name)
+                    created = True
+                user.groups.add(group)
+                landed.append((line_no, email, technical_name,
+                               'created, no password yet' if created else 'existing user'))
+            if dry_run:
+                transaction.set_rollback(True)
+        for line_no, email, technical_name, how in landed:
+            self.stdout.write(self.style.SUCCESS(f'  line {line_no}: {email} -> {technical_name}  ({how})'))
+        for line_no, who, why in problems:
+            self.stdout.write(self.style.ERROR(f'  line {line_no}: {who}: {why}'))
+        if dry_run:
+            self.stdout.write(self.style.WARNING('  dry run — nothing written'))
 
     # ------------------------------------------------------------------
     def _report(self, User, Group):
