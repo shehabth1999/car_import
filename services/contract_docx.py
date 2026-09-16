@@ -272,7 +272,11 @@ def repeat_rule(docx_bytes, exact_text, tokens):
         seen += 1
         if token is None:
             continue
-        match = BLANK.search(_joined(paragraph))
-        if match:
-            _splice(paragraph, [(match.start(), len(_joined(paragraph)), '{{%s}}' % token)])
+        # The whole paragraph, not "from the first blank onwards". The annex
+        # line reads `…… / …….. / 2026`, and its FIRST group is only two
+        # ellipsis characters — below the three that make a blank — so
+        # starting at the first match left `…… / ` stranded in front of the
+        # date. The line is nothing but a placeholder, so it is replaced whole.
+        text = _joined(paragraph)
+        _splice(paragraph, [(0, len(text), '{{%s}}' % token)])
     return _write(root, docx_bytes)
