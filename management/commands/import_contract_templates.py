@@ -5,12 +5,13 @@ The client sent five contracts on 2026-09-16. This reads them, replaces each
 blank with a named token, and stores the result as a `ContractTemplate` — after
 which `Contract.generate()` produces a real, filled, signable document.
 
-The rules below are written out by hand, one per clause, each anchored on the
-clause's own words. That is deliberate. A regex clever enough to guess which
-blank is the customer's name and which is his national ID is a regex that will
-guess wrong on the next version of the contract, silently, into a document
-somebody signs. Anchored rules fail loudly instead: an anchor that no longer
-matches is reported, and that template is not imported.
+The rules below are written out by hand, grouped by what each clause is for and
+anchored on the clause's own words. That is deliberate. A regex clever enough to
+guess which blank is the customer's name and which is his national ID is a regex
+that will guess wrong on the next version of the contract, silently, into a
+document somebody signs. Anchored rules cannot: a clause nothing matched is
+named in the output, and the person importing decides whether that contract
+simply has no such clause or whether the client reworded it.
 
     uv run python manage.py import_contract_templates --dir "/path/to/docx"
     uv run python manage.py import_contract_templates --dir ... --inspect
@@ -27,43 +28,71 @@ KNOWN = [
     ('عقد مبادرة', 'initiative', 'عقد مبادرة', 'initiative'),
 ]
 
-#: (anchor, [token per blank, in order]). `None` leaves a blank alone.
-RULES = [
-    # ── the date at the head of the contract ────────────────────────────────
-    ('أنه في يوم', ['contract_day', 'contract_month']),
-    ('On this day', ['contract_day', 'contract_month']),
-
-    # ── the customer ────────────────────────────────────────────────────────
-    ('ويحمل بطاقة رقم قومي رقم',
-     ['customer_name', 'customer_national_id', 'customer_address']),
-    ('holder of National ID No',
-     ['customer_name', 'customer_national_id', 'customer_address']),
-    # The "عقد مبادرة" file words this clause differently.
-    ('بطاقة رقم قومي / ', ['customer_name', 'customer_national_id', 'customer_address']),
-
-    # ── whose name the car ships in ────────────────────────────────────────
-    ('وشحنها باسم السيد', ['shipping_name']),
-    ('Whereas, the Second Party desires', ['shipping_name']),
-
-    # ── the car ────────────────────────────────────────────────────────────
-    ('شراء سيارة', ['car_model', 'car_trim', 'car_configuration']),
-    ('The First Party agrees to purchase', ['car_model', 'car_trim', 'car_configuration']),
-
-    # ── the money ──────────────────────────────────────────────────────────
-    ('إجمالي القيمة التعاقدية للسيارة', ['contract_total_eur']),
-    ('total contractual value of the vehicle', ['contract_total_eur']),
-    ('بإستلامه من الطرف الثاني', ['contract_down_payment_eur', 'contract_balance_eur']),
-    ('acknowledges receiving', ['contract_down_payment_eur', 'contract_balance_eur']),
-    ('يُحول بنكياً من حساب الطرف الثاني', ['contract_bank_transfer_eur']),
-    ('via bank transfer from the Second Party', ['contract_bank_transfer_eur']),
-    ('يُسدد نقداً فور إصدار بوليصة الشحن', ['contract_cash_on_bl_eur']),
-    ('in cash immediately upon the issuance', ['contract_cash_on_bl_eur']),
-    ('دفعة الجدية المقدرة بـ', ['deposit_pct']),
-    ('paying the down payment of', ['deposit_pct']),
-
-    # ── correspondence ─────────────────────────────────────────────────────
-    ('في حالة الإرسال إلى الطرف الثاني', ['customer_email']),
-    ('For the Second Party, the email is', ['customer_email']),
+#: The clauses, grouped by what they are *for*. Each group lists every wording
+#: the client's five files actually use, because they are five drafts of the
+#: same contract and no two word a clause identically: one says "acknowledges
+#: receiving", another folds the same three amounts into one sentence, a third
+#: says "notices shall be sent to" where the others say "the email is".
+#:
+#: Grouping matters for the reporting, not just the matching. A flat list makes
+#: an initiative contract — which has no car clause at all — report five
+#: "missing" anchors on every import, and an error people see every time is an
+#: error people stop reading. A group is satisfied when ANY of its wordings
+#: matched, and a group that legitimately does not apply is reported as absent
+#: rather than broken.
+RULE_GROUPS = [
+    ('the date', [
+        ('أنه في يوم', ['contract_day', 'contract_month']),
+        ('On this day', ['contract_day', 'contract_month']),
+    ]),
+    ('the customer', [
+        ('ويحمل بطاقة رقم قومي رقم',
+         ['customer_name', 'customer_national_id', 'customer_address']),
+        ('بطاقة رقم قومي / ',
+         ['customer_name', 'customer_national_id', 'customer_address']),
+        ('holder of National ID No',
+         ['customer_name', 'customer_national_id', 'customer_address']),
+    ]),
+    ('whose name it ships in', [
+        ('وشحنها باسم السيد', ['shipping_name']),
+        ('hereas, the Second Party desires', ['shipping_name']),
+    ]),
+    ('the car', [
+        ('شراء سيارة', ['car_model', 'car_trim', 'car_configuration']),
+        ('The First Party agrees to purchase',
+         ['car_model', 'car_trim', 'car_configuration']),
+    ]),
+    ('the total', [
+        ('إجمالي القيمة التعاقدية للسيارة', ['contract_total_eur']),
+        # Two shapes: some files put the total alone, others fold the down
+        # payment and the balance into the same sentence. Listing all three
+        # tokens is safe either way — the extra ones simply find no blank.
+        ('total contractual value of the vehicle',
+         ['contract_total_eur', 'contract_down_payment_eur', 'contract_balance_eur']),
+    ]),
+    ('what was paid at signing', [
+        ('بإستلامه من الطرف الثاني', ['contract_down_payment_eur', 'contract_balance_eur']),
+        ('acknowledges receiving', ['contract_down_payment_eur', 'contract_balance_eur']),
+    ]),
+    ('the bank transfer', [
+        ('يُحول بنكياً من حساب الطرف الثاني', ['contract_bank_transfer_eur']),
+        ('via bank transfer from the Second Party', ['contract_bank_transfer_eur']),
+        ('transferred via bank wire', ['contract_bank_transfer_eur']),
+    ]),
+    ('the cash on the bill of lading', [
+        ('يُسدد نقداً فور إصدار بوليصة الشحن', ['contract_cash_on_bl_eur']),
+        ('in cash immediately upon the issuance', ['contract_cash_on_bl_eur']),
+    ]),
+    ('the deposit percentage', [
+        ('دفعة الجدية المقدرة بـ', ['deposit_pct']),
+        ('paying the down payment of', ['deposit_pct']),
+        ('By signing and paying the', ['deposit_pct']),
+    ]),
+    ("the customer's email", [
+        ('في حالة الإرسال إلى الطرف الثاني', ['customer_email']),
+        ('For the Second Party, the email is', ['customer_email']),
+        ('For the Second Party, notices shall be sent', ['customer_email']),
+    ]),
 ]
 
 #: Fixed text the contract hard-codes, swapped inside anchored paragraphs only.
@@ -125,7 +154,7 @@ class Command(BaseCommand):
             # master, so it wins.
             is_master = 'configuration' in filename.lower()
 
-            tokenised, applied, missing = contract_docx.tokenise(data, RULES)
+            tokenised, applied, absent = _tokenise_groups(contract_docx, data)
             tokenised = contract_docx.replace_literals(tokenised, LITERALS)
             tokenised = contract_docx.repeat_rule(tokenised, ANNEX_DATE_TEXT,
                                                   ANNEX_DATE_TOKENS)
@@ -148,14 +177,30 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(
                 f'{filename}\n  -> {row.code} ({"new" if created else "updated"}), '
                 f'{applied} clause(s) tokenised, {len(tokens)} field(s)'))
-            if missing:
-                # Loud on purpose. An anchor that stopped matching means the
-                # client edited that clause, and the blank it used to fill is
-                # now a blank a customer would sign.
-                self.stdout.write(self.style.ERROR(
-                    '  clauses NOT found (check whether the wording changed):'))
-                for anchor in missing:
-                    self.stdout.write(self.style.ERROR(f'    · {anchor}'))
+            if absent:
+                # Not necessarily an error: an initiative-supply contract has no
+                # car clause, so "the car" being absent from it is the truth.
+                # It IS worth printing, because the other reading — that the
+                # client reworded a clause and its blank will now be signed
+                # empty — looks exactly the same from here.
+                self.stdout.write(self.style.WARNING(
+                    '  no clause found for: ' + ', '.join(absent)))
+                self.stdout.write(
+                    '  (fine when this contract genuinely has no such clause; '
+                    'check the wording if it does)')
+
+
+def _tokenise_groups(contract_docx, data):
+    """Apply every group, and report the ones nothing matched."""
+    applied, absent = 0, []
+    for label, alternatives in RULE_GROUPS:
+        result, hits, _missing = contract_docx.tokenise(data, alternatives)
+        if hits:
+            data = result
+            applied += hits
+        else:
+            absent.append(label)
+    return data, applied, absent
 
 
 def _tokens_in(contract_docx, data):
