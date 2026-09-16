@@ -25,6 +25,11 @@ SCHEDULES = [
         'every': 15, 'period': 'minutes',
     },
     {
+        'name': 'car_import: import call recordings from Dropbox',
+        'task': 'car_import.tasks.sync_dropbox_calls',
+        'every': 6, 'period': 'hours',
+    },
+    {
         'name': 'car_import: refresh supplier listing availability',
         'task': 'car_import.tasks.refresh_listing_availability',
         'every': 1, 'period': 'days',

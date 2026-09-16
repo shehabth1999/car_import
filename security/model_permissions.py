@@ -67,6 +67,11 @@ MODEL_PERMISSIONS = [
     {'model': 'car_import.initiative', 'group': 'car_import.sales_manager', 'permissions': MANAGE},
     {'model': 'car_import.initiative', 'group': 'car_import.management', 'permissions': FULL},
 
+    # ── call recordings: internal, and an agent never deletes one ──────
+    {'model': 'car_import.callrecording', 'group': 'car_import.sales_manager', 'permissions': MANAGE},
+    {'model': 'car_import.callrecording', 'group': 'car_import.operations', 'permissions': MANAGE},
+    {'model': 'car_import.callrecording', 'group': 'car_import.management', 'permissions': FULL},
+
     # ── the log is evidence: nobody edits it ────────────────────────────────
     {'model': 'car_import.stagechangelog', 'group': 'car_import.sales_agent', 'permissions': VIEW_ONLY},
     {'model': 'car_import.stagechangelog', 'group': 'car_import.sales_manager', 'permissions': VIEW_ONLY},

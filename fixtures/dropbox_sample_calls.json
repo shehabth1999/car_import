@@ -1,0 +1,56 @@
+[
+  {
+    ".tag": "file",
+    "id": "id:SIMCALL0000001",
+    "name": "201012345678_20260914_101532.mp3",
+    "path_lower": "/calls/ramy/2026-09/201012345678_20260914_101532.mp3",
+    "size": 1843200,
+    "client_modified": "2026-09-14T10:15:32Z",
+    "simulated_transcript": "العميل بيسأل عن العربية وصلت فين، وقاله إنها في الشحن الدولي والوصول المتوقع أول أكتوبر. طلب تحديث مكتوب على واتساب.",
+    "simulated_summary": "سؤال عن حالة الشحن. العميل مطمئن بعد ما عرف الوصول المتوقع.",
+    "simulated_actions": ["يتبعتله تحديث مكتوب على واتساب", "يتراجع تاريخ الوصول بعد أسبوع"],
+    "simulated_duration": 184
+  },
+  {
+    ".tag": "file",
+    "id": "id:SIMCALL0000002",
+    "name": "201199887766_20260915_143012.m4a",
+    "path_lower": "/calls/aya/2026-09/201199887766_20260915_143012.m4a",
+    "size": 2310144,
+    "client_modified": "2026-09-15T14:30:12Z",
+    "simulated_transcript": "العميلة بتسأل عن التقسيط وكام المقدم. اتقالها الشروط العامة وإن الزميل هو اللي يحسب القسط بالظبط.",
+    "simulated_summary": "استفسار عن التقسيط. محتاجة عرض بالأرقام من المبيعات.",
+    "simulated_actions": ["يتحسبلها القسط ويتبعت", "تتسجل كعميلة مهتمة بالتقسيط"],
+    "simulated_duration": 322
+  },
+  {
+    ".tag": "file",
+    "id": "id:SIMCALL0000003",
+    "name": "unknown_caller_20260915_180455.mp3",
+    "path_lower": "/calls/ramy/2026-09/unknown_caller_20260915_180455.mp3",
+    "size": 921600,
+    "client_modified": "2026-09-15T18:04:55Z",
+    "simulated_transcript": "مكالمة قصيرة، الرقم مش ظاهر في اسم الملف.",
+    "simulated_summary": "مكالمة من رقم غير معروف.",
+    "simulated_actions": [],
+    "simulated_duration": 47
+  },
+  {
+    ".tag": "file",
+    "id": "id:SIMCALL0000004",
+    "name": "01012345678_20260916_090015.wav",
+    "path_lower": "/calls/aya/2026-09/01012345678_20260916_090015.wav",
+    "size": 5120000,
+    "client_modified": "2026-09-16T09:00:15Z",
+    "simulated_transcript": "نفس العميل بتاع المكالمة الأولى بس الرقم متكتب بصيغة محلية. بيسأل عن الجمارك.",
+    "simulated_summary": "سؤال عن الجمارك — اتحول للزميل المختص.",
+    "simulated_actions": ["الزميل يرد على سؤال الجمارك"],
+    "simulated_duration": 211
+  },
+  {
+    ".tag": "folder",
+    "id": "id:SIMFOLDER001",
+    "name": "2026-09",
+    "path_lower": "/calls/aya/2026-09"
+  }
+]

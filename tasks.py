@@ -239,3 +239,17 @@ def refresh_listing_availability():
     result = mobile_de.refresh_availability()
     logger.info('car_import: listing refresh %s', result)
     return result
+
+
+@shared_task
+def sync_dropbox_calls():
+    """Nightly: pull new call recordings and match them.
+
+    A scheduled poll with the stored cursor covers whatever a missed webhook
+    dropped — which is the failure mode webhooks actually have.
+    """
+    from car_import.services import dropbox_sync
+
+    result = dropbox_sync.sync_calls()
+    logger.info('car_import: dropbox sync %s', result)
+    return result

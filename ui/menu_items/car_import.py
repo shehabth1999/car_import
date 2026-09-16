@@ -63,6 +63,18 @@ menu_dict = {
                 "allowed_groups": ["car_import.sales_agent", "car_import.sales_manager",
                                    "car_import.management"],
             },
+            "car_import_menu_calls": {
+                "name": _("Call recordings"),
+                "icon": "PhoneCall",
+                "module": "car_import",
+                "model": "car_import.callrecording",
+                "view_types": "list,form",
+                "sequence": 29,
+                # Internal only. A recording is personal data, and the summaries
+                # are for the company rather than the customer.
+                "allowed_groups": ["car_import.sales_manager", "car_import.operations",
+                                   "car_import.management"],
+            },
             "car_import_menu_stage_log": {
                 "name": _("Message log"),
                 "icon": "Send",
