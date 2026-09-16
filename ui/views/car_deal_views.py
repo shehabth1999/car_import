@@ -219,6 +219,11 @@ car_deal_form_view = {
                                  "displayField": "name", "required": True, "multiSelect": False},
                                 {"name": "lead", "string": _("Lead"), "widget": "relation",
                                  "displayField": "name", "multiSelect": False},
+                                # Read through from the lead: which advert, which
+                                # campaign, first click. Answers "what paid for
+                                # this car?" on the screen where it gets asked.
+                                {"name": "attribution_summary", "string": _("Came from"),
+                                 "widget": "text", "readonly": True},
                                 {"name": "assigned_to", "string": _("Sales agent"), "widget": "relation",
                                  "displayField": "name", "multiSelect": False},
                             ],

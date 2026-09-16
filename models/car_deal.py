@@ -229,6 +229,32 @@ class CarDeal(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
                 .first())
 
     @property
+    def attribution_summary(self):
+        """Where this customer came from, as one line.
+
+        The platform records it on the LEAD — click-to-WhatsApp referrals,
+        UTM campaign, Meta ad — and nothing showed it on the deal, which is the
+        screen a manager actually has open when they ask "which advert paid for
+        this car?". Read through, never copied: the lead stays the source.
+        """
+        lead = self.lead if self.lead_id else None
+        if lead is None:
+            return ''
+        bits = []
+        origin = getattr(lead, 'lead_origin', '') or ''
+        if origin:
+            bits.append({'ads': 'إعلان', 'organic': 'أورجانيك'}.get(origin, origin))
+        for attr in ('utm_source', 'utm_medium', 'utm_campaign', 'meta_campaign', 'meta_ad'):
+            value = getattr(lead, attr, None)
+            name = getattr(value, 'name', None)
+            if name:
+                bits.append(str(name))
+        first = getattr(lead, 'meta_first_touch_at', None)
+        if first:
+            bits.append(f'أول نقرة {first:%Y-%m-%d}')
+        return ' · '.join(bits)
+
+    @property
     def days_in_stage(self):
         if not self.stage_entered_at:
             return None
