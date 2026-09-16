@@ -120,11 +120,32 @@ uv run python manage.py seed_import_stages         # the 14 stages + the deal nu
 uv run python manage.py schedule_car_import_jobs   # the three recurring jobs
 ```
 
-`seed_reference_data` writes only what the owner confirmed on 14–15 September,
-and prints what it is deliberately NOT writing — the down-payment formula,
-whether the customs figure is payable or a valuation, bank financing terms. An
-empty table makes the pricing engine refuse; a plausible wrong number makes it
-quote confidently and be wrong by a factor.
+`seed_reference_data` writes only what the owner confirmed, and prints what it
+is deliberately NOT writing — whether the customs figure is payable or a
+valuation, and bank financing terms. An empty table makes the pricing engine
+refuse; a plausible wrong number makes it quote confidently and be wrong by a
+factor.
+
+It also writes the **five pricing bands and the seven calculator fees** taken
+from the client's own `New Quotation.xlsx`. Prove they landed correctly before
+anyone quotes from them:
+
+```bash
+uv run python manage.py price_car --check
+```
+
+That replays the workbook's two worked examples — 48,001 € from the English
+sheet and 30,000 € from the Arabic one — against the values cached inside the
+file itself, and fails loudly if this engine and the client's calculator
+disagree by a cent. It also asserts that a fully loaded quote's rows add up to
+its own total, which the workbook cannot test because the workbook has no
+discount. Run it after any change to a band or a fee.
+
+To price one car without creating a quotation:
+
+```bash
+uv run python manage.py price_car 48001 --eur1 --shipping container --port port_said --paid 20000
+```
 
 **The client's values workbook** is loaded separately, because it is their
 commercial data and is not shipped with the module:
@@ -282,14 +303,23 @@ real stage move is then their first automatic message.
 - Deal pipeline, form, list and search; car, stage and message-log screens.
 - Identity fields on the contact, qualification on the lead, **Create car deal** on the lead.
 - Six security groups and the install guard.
-- An AI agent for WhatsApp/Messenger/Instagram/TikTok/web chat with six tools:
-  deal status, send status, eligibility, instalment terms, fees, and hand-off to a human.
+- An AI agent for WhatsApp/Messenger/Instagram/TikTok/web chat with eleven tools:
+  deal status, send status, eligibility, instalment terms, fees, document
+  checklist, vehicle and initiative search, initiative registration, follow-up
+  scheduling, and hand-off to a human.
+- **The price calculator**, ported cell for cell from the client's
+  `New Quotation.xlsx`: five bands and seven fees as editable dated rows, an
+  engine that refuses rather than guesses for a price no band covers, and
+  `price_car --check` to prove it still matches their sheet.
+- **Quotations** (`Quote`, `QuoteLine`): every figure frozen at the moment it
+  was calculated, a payment box that takes a real amount instead of a status,
+  an Arabic page to print, and a WhatsApp message to send — behind a
+  confirmation, a kill switch and an opt-out check.
 
 ## What it deliberately does not do yet
 
 | Not built | Why / what unblocks it |
 |---|---|
-| Price quotes and the deposit tables | The loader needs the fee schedule and the down-payment calculator from the client |
 | mobile.de search | The account questions came back blank; Mr Khaled holds the account |
 | Contract generation | Needs the blank templates and the instalment wording from their lawyer |
 | Documents / KYC lane (vision) | Second AI lane; comes after the document checklist |
