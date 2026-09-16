@@ -147,6 +147,28 @@ To price one car without creating a quotation:
 uv run python manage.py price_car 48001 --eur1 --shipping container --port port_said --paid 20000
 ```
 
+## 1b-bis. The contract templates
+
+The client's `.docx` contracts are their commercial and legal property and are
+not shipped with the module. Put them on the server, import them, and delete
+them — the same discipline as the values workbook:
+
+```bash
+uv run python manage.py import_contract_templates --dir /tmp/ka_contracts --inspect   # look first
+uv run python manage.py import_contract_templates --dir /tmp/ka_contracts
+rm -rf /tmp/ka_contracts
+```
+
+`--inspect` prints every blank it can see without writing anything. The real
+run reports, per file, which clause groups it could NOT find — that is either a
+contract which genuinely has no such clause (an initiative contract has no car
+clause) or the client rewording a clause under us, and those look identical
+from here, so a human reads the line.
+
+Two files import as `*_reference`: they are copies of signed contracts with
+their dates already typed in, not blank templates, and they are kept because
+"why does this clause differ?" gets asked eventually.
+
 **The client's values workbook** is loaded separately, because it is their
 commercial data and is not shipped with the module:
 
@@ -315,13 +337,21 @@ real stage move is then their first automatic message.
   was calculated, a payment box that takes a real amount instead of a status,
   an Arabic page to print, and a WhatsApp message to send — behind a
   confirmation, a kill switch and an opt-out check.
+- **Contracts** (`Contract`, `ContractTemplate`): the client's own bilingual
+  `.docx` files, blanks turned into named fields, filled from the deal and its
+  accepted quotation and handed back as the same Word document. It refuses to
+  produce a file when a required field did not land, because a contract with
+  dots where the price belongs is a document somebody signs.
+- **Review pages for the client**: `export_stage_messages` and
+  `export_whatsapp_templates` write a link the client can read on a phone and
+  forward, which is how the stage wording and the WhatsApp templates get
+  approved without pasting fourteen messages into a chat thread.
 
 ## What it deliberately does not do yet
 
 | Not built | Why / what unblocks it |
 |---|---|
 | mobile.de search | The account questions came back blank; Mr Khaled holds the account |
-| Contract generation | Needs the blank templates and the instalment wording from their lawyer |
 | Documents / KYC lane (vision) | Second AI lane; comes after the document checklist |
 | Website tracking-page feed | Waiting on an introduction to their engineer, Ahmed Saeed |
 | Call summaries from Dropbox | Separate module, `car_call_summary` |
