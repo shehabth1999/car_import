@@ -6,15 +6,22 @@ from modules.base.models.base import BaseModel
 
 #: Options that move a car from the medium tier to the full tier.
 #: The client confirmed on 2026-09-14: panorama and sunroof count separately,
-#: and **any 3 of 6** options put the car in the full tier. Five are named so
-#: far; the sixth is still to be confirmed, hence `has_other_tier_option`.
+#: and **any 3 of 6** options put the car in the full tier. All six were
+#: confirmed by the owner on 2026-09-16, in his own words:
+#:   فتحة سقف · سقف بانوراما · شنطة كهرباء · كراسي كهرباء · كراسي جلد · عداد ديجيتال
+#:
+#: Two corrections came with that list. What was recorded as "memory seats" is
+#: ELECTRIC seats — a different option, and a commoner one. And leather seats,
+#: which had been missed entirely, take the sixth slot that was a placeholder.
+#: Both mattered: the count decides the tier, the tier decides the deposit, and
+#: the deposit is thousands of dollars.
 TIER_OPTION_FIELDS = (
-    'has_panorama',
     'has_sunroof',
-    'has_memory_seats',
+    'has_panorama',
     'has_electric_trunk',
+    'has_electric_seats',
+    'has_leather_seats',
     'has_digital_cluster',
-    'has_other_tier_option',
 )
 
 #: How many of those options make the car "كاملة".
@@ -98,13 +105,10 @@ class Vehicle(BaseModel):
     # ── the options that decide the deposit tier ────────────────────────────
     has_panorama = models.BooleanField(default=False, verbose_name=_("Panorama roof"))
     has_sunroof = models.BooleanField(default=False, verbose_name=_("Sunroof"))
-    has_memory_seats = models.BooleanField(default=False, verbose_name=_("Memory seats"))
-    has_electric_trunk = models.BooleanField(default=False, verbose_name=_("Electric trunk"))
-    has_digital_cluster = models.BooleanField(default=False, verbose_name=_("Digital cluster"))
-    has_other_tier_option = models.BooleanField(
-        default=False, verbose_name=_("Other tier option"),
-        help_text=_("The client's rule counts 6 options; five are named so far"),
-    )
+    has_electric_trunk = models.BooleanField(default=False, verbose_name=_("Electric boot (شنطة كهرباء)"))
+    has_electric_seats = models.BooleanField(default=False, verbose_name=_("Electric seats (كراسي كهرباء)"))
+    has_leather_seats = models.BooleanField(default=False, verbose_name=_("Leather seats (كراسي جلد)"))
+    has_digital_cluster = models.BooleanField(default=False, verbose_name=_("Digital cluster (عداد ديجيتال)"))
     tier_override = models.CharField(
         max_length=16, choices=TIER, blank=True, verbose_name=_("Tier override"),
         help_text=_("Set only when the deposit sheet disagrees with the option count"),

@@ -8,6 +8,7 @@ from .call_recording import CallRecording
 from .documents import DocumentRequirement, DealDocument
 from .initiative import Initiative
 from .listings import ShowroomListing, InitiativeListing
+from .pricing import PricingBand
 from .reference_data import (
     ImportProgram, TaxRule, Eur1Rule,
     DepositTier, CustomsValuation, ModelPriceRange,
@@ -17,7 +18,7 @@ from .reference_data import (
 __all__ = [
     'ImportStage', 'Vehicle', 'CarDeal', 'StageChangeLog', 'SupplierListing',
     'DocumentRequirement', 'DealDocument', 'Initiative', 'CallRecording',
-    'ShowroomListing', 'InitiativeListing',
+    'ShowroomListing', 'InitiativeListing', 'PricingBand',
     'ImportProgram', 'TaxRule', 'Eur1Rule',
     'DepositTier', 'CustomsValuation', 'ModelPriceRange',
     'FeeSchedule', 'FinancingPlan', 'FirstOwnerDiscount', 'FxReference',

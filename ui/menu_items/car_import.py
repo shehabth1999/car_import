@@ -149,6 +149,15 @@ menu_dict = {
                         "sequence": 20,
                         "allowed_groups": ["car_import.management"],
                     },
+                    "car_import_menu_pricing_bands": {
+                        "name": _("Pricing bands"),
+                        "icon": "Calculator",
+                        "module": "car_import",
+                        "model": "car_import.pricingband",
+                        "view_types": "list,form",
+                        "sequence": 25,
+                        "allowed_groups": ["car_import.management", "car_import.sales_manager"],
+                    },
                     "car_import_menu_fees": {
                         "name": _("Fee schedule"),
                         "icon": "Receipt",

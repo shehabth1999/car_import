@@ -100,6 +100,38 @@ DOCUMENTS = {
 DOCUMENTS['commercial'] = DOCUMENTS['personal']
 
 
+# From the client's own calculator (New Quotation.xlsx, 2026-09-16), cell B16
+# for the admin fee and B20 for the deposit. The bands are reproduced exactly,
+# including the two things that look wrong and are not: the cheapest band's
+# admin fee is a DISCOUNT of 750, and the deposit percentage is not monotonic.
+PRICING_BANDS = [
+    ('0 – 30,000 €',       0,     30000, 'fixed',          -750, 15),
+    ('30,001 – 48,000 €',  30001, 48000, 'fixed',             0, 25),
+    ('48,001 – 59,000 €',  48001, 59000, 'percent_of_net',  3.0, 25),
+    ('59,001 – 88,000 €',  59001, 88000, 'percent_of_net',  5.7, 15),
+    ('88,001 € and above', 88001,  None, 'percent_of_net',  6.5, 15),
+]
+
+# The fees the calculator and the owner's message name. Ports differ by more
+# than the sheet's note admits: it says "about 50,000 EGP", the owner says
+# Alexandria 55,000 and Port Said 105,000 — twice the money.
+CALCULATOR_FEES = [
+    {'code': 'shipping_cost', 'name': 'مصاريف الشحن', 'amount': 4750, 'currency': 'EUR'},
+    {'code': 'eur1_certificate', 'name': 'شهادة يورو 1', 'amount': 550, 'currency': 'EUR',
+     'applies_to': 'with_eur1'},
+    {'code': 'shipping_vip_roro', 'name': 'شحن VIP RORO', 'amount': 250, 'currency': 'EUR',
+     'applies_to': 'optional'},
+    {'code': 'shipping_container', 'name': 'شحن بالحاوية', 'amount': 1000, 'currency': 'EUR',
+     'applies_to': 'optional'},
+    {'code': 'port_alexandria', 'name': 'مصاريف ميناء الإسكندرية', 'amount': 55000,
+     'currency': 'EGP', 'notes': 'Collected on arrival, in Egypt.'},
+    {'code': 'port_said', 'name': 'مصاريف ميناء بورسعيد', 'amount': 105000, 'currency': 'EGP',
+     'notes': 'Collected on arrival, in Egypt.'},
+    {'code': 'showroom_collection', 'name': 'الاستلام من المعرض', 'amount': 5000,
+     'currency': 'EGP', 'applies_to': 'optional'},
+]
+
+
 class Command(BaseCommand):
     help = "Seed the confirmed programmes, tax bands, fees, financing plans and EUR 1 rule"
 
@@ -171,6 +203,26 @@ class Command(BaseCommand):
                     defaults={'discount_pct': 5 * years, 'effective_from': CONFIRMED,
                               'source_note': SOURCE})
             counts['first-owner discounts'] = 5
+
+            from car_import.models import PricingBand
+            made = 0
+            for seq, (name, low, high, fee_type, fee_value, deposit) in enumerate(PRICING_BANDS, 1):
+                _row, m = PricingBand.objects.update_or_create(
+                    name=name,
+                    defaults={'sequence': seq * 10, 'gross_from_eur': low, 'gross_to_eur': high,
+                              'admin_fee_type': fee_type, 'admin_fee_value': fee_value,
+                              'deposit_pct': deposit, 'effective_from': date(2026, 9, 16),
+                              'source_note': "the client's calculator, 2026-09-16"})
+                made += bool(m)
+            counts['pricing bands'] = f'{made} new'
+
+            for data in CALCULATOR_FEES:
+                FeeSchedule.objects.update_or_create(
+                    code=data['code'],
+                    defaults=dict({k: v for k, v in data.items() if k != 'code'},
+                                  effective_from=date(2026, 9, 16),
+                                  source_note="the client's calculator, 2026-09-16"))
+            counts['calculator fees'] = len(CALCULATOR_FEES)
 
             from car_import.models import DocumentRequirement
             made = 0

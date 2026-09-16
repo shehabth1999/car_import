@@ -101,14 +101,14 @@ vehicle_form_view = {
                             "fields": [
                                 {"name": "has_panorama", "string": _("Panorama roof"), "widget": "switch"},
                                 {"name": "has_sunroof", "string": _("Sunroof"), "widget": "switch"},
-                                {"name": "has_memory_seats", "string": _("Memory seats"), "widget": "switch"},
+                                {"name": "has_electric_seats", "string": _("Electric seats"), "widget": "switch"},
                             ],
                         },
                         {
                             "fields": [
                                 {"name": "has_electric_trunk", "string": _("Electric trunk"), "widget": "switch"},
                                 {"name": "has_digital_cluster", "string": _("Digital cluster"), "widget": "switch"},
-                                {"name": "has_other_tier_option", "string": _("Other tier option"), "widget": "switch"},
+                                {"name": "has_leather_seats", "string": _("Leather seats"), "widget": "switch"},
                                 {"name": "tier_override", "string": _("Tier override"), "widget": "select",
                                  "help": _("Any 3 of the 6 options make the car كاملة — set this only to disagree")},
                             ],
