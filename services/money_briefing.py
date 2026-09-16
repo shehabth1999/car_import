@@ -59,9 +59,13 @@ def build(partner, topic=None, reason=''):
     if not (fees or instalments or quote):
         return ''
 
-    lines.append('⚠️ للمراجعة الداخلية — متتبعتش للعميل زي ما هي.')
-    lines.append('العميل سأل سؤال فلوس والمساعد حوّل من غير ما يقول أي رقم.')
-    lines.append('دي الأرقام المعتمدة في النظام دلوقتي. **تأكد إنها لسه صح قبل ما تقولها.**')
+    # No markdown. The chat renders the text as it is stored, so `**bold**`
+    # arrives at the agent as literal asterisks — emphasis has to be words and
+    # placement, not syntax.
+    lines.append('⚠️ ملاحظة داخلية — العميل مش شايفها.')
+    lines.append('سأل سؤال فلوس، والمساعد حوّل من غير ما يقول أي رقم.')
+    lines.append('دي الأرقام المعتمدة في النظام دلوقتي.')
+    lines.append('❗ تأكد إنها لسه صح قبل ما تقولها للعميل.')
     lines.append('')
 
     if quote:
@@ -70,7 +74,7 @@ def build(partner, topic=None, reason=''):
                      f'({quote["deposit_pct"]}%) · الباقي {quote["balance"]} €')
         if quote['paid']:
             lines.append(f'   المدفوع {quote["paid"]} €'
-                         + (f' · **دفع زيادة {quote["overpaid"]} €**' if quote['overpaid'] else ''))
+                         + (f' · ❗ دفع زيادة {quote["overpaid"]} €' if quote['overpaid'] else ''))
         lines.append('')
 
     if fees:
