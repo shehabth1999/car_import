@@ -983,4 +983,11 @@ CATALOG = {
     'Zero': 'زيرو',
     'funds on %(date)s': 'الفلوس جاهزة في %(date)s',
     'nothing new': 'مفيش جديد',
+    '%(name)s has no open deal to move.': '%(name)s معندوش صفقة مفتوحة تتنقل.',
+    'New deal for %(name)s': 'صفقة جديدة لـ %(name)s',
+    'Qualification saved: %(summary)s': 'اتحفظ التأهيل: %(summary)s',
+    'Qualified from the chat: %(summary)s': 'تأهيل من الشات: %(summary)s',
+    'Qualify %(name)s': 'تأهيل %(name)s',
+    'Quotation for %(name)s': 'عرض سعر لـ %(name)s',
+    'Set stage — %(deal)s': 'تغيير المرحلة — %(deal)s',
 }

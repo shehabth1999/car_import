@@ -40,6 +40,9 @@ msgstr "%(car)s مصنّعة في %(country)s"
 msgid "%(customer)s on %(programme)s"
 msgstr "%(customer)s على برنامج %(programme)s"
 
+msgid "%(name)s has no open deal to move."
+msgstr "%(name)s معندوش صفقة مفتوحة تتنقل."
+
 msgctxt "ui/views/vehicle_views.py"
 msgid "17 characters — never shortened"
 msgstr "17 حرف — لا يُختصر أبداً"
@@ -2802,6 +2805,9 @@ msgstr "صافي — مفيش ضريبة تُسترد"
 msgid "Never more than the fee itself"
 msgstr "عمره ما يزيد عن المصاريف نفسها"
 
+msgid "New deal for %(name)s"
+msgstr "صفقة جديدة لـ %(name)s"
+
 msgid "New quotation"
 msgstr "عرض سعر جديد"
 
@@ -3463,6 +3469,15 @@ msgctxt "ui/views/car_deal_views.py"
 msgid "Put on hold"
 msgstr "تعليق"
 
+msgid "Qualification saved: %(summary)s"
+msgstr "اتحفظ التأهيل: %(summary)s"
+
+msgid "Qualified from the chat: %(summary)s"
+msgstr "تأهيل من الشات: %(summary)s"
+
+msgid "Qualify %(name)s"
+msgstr "تأهيل %(name)s"
+
 msgid "Qualify customer"
 msgstr "تأهيل العميل"
 
@@ -3483,6 +3498,9 @@ msgstr "عرض سعر"
 msgctxt "ui/views/quote_views.py"
 msgid "Quotation"
 msgstr "عرض سعر"
+
+msgid "Quotation for %(name)s"
+msgstr "عرض سعر لـ %(name)s"
 
 msgid "Quotation line"
 msgstr "سطر عرض السعر"
@@ -3846,6 +3864,9 @@ msgstr "حدده بس لو شيت الودائع مختلف عن عدد المو
 
 msgid "Set stage"
 msgstr "تغيير المرحلة"
+
+msgid "Set stage — %(deal)s"
+msgstr "تغيير المرحلة — %(deal)s"
 
 msgid "Set stage…"
 msgstr "تغيير المرحلة…"
