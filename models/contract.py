@@ -221,6 +221,7 @@ class Contract(BaseModel, BranchMixin, FullChatterMixin):
     #: The copy that came back with a signature on it. A generated file proves
     #: what we offered; only this proves what they agreed to.
     signed_document = AttachmentForeignKeyField(
+        related_name='+',
         upload_to='car_import/contracts/signed', allowed_types=['pdf', 'image', 'document'],
         verbose_name=_("Signed copy"))
     sent_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Sent at"),

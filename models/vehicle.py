@@ -158,18 +158,22 @@ class Vehicle(BaseModel):
     # showroom. Until now the stage could send media and the car had nowhere to
     # keep it, so the only copy lived in a WhatsApp thread.
     photos = AttachmentManyToManyField(
+        related_name='+',
         upload_to='car_import/vehicles/photos', allowed_types=['image'],
         verbose_name=_("Photos"), blank=True,
     )
     walkaround_video = AttachmentForeignKeyField(
+        related_name='+',
         upload_to='car_import/vehicles/video', allowed_types=['video'],
         verbose_name=_("Walk-around video"),
     )
     car_card = AttachmentForeignKeyField(
+        related_name='+',
         upload_to='car_import/vehicles/cards', allowed_types=['pdf', 'image', 'document'],
         verbose_name=_("Car card"),
     )
     vin_option_list = AttachmentForeignKeyField(
+        related_name='+',
         upload_to='car_import/vehicles/options', allowed_types=['pdf', 'document', 'image'],
         verbose_name=_("VIN option list"),
         help_text=_("The factory list the supplier sends against the VIN"),
