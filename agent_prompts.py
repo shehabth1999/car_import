@@ -22,17 +22,12 @@ def _read(name):
 
 CORE = _read('core.md')
 LANE_SALES = _read('lane_sales.md')
-VOICE_AYA = _read('voice_aya.md')
-VOICE_RAMY = _read('voice_ramy.md')
-VOICE_SOCIAL = _read('voice_social.md')
-
-VOICES = {
-    'aya': VOICE_AYA,
-    'ramy': VOICE_RAMY,
-    'social': VOICE_SOCIAL,
-}
+# One voice for every number and every channel. There used to be three
+# (Aya, Ramy, Social), one workflow each; the owner asked for a single agent,
+# so the voice file blends them and adapts by channel inside the prompt.
+VOICE = _read('voice.md')
 
 
-def system_prompt(voice='aya'):
-    """The full system prompt for one WhatsApp number or channel."""
-    return "\n\n".join([CORE, VOICES.get(voice, VOICE_AYA), LANE_SALES])
+def system_prompt():
+    """The full system prompt: the rules, the voice, the sales lane."""
+    return "\n\n".join([CORE, VOICE, LANE_SALES])

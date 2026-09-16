@@ -7,9 +7,9 @@ canvas — stays the source of truth. Nodes are saved one by one (never
 `queryset.update`) because the compile cache is invalidated in `post_save`; a
 bulk update would leave every worker running the old graph.
 
-    uv run python manage.py build_ka_workflows --voice aya
-    uv run python manage.py build_ka_workflows --voice aya --release <whatsapp_account_id>
-    uv run python manage.py build_ka_workflows --voice aya --canary <partner_id>
+    uv run python manage.py build_ka_workflows
+    uv run python manage.py build_ka_workflows --release <whatsapp_account_id>
+    uv run python manage.py build_ka_workflows --canary <partner_id>
     uv run python manage.py build_ka_workflows --rollback
 """
 from django.core.management.base import BaseCommand, CommandError
@@ -20,8 +20,6 @@ class Command(BaseCommand):
     help = "Create or refresh the KA Sales workflow, and optionally point a WhatsApp account at it"
 
     def add_arguments(self, parser):
-        parser.add_argument('--voice', default='aya', choices=['aya', 'ramy', 'social'],
-                            help="Which agent's voice this copy speaks in")
         parser.add_argument('--owner', type=int, default=None,
                             help="User id that owns the workflow (defaults to the first superuser)")
         parser.add_argument('--release', type=int, default=None,
@@ -37,8 +35,7 @@ class Command(BaseCommand):
         from car_import.workflows import ka_sales_definition as definition
         from modules.aistudio.models import LLMModel, ToolDefinition, WorkflowDefinition, WorkflowEdge, WorkflowNode
 
-        voice = options['voice']
-        payload = definition.workflow_payload(voice)
+        payload = definition.workflow_payload()
         name = payload.pop('name')
 
         if options['rollback']:
@@ -76,7 +73,7 @@ class Command(BaseCommand):
         workflow.nodes.all().delete()
         workflow.edges.all().delete()
 
-        for node in definition.nodes(voice):
+        for node in definition.nodes():
             config = dict(node['configuration'])
             if node['node_id'] == 'sales_agent':
                 config['llm_model_id'] = model_id
@@ -103,6 +100,8 @@ class Command(BaseCommand):
             f"({workflow.nodes.count()} nodes, {workflow.edges.count()} edges)."
         ))
 
+        self._retire_legacy(WorkflowDefinition, workflow)
+
         if options['canary']:
             self._canary(workflow, options['canary'])
         if options['release']:
@@ -118,6 +117,32 @@ class Command(BaseCommand):
         )
 
     # ── helpers ─────────────────────────────────────────────────────────────
+    def _retire_legacy(self, WorkflowDefinition, keep):
+        """Switch off the per-number copies (KA Sales — Aya / Ramy / Social).
+
+        One agent now speaks for every number and channel. The old rows are
+        deactivated, not deleted: their executions are the only record of what
+        the agent said during the shadow weeks. Anything still bound to one of
+        them is moved to the single workflow.
+        """
+        legacy = WorkflowDefinition.objects.filter(name__startswith='KA Sales — ').exclude(pk=keep.pk)
+        if not legacy.exists():
+            return
+        from modules.base.models import Partner
+        moved = Partner.all_objects.filter(workflow__in=legacy).update(workflow=keep)
+        try:
+            from modules.whatsapp.models import WhatsAppAccount
+            moved += WhatsAppAccount.objects.filter(workflow__in=legacy).update(workflow=keep)
+        except Exception:
+            pass
+        names = list(legacy.values_list('name', flat=True))
+        for row in legacy:
+            row.is_active = False
+            row.save(update_fields=['is_active'])
+        self.stdout.write(self.style.WARNING(
+            f"Retired {len(names)} legacy copy(ies): {', '.join(names)} — deactivated, "
+            f"{moved} binding(s) moved to '{keep.name}'."))
+
     def _owner(self, owner_id):
         from modules.base.models.user import User
 

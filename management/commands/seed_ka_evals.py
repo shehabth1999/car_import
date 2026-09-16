@@ -7,7 +7,7 @@ imagination, while these test the specific ways this agent has actually been
 wrong.
 
     uv run python manage.py seed_ka_evals
-    uv run python manage.py seed_ka_evals --workflow "KA Sales — Aya"
+    uv run python manage.py seed_ka_evals --workflow "KA Sales"
 
 ⚠ **Eval runs are not sandboxed.** Side-effecting tools fire for real: an
 escalation really switches the AI off, and a send tool really sends. The
@@ -130,7 +130,7 @@ class Command(BaseCommand):
     help = "Create the KA Sales eval dataset and its golden cases"
 
     def add_arguments(self, parser):
-        parser.add_argument('--workflow', default='KA Sales — Aya')
+        parser.add_argument('--workflow', default='KA Sales')
         parser.add_argument('--name', default='KA Sales — the rules that must hold')
 
     def handle(self, *args, **options):

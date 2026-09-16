@@ -252,7 +252,7 @@ uv run python manage.py build_ka_workflows --voice aya
 ```
 
 **Or** import a bundle through the UI — AI Studio → Workflows → Import → choose
-`workflows/ka_sales_aya.bundle.json` (also `_ramy` and `_social`). Tools and models
+`workflows/ka_sales.bundle.json`. Tools and models
 are carried by name, so pick the model in the node afterwards if the name differs.
 
 Either way, verify the graph before anyone connects a number — one entry node, both
@@ -264,7 +264,7 @@ workflow attached to **no** WhatsApp account yet:
 uv run python manage.py shell -c "
 from modules.aistudio.models import WorkflowDefinition, ToolDefinition
 from modules.whatsapp.models import WhatsAppAccount
-w = WorkflowDefinition.objects.get(name='KA Sales — Aya')
+w = WorkflowDefinition.objects.get(name='KA Sales')
 nodes = {n.node_id: n for n in w.nodes.all()}; edges = list(w.edges.all())
 print('entry:', [n for n in nodes if n not in {e.target_node_id for e in edges}])
 print('accounts:', list(WhatsAppAccount.objects.values_list('name', 'handled_by_ai', 'workflow_id')))"

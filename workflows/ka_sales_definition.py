@@ -109,6 +109,17 @@ def execute(input_data):
 
     facts_lines, warnings, deal = [], [], None
 
+    # Which channel this is — the voice adapts to it (shorter on social, the
+    # one-line "who we are" opener there). `conversation` is an injected global.
+    try:
+        convo = conversation
+    except NameError:
+        convo = None
+    channel = str(getattr(convo, 'type', '') or '').lower()
+    channel_names = {'whatsapp': 'واتساب', 'messenger': 'ماسنجر', 'instagram': 'إنستجرام',
+                     'tiktok': 'تيك توك', 'webbot': 'شات الموقع', 'web': 'شات الموقع'}
+    facts_lines.append('القناة: %s' % (channel_names.get(channel) or channel or 'غير معروفة'))
+
     try:
         CarDeal = models['car_import']['CarDeal']
         if partner_id:
@@ -203,12 +214,15 @@ def execute(input_data):
 '''.strip()
 
 
-def system_message_text(voice='aya'):
+WORKFLOW_NAME = 'KA Sales'
+
+
+def system_message_text():
     """The agent's system prompt: the rules, the voice, and this turn's facts."""
     from car_import.agent_prompts import system_prompt
 
     return (
-        system_prompt(voice)
+        system_prompt()
         + "\n\n# بيانات الصفقة الحالية (من السيستم، مش من ذاكرتك)\n"
         + "{{ prepare_turn.deal_facts }}\n\n"
         + "# تحذيرات خاصة بالرسالة دي\n"
@@ -217,11 +231,10 @@ def system_message_text(voice='aya'):
     )
 
 
-def workflow_payload(voice='aya', system_text=None):
-    """The workflow row's own fields."""
-    titles = {'aya': 'Aya', 'ramy': 'Ramy', 'social': 'Social'}
+def workflow_payload():
+    """The workflow row's own fields. One workflow serves every number and channel."""
     return {
-        'name': f"KA Sales — {titles.get(voice, voice.title())}",
+        'name': WORKFLOW_NAME,
         'description': ("Customer conversations for Khaled Automobile / K&T. Python prepares the facts, "
                         "the agent reads meaning, and every money question goes to a human."),
         'category': 'sales',
@@ -241,8 +254,8 @@ def workflow_payload(voice='aya', system_text=None):
     }
 
 
-def nodes(voice='aya', system_text=None):
-    text = system_text if system_text is not None else system_message_text(voice)
+def nodes(system_text=None):
+    text = system_text if system_text is not None else system_message_text()
     return [
         {
             'node_id': 'prepare_turn',
@@ -359,11 +372,11 @@ def reference_manifest(workflow_key='wf_1'):
     return entries
 
 
-def bundle(voice='aya', system_text=None, exported_at=None):
+def bundle(system_text=None, exported_at=None):
     """A complete AI Studio bundle, ready to import through the UI."""
     key = 'wf_1'
-    payload = workflow_payload(voice)
-    payload['nodes'] = nodes(voice, system_text=system_text)
+    payload = workflow_payload()
+    payload['nodes'] = nodes(system_text=system_text)
     payload['edges'] = list(EDGES)
     return {
         'format': BUNDLE_FORMAT,
@@ -380,8 +393,8 @@ def bundle(voice='aya', system_text=None, exported_at=None):
     }
 
 
-def write_bundle(path, voice='aya', system_text=None, exported_at=None):
-    data = bundle(voice=voice, system_text=system_text, exported_at=exported_at)
+def write_bundle(path, system_text=None, exported_at=None):
+    data = bundle(system_text=system_text, exported_at=exported_at)
     os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
     with open(path, 'w', encoding='utf-8') as handle:
         json.dump(data, handle, ensure_ascii=False, indent=2)
