@@ -139,8 +139,13 @@ def figures_from_tool_messages(conversation, since):
         return []
     try:
         from modules.chat.models import Message
-        rows = Message.objects.filter(conversation=conversation, type='tool',
-                                      created_at__gte=since).values_list('content', flat=True)
+        # `objects_all`, not `objects`: the default manager EXCLUDES tool and
+        # tool_call rows by design (chat/models.py:2292), so the obvious query
+        # returns nothing, every figure looks untraceable, and the gate blocks
+        # the very numbers the tools just supplied.
+        rows = (Message.objects_all.filter(conversation=conversation, type='tool',
+                                           created_at__gte=since)
+                .values_list('content', flat=True))
     except Exception:
         logger.exception('car_import: could not read this turn\'s tool results')
         return []
