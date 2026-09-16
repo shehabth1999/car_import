@@ -109,6 +109,77 @@ or let the fleet do it: `genie-ops <slug> update`, which runs migrate → deploy
 update fails part-way it can leave `.maintenance` behind and nginx keeps serving 503 —
 check for that file after any failure.
 
+## 1b. Seed the data the module runs on
+
+Three commands, in this order. The first two are not optional — the module
+answers customers out of these tables.
+
+```bash
+uv run python manage.py seed_reference_data        # programmes, tax bands, fees, financing, EUR 1
+uv run python manage.py seed_import_stages         # the 14 stages + the deal number sequence
+uv run python manage.py schedule_car_import_jobs   # the three recurring jobs
+```
+
+`seed_reference_data` writes only what the owner confirmed on 14–15 September,
+and prints what it is deliberately NOT writing — the down-payment formula,
+whether the customs figure is payable or a valuation, bank financing terms. An
+empty table makes the pricing engine refuse; a plausible wrong number makes it
+quote confidently and be wrong by a factor.
+
+**The client's values workbook** is loaded separately, because it is their
+commercial data and is not shipped with the module:
+
+```bash
+# put the CSV on the server, load it, then delete it
+uv run python manage.py load_official_values --file /tmp/official_values.csv --dry-run
+uv run python manage.py load_official_values --file /tmp/official_values.csv
+```
+
+It REJECTS rows that fail a sanity check rather than guessing — a full tier
+priced below its medium tier, or a reversed price range. Both are errors that
+actually got through an earlier extraction of this same file. On `khaled_test`
+it loaded 304 deposit values, 5 customs values and 63 price ranges with no
+rejections.
+
+## 1c. The two integrations, and their simulators
+
+Both are written against the documented API and both ship with a simulator, so
+the work did not wait on credentials that have not arrived:
+
+```bash
+uv run python manage.py search_mobile_de --status          # which backend would answer
+uv run python manage.py search_mobile_de --make Mercedes-Benz --model C200 --import
+uv run python manage.py sync_dropbox_calls --status
+uv run python manage.py sync_dropbox_calls
+```
+
+Every run prints **which backend answered**, and every simulated row is stamped
+`is_simulated` — a fake car must never drift into a customer's quote.
+
+To go live, set config parameters and change no code:
+
+| Integration | Config parameters |
+|---|---|
+| mobile.de | `car_import.mobile_de_username`, `car_import.mobile_de_password` |
+| Dropbox | `car_import.dropbox_app_key`, `_app_secret`, `_refresh_token`, `_folder` |
+
+## 1d. The organisation, and the deals already in flight
+
+```bash
+uv run python manage.py setup_car_import_org --report
+uv run python manage.py setup_car_import_org --assign person@example.com=sales_agent
+uv run python manage.py setup_car_import_org --branches
+
+uv run python manage.py import_open_deals --file deals.csv --dry-run
+uv run python manage.py import_open_deals --file deals.csv
+```
+
+Every imported deal is created with **customer messages held**, unconditionally.
+`--release-messages` exists only to refuse: importing loudly is not something
+anyone should be able to do by passing a flag. Lift the hold per deal, by hand,
+once each customer knows a system is doing this — the next real stage move is
+then their first automatic message.
+
 ## 2. Seed the stages
 
 ```bash
@@ -164,6 +235,19 @@ Then open the agent node and confirm:
   rebuild;
 - `error_message` is the Arabic hand-off sentence (the build command sets it; the bundle
   import does not carry it).
+
+### Before a number: the evals
+
+```bash
+uv run python manage.py seed_ka_evals              # 9 golden cases
+uv run python manage.py export_ka_workflow --voice aya   # a bundle for another instance
+```
+
+Every case is either a defect that reached this tenant or a rule the client
+stated. Run them from AI Studio → Evals, and read the result honestly: runs are
+**not sandboxed** so a side-effecting tool really fires, `max_cost` and
+`max_steps` assertions can never fail, and `must_call_tools` is a substring
+match. A pass means "nothing obvious broke", not proof.
 
 ## 4. Connect a number, carefully
 
