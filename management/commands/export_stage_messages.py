@@ -76,43 +76,49 @@ class Command(BaseCommand):
             return
 
         example = _Example()
-        cards, on, off, missing = [], 0, 0, 0
+        cards, on, off = [], 0, 0
         for index, stage in enumerate(stages, 1):
             raw = (stage.fallback_text_ar if language == 'ar' else stage.fallback_text_en) or ''
             rendered = stage_notifier.render_stage_message(example, stage, language=language)
-            if not raw.strip():
-                missing += 1
-            if stage.notify_customer:
+            # What the reviewer needs is what will happen *after* they approve,
+            # not today's kill-switch state. Every stage is seeded with
+            # `notify_customer=False` until somebody signs off, so reporting
+            # the live flag would print "no message" fourteen times and leave
+            # them thinking we had not written any.
+            will_send = bool(raw.strip())
+            if will_send:
                 on += 1
             else:
                 off += 1
-            cards.append(_card(index, stage, rendered, language))
+            cards.append(_card(index, stage, rendered, will_send))
 
-        html = _page(cards, len(stages), on, off, missing,
+        html = _page(cards, len(stages), on, off,
                      stage_notifier.messages_enabled(), language)
         stamp = timezone.now().strftime('%Y%m%d%H%M%S')
         path = default_storage.save(f'car_import/review/stage-messages-{language}-{stamp}.html',
                                     ContentFile(html.encode('utf-8')))
         url = default_storage.url(path)
 
-        self.stdout.write(self.style.SUCCESS(f'\n{len(stages)} stage(s): '
-                                             f'{on} message the customer, {off} do not, '
-                                             f'{missing} have no text yet.'))
+        self.stdout.write(self.style.SUCCESS(
+            f'\n{len(stages)} stage(s): {on} carry a message for the customer, '
+            f'{off} have no text yet.'))
         self.stdout.write(f'\n  {url}\n')
         self.stdout.write('Prefix it with the tenant domain and send that link. '
                           'The page has no login — regenerate after sign-off.')
 
 
-def _card(index, stage, rendered, language):
+def _card(index, stage, rendered, will_send):
     name = escape(stage.name or stage.name_en or stage.code)
     body = escape(rendered).replace('\n', '<br>') if rendered.strip() else \
         '<span class="empty">— لسه مفيش نص للمرحلة دي —</span>'
 
     facts = []
-    if not stage.notify_customer:
-        facts.append('<span class="tag off">مفيش رسالة للعميل</span>')
+    if not will_send:
+        facts.append('<span class="tag off">مفيش نص، يعني مفيش رسالة</span>')
+    elif stage.notify_customer:
+        facts.append('<span class="tag on">بتتبعت دلوقتي</span>')
     else:
-        facts.append('<span class="tag on">بتتبعت للعميل</span>')
+        facts.append('<span class="tag on">هتتبعت بعد الموافقة</span>')
     if stage.requires_agent_approval:
         facts.append('<span class="tag hold">الموظف بيدوس إرسال</span>')
     if stage.send_delay_minutes:
@@ -133,7 +139,7 @@ def _card(index, stage, rendered, language):
 </article>"""
 
 
-def _page(cards, total, on, off, missing, kill_switch_on, language):
+def _page(cards, total, on, off, kill_switch_on, language):
     warning = '' if kill_switch_on else (
         '<div class="banner">🔒 كل الرسايل دلوقتي <b>مقفولة</b> على النظام. '
         'مفيش حاجة بتتبعت لأي عميل لحد ما حضرتك توافق.</div>')
@@ -189,9 +195,8 @@ def _page(cards, total, on, off, missing, kill_switch_on, language):
 {warning}
 <div class="counts">
   <span>{total} مرحلة</span>
-  <span>{on} بتبعت للعميل</span>
-  <span>{off} من غير رسالة</span>
-  {'<span>' + str(missing) + ' لسه من غير نص</span>' if missing else ''}
+  <span>{on} فيها رسالة للعميل</span>
+  {'<span>' + str(off) + ' من غير رسالة</span>' if off else ''}
 </div>
 {''.join(cards)}
 <footer>
