@@ -11,3 +11,4 @@ class CarImportConfig(AppConfig):
         from . import extensions  # noqa: F401
         from . import patches
         patches.apply_patches()
+        patches.apply_url_patches()

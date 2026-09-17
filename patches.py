@@ -98,3 +98,40 @@ def _workflow_name(workflow_id):
                 .values_list('name', flat=True).first() or '')
     except Exception:
         return ''
+
+
+# ── the extension's own pages ─────────────────────────────────────────────────
+def apply_url_patches():
+    """Mount `car_import/urls.py` into the root urlconf, without touching core.
+
+    Core mounts modules by name in `project/urls.py`; an extension has no
+    line there. Django builds its resolver lazily from the urlconf module's
+    `urlpatterns` — a plain list — so inserting our `include()` at startup,
+    before the website catch-all, is all a route needs. Idempotent, and it
+    clears the resolver cache in case something resolved a URL already.
+    """
+    import importlib
+
+    try:
+        from django.conf import settings
+        from django.urls import clear_url_caches, include, path
+
+        root = importlib.import_module(settings.ROOT_URLCONF)
+        patterns = getattr(root, 'urlpatterns', None)
+        if patterns is None:
+            return
+        for entry in patterns:
+            if getattr(entry, 'namespace', None) == 'car_import':
+                return
+        mount = path('', include(('car_import.urls', 'car_import'), namespace='car_import'))
+        index = len(patterns)
+        for i, entry in enumerate(patterns):
+            target = getattr(getattr(entry, 'urlconf_name', None), '__name__', '')
+            if target == 'modules.genie.website_urls':   # the catch-all must stay last
+                index = i
+                break
+        patterns.insert(index, mount)
+        clear_url_caches()
+        logger.info("car_import: pages mounted at /car-import/ (index %s of %s)", index, len(patterns))
+    except Exception:  # noqa: BLE001 — a page that fails to mount must not take the app down
+        logger.exception("car_import: could not mount the extension's urls")

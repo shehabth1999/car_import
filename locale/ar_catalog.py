@@ -1149,4 +1149,5 @@ CATALOG = {
     'Wins over the percentage when both are set': 'بيكسب على النسبة لو الاتنين محددين',
     "Euros — the German advert's currency. Every figure on this quotation is in it": "يورو — عملة الإعلان الألماني. كل رقم في عرض السعر ده بيها",
     "Pounds — the showroom's currency": "جنيه — عملة المعرض",
+    "Calculator": "الآلة الحاسبة",
 }

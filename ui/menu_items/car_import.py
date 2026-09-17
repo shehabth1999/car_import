@@ -48,6 +48,17 @@ menu_dict = {
                         "allowed_groups": ["car_import.sales_agent", "car_import.sales_manager",
                                            "car_import.operations", "car_import.management"],
                     },
+                    "car_import_menu_calculator": {
+                        "name": _("Calculator"),
+                        "icon": "Calculator",
+                        "module": "car_import",
+                        # A page the extension serves itself (pages.py), mounted at
+                        # startup by patches.apply_url_patches — no core route.
+                        "url": "/car-import/calculator/",
+                        "sequence": 12,
+                        "allowed_groups": ["car_import.sales_agent", "car_import.sales_manager",
+                                           "car_import.management"],
+                    },
                     "car_import_menu_quotes": {
                         "name": _("Quotations"),
                         "icon": "Calculator",
