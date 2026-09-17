@@ -482,6 +482,29 @@ def ka_get_fee_and_licensing_costs(context) -> Dict[str, Any]:
         return {"success": False, "error": str(e), "error_type": "unknown"}
 
 
+def _file_discount_request(partner, context, reason):
+    """One pending fee-discount request per customer; the amount is management's
+    to fill in when they decide. Returns the request id, or None."""
+    try:
+        from car_import.models.approval import ApprovalPolicy, ApprovalRequest
+        pending = (ApprovalRequest.objects
+                   .filter(subject='fee_discount', partner=partner, state='pending')
+                   .order_by('-id').first())
+        if pending is not None:
+            return pending.pk
+        deal = _deal_for(context)
+        deal = deal if getattr(deal, 'pk', None) else None
+        policy = ApprovalPolicy.for_subject('fee_discount')
+        request = ApprovalRequest.objects.create(
+            subject='fee_discount', policy=policy, deal=deal, partner=partner,
+            currency=getattr(policy, 'currency', None),
+            reason=f'طلب خصم جاي من الشات (المساعد): {reason}')
+        return request.pk
+    except Exception:
+        logger.exception("car_import: could not file the discount approval request")
+        return None
+
+
 @tool(
     name="ka_escalate_conversation_to_staff",
     display_name="Hand the customer to a colleague",
@@ -510,29 +533,6 @@ def ka_get_fee_and_licensing_costs(context) -> Dict[str, Any]:
         "required": ["reason"],
     },
 )
-def _file_discount_request(partner, context, reason):
-    """One pending fee-discount request per customer; the amount is management's
-    to fill in when they decide. Returns the request id, or None."""
-    try:
-        from car_import.models.approval import ApprovalPolicy, ApprovalRequest
-        pending = (ApprovalRequest.objects
-                   .filter(subject='fee_discount', partner=partner, state='pending')
-                   .order_by('-id').first())
-        if pending is not None:
-            return pending.pk
-        deal = _deal_for(context)
-        deal = deal if getattr(deal, 'pk', None) else None
-        policy = ApprovalPolicy.for_subject('fee_discount')
-        request = ApprovalRequest.objects.create(
-            subject='fee_discount', policy=policy, deal=deal, partner=partner,
-            currency=getattr(policy, 'currency', None),
-            reason=f'طلب خصم جاي من الشات (المساعد): {reason}')
-        return request.pk
-    except Exception:
-        logger.exception("car_import: could not file the discount approval request")
-        return None
-
-
 def ka_escalate_conversation_to_staff(context, reason: str, topic: Optional[str] = None) -> Dict[str, Any]:
     """Switch the conversation to a human and tell the customer someone is coming."""
     try:

@@ -29,6 +29,13 @@ ALLOWED_LATIN = {
     'amg', 'gmbh', 'acid', 'eur', 'usd', 'egp', 'km', 'cc', 'hp', 'suv', 'tfsi',
     'tsi', 'tdi', 'gla', 'glc', 'gle', 'cla', 'ka', 'whatsapp', 'bill', 'lading',
     'mobile', 'de', 'msc', 'euro',
+    # trim and drivetrain names the listings carry verbatim — "AMG Line",
+    # "4MATIC", "xDrive" are the car's name, not the assistant slipping into
+    # English. Seen flagged live on 2026-09-17 ("line", "matic").
+    'line', 'matic', 'xdrive', 'quattro', 'sport', 'coupe', 'cabrio', 'sedan',
+    'premium', 'avantgarde', 'exclusive', 'progressive', 'edition', 'plus',
+    'hybrid', 'tron', 'night', 'package', 'sportline', 'style', 'ambition',
+    'elegance', 'luxury', 'business', 'comfort', 'panorama', 'led', 'kit',
 }
 MONEY_WORDS = ('جنيه', 'يورو', 'دولار', 'ألف', 'الف', '٪', '%')
 
