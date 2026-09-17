@@ -714,6 +714,9 @@ msgctxt "ui/views/quote_views.py"
 msgid "Calculated at"
 msgstr "وقت الحساب"
 
+msgid "Calculator"
+msgstr "الآلة الحاسبة"
+
 msgid "Call recording"
 msgstr "تسجيل مكالمة"
 
