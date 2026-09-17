@@ -1323,6 +1323,14 @@ msgctxt "ui/views/car_deal_views.py"
 msgid "Currency"
 msgstr "العملة"
 
+msgctxt "ui/views/consignment_views.py"
+msgid "Currency"
+msgstr "العملة"
+
+msgctxt "ui/views/contract_views.py"
+msgid "Currency"
+msgstr "العملة"
+
 msgctxt "ui/views/quote_views.py"
 msgid "Currency"
 msgstr "العملة"
@@ -1935,6 +1943,10 @@ msgstr "الإجمالي باليورو × السعر اللي كتبته. تق�
 
 msgid "European"
 msgstr "أوروبية"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Euros — the German advert's currency. Every figure on this quotation is in it"
+msgstr "يورو — عملة الإعلان الألماني. كل رقم في عرض السعر ده بيها"
 
 msgid "Every deal"
 msgstr "كل صفقة"
@@ -3702,6 +3714,10 @@ msgstr "عملاء محتملون"
 msgctxt "ui/views/call_views.py"
 msgid "Possible customers"
 msgstr "عملاء محتملون"
+
+msgctxt "ui/views/consignment_views.py"
+msgid "Pounds — the showroom's currency"
+msgstr "جنيه — عملة المعرض"
 
 msgid "Power (hp)"
 msgstr "القوة (حصان)"

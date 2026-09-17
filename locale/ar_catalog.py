@@ -1147,4 +1147,6 @@ CATALOG = {
     'While it runs, the owner may not sell the car themselves': 'طول ما التوكيل ساري، المالك ما يبيعش العربية بنفسه',
     'Whoever is authorised on the contract date. Their name and ID replace the literal ones in the template': 'المفوّض بالتوقيع في تاريخ العقد. اسمه ورقمه القومي بيحلوا محل المكتوبين في النموذج',
     'Wins over the percentage when both are set': 'بيكسب على النسبة لو الاتنين محددين',
+    "Euros — the German advert's currency. Every figure on this quotation is in it": "يورو — عملة الإعلان الألماني. كل رقم في عرض السعر ده بيها",
+    "Pounds — the showroom's currency": "جنيه — عملة المعرض",
 }

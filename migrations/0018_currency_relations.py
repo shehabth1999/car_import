@@ -38,16 +38,16 @@ def backfill(apps, schema_editor):
     by_code = {(c.code or '').upper(): c.pk for c in Currency.objects.all()}
     for model, source, target, default in CONVERT:
         Model = apps.get_model('car_import', model)
-        for row in Model.objects.all():
+        for row in Model._default_manager.all():
             code = (getattr(row, source, None) or default or '').strip().upper()
             pk = by_code.get(code) or by_code.get(default)
             if pk:
-                Model.objects.filter(pk=row.pk).update(**{f'{target}_id': pk})
+                Model._default_manager.filter(pk=row.pk).update(**{f'{target}_id': pk})
     for model, target, default in NEW:
         Model = apps.get_model('car_import', model)
         pk = by_code.get(default)
         if pk:
-            Model.objects.filter(**{f'{target}__isnull': True}).update(**{f'{target}_id': pk})
+            Model._default_manager.filter(**{f'{target}__isnull': True}).update(**{f'{target}_id': pk})
 
 
 class Migration(migrations.Migration):

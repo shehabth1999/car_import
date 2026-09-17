@@ -211,8 +211,8 @@ def stage_placeholders(deal, stage):
         'tracking_url': deal.tracking_url or '',
     }
     # Money is only ever what a human marked on the deal — never a computed figure.
-    values['amount_paid'] = _money(deal.amount_paid_marked, deal.currency_note)
-    values['amount_due'] = _money(deal.amount_due_marked, deal.currency_note)
+    values['amount_paid'] = _money(deal.amount_paid_marked, getattr(deal.currency, 'code', ''))
+    values['amount_due'] = _money(deal.amount_due_marked, getattr(deal.currency, 'code', ''))
     return values
 
 
