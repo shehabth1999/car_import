@@ -31,7 +31,7 @@ menu_dict = {
             # ---------------------------------------------------------- selling
             "car_import_menu_sales": {
                 "name": _("Sales"),
-                "icon": "Handshake",
+                "icon": "Briefcase",
                 "module": "car_import",
                 "sequence": 10,
                 "allowed_groups": ["car_import.sales_agent", "car_import.sales_manager",
@@ -40,7 +40,7 @@ menu_dict = {
                 "children": {
                     "car_import_menu_deals": {
                         "name": _("Deals"),
-                        "icon": "Handshake",
+                        "icon": "Tag",
                         "module": "car_import",
                         "model": "car_import.cardeal",
                         "view_types": "kanban,list,form",
@@ -70,7 +70,7 @@ menu_dict = {
                     },
                     "car_import_menu_consignment": {
                         "name": _("Consignment mandates"),
-                        "icon": "Handshake",
+                        "icon": "Repeat",
                         "module": "car_import",
                         "model": "car_import.consignmentmandate",
                         "view_types": "list,form",
