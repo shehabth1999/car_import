@@ -172,8 +172,15 @@ class Command(BaseCommand):
         dry = options['dry_run']
         counts = {}
 
+        from car_import.services import currencies
+
         def upsert(model, lookup, defaults):
             defaults = dict(defaults, effective_from=CONFIRMED, source_note=SOURCE)
+            # Currencies are rows, not codes: a seed table says 'EUR', the
+            # column wants base.Currency.
+            for key in ('currency', 'currency_from', 'currency_to'):
+                if isinstance(defaults.get(key), str):
+                    defaults[key] = currencies.by_code(defaults[key])
             if dry:
                 exists = model.objects.filter(**lookup).exists()
                 return None, not exists
@@ -287,7 +294,8 @@ class Command(BaseCommand):
                 ApprovalPolicy.objects.update_or_create(
                     subject=subject,
                     defaults={'name': name, 'threshold_amount': threshold,
-                              'currency': currency, 'approver_group': 'car_import.management',
+                              'currency': currencies.by_code(currency),
+                              'approver_group': 'car_import.management',
                               'is_active': True, 'effective_from': CONFIRMED,
                               'source_note': "the client's approval matrix"})
             counts['approval rules'] = len(APPROVALS)

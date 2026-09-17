@@ -90,7 +90,7 @@ car_import_fee_list_view = _list(
         {"name": "name", "string": _("Name"), "widget": "text", "width": "240"},
         {"name": "amount", "string": _("Amount"), "widget": "number", "width": "120"},
         {"name": "amount_to", "string": _("Up to"), "widget": "number", "width": "110"},
-        {"name": "currency", "string": _("Currency"), "widget": "text", "width": "90"},
+        {"name": "currency", "string": _("Currency"), "widget": "relation", "displayField": "code", "width": "90"},
         {"name": "applies_to", "string": _("Applies"), "widget": "select", "width": "140"},
         {"name": "quotable_to_customer", "string": _("May be quoted"), "widget": "switch", "width": "130"},
         {"name": "effective_from", "string": _("From"), "widget": "date", "width": "120"},
@@ -105,7 +105,7 @@ car_import_fee_form_view = _form(
                 {"name": "name", "string": _("Name"), "widget": "text", "required": True},
                 {"name": "amount", "string": _("Amount"), "widget": "number"},
                 {"name": "amount_to", "string": _("Up to (for a range)"), "widget": "number"},
-                {"name": "currency", "string": _("Currency"), "widget": "text"},
+                {"name": "currency", "string": _("Currency"), "widget": "relation", "displayField": "code", "multiSelect": False},
             ]},
             {"fields": [
                 {"name": "applies_to", "string": _("Applies"), "widget": "select"},
@@ -218,8 +218,8 @@ car_import_fx_list_view = _list(
     "car_import_fx_list_view", "Exchange rates", "car_import.fxreference",
     "car_import_menu_fx",
     [
-        {"name": "currency_from", "string": _("From"), "widget": "text", "width": "90"},
-        {"name": "currency_to", "string": _("To"), "widget": "text", "width": "90"},
+        {"name": "currency_from", "string": _("From"), "widget": "relation", "displayField": "code", "width": "90"},
+        {"name": "currency_to", "string": _("To"), "widget": "relation", "displayField": "code", "width": "90"},
         {"name": "rate", "string": _("Rate"), "widget": "number", "width": "140"},
         {"name": "commission_pct_min", "string": _("Commission % from"), "widget": "number", "width": "150"},
         {"name": "commission_pct_max", "string": _("to"), "widget": "number", "width": "110"},
@@ -232,8 +232,8 @@ car_import_fx_form_view = _form(
     [
         {"title": _("The rate of the day"), "groups": [
             {"fields": [
-                {"name": "currency_from", "string": _("From"), "widget": "text"},
-                {"name": "currency_to", "string": _("To"), "widget": "text"},
+                {"name": "currency_from", "string": _("From"), "widget": "relation", "displayField": "code", "multiSelect": False},
+                {"name": "currency_to", "string": _("To"), "widget": "relation", "displayField": "code", "multiSelect": False},
                 {"name": "rate", "string": _("Rate"), "widget": "number", "required": True},
             ]},
             {"fields": [

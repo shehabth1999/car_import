@@ -99,7 +99,7 @@ crm_dashboard_car_import_batch = {
                                 {"name": "id", "string": {"en": "Won", "ar": "مكسوب"}, "format": "number",
                                  "aggregation": "count", "align": "right"},
                                 {"name": "expected_revenue", "string": {"en": "Revenue", "ar": "الإيراد"},
-                                 "format": "currency", "aggregation": "sum", "align": "right"},
+                                 "format": "number", "aggregation": "sum", "align": "right"},
                             ],
                             "group_by": ["utm_campaign__name", "utm_source__name"],
                             "limit": 15, "order_by": "-expected_revenue",

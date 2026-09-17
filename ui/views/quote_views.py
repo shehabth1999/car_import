@@ -166,6 +166,8 @@ car_quote_form_view = {
                     "title": _("What the salesman enters"),
                     "groups": [
                         {"fields": [
+                            {"name": "currency", "string": _("Currency"), "widget": "relation", "displayField": "code", "multiSelect": False,
+                             "help": _("Euros — the German advert's currency. Every figure on this quotation is in it")},
                             {"name": "gross_price_eur", "string": _("Price with VAT (€)"),
                              "widget": "number", "required": True, "onChange": True,
                              "help": _("The number on the German advert. Everything below follows from it — and recalculates as you type")},
@@ -350,7 +352,8 @@ car_quote_form_view = {
                              {"name": "lines.sequence", "widget": "number", "string": _("#")},
                              {"name": "lines.label", "widget": "text", "string": _("Description")},
                              {"name": "lines.amount", "widget": "number", "string": _("Amount")},
-                             {"name": "lines.currency", "widget": "text", "string": _("Currency")},
+                             {"name": "lines.currency", "widget": "relation", "displayField": "code",
+                              "string": _("Currency")},
                          ]},
                          },
                     ]}],

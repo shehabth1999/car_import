@@ -376,7 +376,7 @@ car_deal_form_view = {
                                      "help": _("What the accountant confirmed received. A mark, not a ledger entry")},
                                     {"name": "amount_due_marked", "string": _("Marked as due"), "widget": "number",
                                      "readonly": True, "help": _("Agreed minus paid")},
-                                    {"name": "currency_note", "string": _("Currency"), "widget": "text",
+                                    {"name": "currency", "string": _("Currency"), "widget": "relation", "displayField": "code", "multiSelect": False,
                                      "help": _("EUR for imports; EGP for showroom cars")},
                                     {"name": "payment_marked_by", "string": _("Marked by"), "widget": "relation",
                                      "displayField": "name", "readonly": True, "multiSelect": False},

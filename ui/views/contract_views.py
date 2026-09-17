@@ -202,6 +202,7 @@ car_contract_form_view = {
                         "title": _("Article 4 — the price and how it is paid"),
                         "groups": [
                             {"fields": [
+                                {"name": "currency", "string": _("Currency"), "widget": "relation", "displayField": "code", "multiSelect": False},
                                 {"name": "total_eur", "string": _("Total contract value (€)"),
                                  "widget": "number", "required": True, "onChange": True,
                                  "help": _("The three payments below must add up to this — the form says so as you type, and the save refuses otherwise")},

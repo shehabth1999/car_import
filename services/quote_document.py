@@ -47,7 +47,8 @@ def _visible_lines(quote, currency):
     an offer that invites a question about a service nobody bought.
     """
     return [line for line in quote.lines.all()
-            if line.currency == currency and (line.amount or line.code in ('gross', 'net'))]
+            if getattr(line.currency, 'code', None) == currency
+            and (line.amount or line.code in ('gross', 'net'))]
 
 
 def as_text(quote):

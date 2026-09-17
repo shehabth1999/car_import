@@ -181,7 +181,7 @@ def _fees():
     for row in rows:
         if row.amount is None:
             continue
-        out.append((row.name or row.code, f'{row.amount:,.0f} {row.currency or ""}'.strip()))
+        out.append((row.name or row.code, f'{row.amount:,.0f} {getattr(row.currency, "code", "") or ""}'.strip()))
     return out
 
 

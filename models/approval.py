@@ -64,8 +64,8 @@ class ApprovalPolicy(BaseModel, EffectiveMixin):
         max_digits=12, decimal_places=2, null=True, blank=True,
         verbose_name=_("Needs approval above"),
         help_text=_("Leave empty when the subject always needs approval"))
-    currency = models.CharField(max_length=8, blank=True, default='EUR',
-                                verbose_name=_("Currency"))
+    currency = models.ForeignKey('base.Currency', null=True, blank=True, on_delete=models.SET_NULL,
+                                 related_name='+', verbose_name=_("Currency"))
     approver_group = models.CharField(
         max_length=64, default='car_import.management', verbose_name=_("Approved by"),
         help_text=_("A group's technical name, e.g. car_import.management"))
@@ -80,7 +80,7 @@ class ApprovalPolicy(BaseModel, EffectiveMixin):
     def __str__(self):
         if self.threshold_amount is None:
             return f'{self.get_subject_display()} — {_("always")}'
-        return f'{self.get_subject_display()} > {self.threshold_amount:,.0f} {self.currency}'
+        return f'{self.get_subject_display()} > {self.threshold_amount:,.0f} {getattr(self.currency, "code", "")}'
 
     def covers(self, amount=None):
         """True when this rule bites for that amount."""
@@ -121,7 +121,8 @@ class ApprovalRequest(BaseModel, FullChatterMixin):
 
     amount = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True,
                                  verbose_name=_("Amount"))
-    currency = models.CharField(max_length=8, blank=True, default='EUR', verbose_name=_("Currency"))
+    currency = models.ForeignKey('base.Currency', null=True, blank=True, on_delete=models.SET_NULL,
+                                 related_name='+', verbose_name=_("Currency"))
     reason = models.TextField(blank=True, verbose_name=_("Why"))
 
     requested_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
@@ -158,7 +159,7 @@ class ApprovalRequest(BaseModel, FullChatterMixin):
         if not approvers:
             return
 
-        amount = (f'{self.amount:,.2f} {self.currency}' if self.amount is not None else '—')
+        amount = (f'{self.amount:,.2f} {getattr(self.currency, "code", "")}' if self.amount is not None else '—')
         body = (f'🔐 مطلوب موافقة — {self.get_subject_display()}\n'
                 f'المبلغ: {amount}\n'
                 f'السبب: {self.reason or "—"}\n'
@@ -205,7 +206,7 @@ def _tell_the_requester(request):
     if user is None:
         return
     verdict = 'تمت الموافقة ✅' if request.state == 'approved' else 'مرفوض ❌'
-    amount = (f'{request.amount:,.2f} {request.currency}' if request.amount is not None else '—')
+    amount = (f'{request.amount:,.2f} {getattr(request.currency, "code", "")}' if request.amount is not None else '—')
     who = getattr(request.decided_by, 'name', None) or getattr(request.decided_by, 'email', '') or ''
     body = (f'{verdict} — {request.get_subject_display()}\n'
             f'المبلغ: {amount}\n'
@@ -286,7 +287,7 @@ def require(subject, amount=None, *, deal=None, quote=None, partner=None,
     if pending is None:
         pending = ApprovalRequest.objects.create(
             subject=subject, policy=policy, deal=deal, quote=quote, partner=partner,
-            amount=amount, currency=policy.currency or 'EUR', reason=reason,
+            amount=amount, currency=policy.currency, reason=reason,
             requested_by=user)
 
     message = _(

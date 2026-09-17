@@ -85,6 +85,8 @@ class ConsignmentMandate(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin
                     "the mandate ends still owes commission"))
     cure_days = models.PositiveIntegerField(default=7, verbose_name=_("Cure period (days)"))
 
+    currency = models.ForeignKey('base.Currency', null=True, blank=True, on_delete=models.SET_NULL,
+                                 related_name='+', verbose_name=_("Currency"))
     price_floor_egp = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True,
                                           verbose_name=_("Price band — from (EGP)"))
     price_ceiling_egp = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True,
@@ -172,6 +174,9 @@ class ConsignmentMandate(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin
 
     def pre_save(self):
         super().pre_save()
+        if self.currency_id is None:
+            from car_import.services import currencies
+            self.currency = currencies.egp()
         if (self.price_floor_egp and self.price_ceiling_egp
                 and self.price_floor_egp > self.price_ceiling_egp):
             raise ValidationError({'price_ceiling_egp': _(

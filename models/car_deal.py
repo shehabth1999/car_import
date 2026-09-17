@@ -133,7 +133,8 @@ class CarDeal(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
                                              verbose_name=_("Marked as paid"))
     amount_due_marked = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True,
                                             verbose_name=_("Marked as due"))
-    currency_note = models.CharField(max_length=32, blank=True, verbose_name=_("Currency"))
+    currency = models.ForeignKey('base.Currency', null=True, blank=True, on_delete=models.SET_NULL,
+                                 related_name='+', verbose_name=_("Currency"))
     payment_marked_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL,
         related_name='+', verbose_name=_("Marked by"),
@@ -331,6 +332,9 @@ class CarDeal(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
         user = getattr(getattr(self, 'env', None), 'user', None)
         if self.assigned_to_id is None and getattr(user, 'pk', None):
             self.assigned_to = user
+        if self.currency_id is None:
+            from car_import.services import currencies
+            self.currency = currencies.egp() if self.program == 'showroom' else currencies.eur()
 
     def pre_save(self):
         super().pre_save()

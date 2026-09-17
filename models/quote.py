@@ -98,6 +98,8 @@ class Quote(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
         help_text=_("Never more than the fee itself"))
     vat_rate_pct = models.DecimalField(max_digits=5, decimal_places=2, default=19,
                                        verbose_name=_("VAT %"))
+    currency = models.ForeignKey('base.Currency', null=True, blank=True, on_delete=models.SET_NULL,
+                                 related_name='+', verbose_name=_("Currency"))
     fx_rate_egp = models.DecimalField(
         max_digits=12, decimal_places=4, null=True, blank=True, verbose_name=_("EGP per EUR"),
         help_text=_("Only to show the customer an indicative figure. The company does not "
@@ -344,6 +346,9 @@ class Quote(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
             self.assigned_to = user
         if self.deal_id and self.partner_id is None:
             self.partner_id = self.deal.partner_id
+        if self.currency_id is None:
+            from car_import.services import currencies
+            self.currency = currencies.eur()
 
     def post_save(self):
         self._write_lines()
@@ -368,7 +373,7 @@ class Quote(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
         changed = []
         for field, value in (('payment_state', state), ('amount_agreed', self.total_eur),
                              ('amount_paid_marked', paid), ('amount_due_marked', self.remaining_eur),
-                             ('currency_note', 'EUR')):
+                             ('currency_id', self.currency_id)):
             if getattr(deal, field) != value:
                 setattr(deal, field, value)
                 changed.append(field)
@@ -383,10 +388,12 @@ class Quote(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
         if self._pending_lines is None:
             return
         lines, self._pending_lines = self._pending_lines, None
+        from car_import.services import currencies
         QuoteLine.all_objects.filter(quote_id=self.pk).delete()
         QuoteLine.all_objects.bulk_create([
             QuoteLine(quote_id=self.pk, sequence=(index + 1) * 10, code=line['code'],
-                      label=line['label_ar'], amount=line['amount'], currency=line['currency'])
+                      label=line['label_ar'], amount=line['amount'],
+                      currency_id=currencies.id_by_code(line['currency']))
             for index, line in enumerate(lines)
         ])
 
@@ -609,7 +616,7 @@ class Quote(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
             if quote.deal_id:
                 deal = quote.deal
                 deal.amount_agreed = quote.total_eur
-                deal.currency_note = 'EUR'
+                deal.currency_id = quote.currency_id
                 deal.accepted_quote = quote
                 deal.save()
             accepted += 1
@@ -638,7 +645,8 @@ class QuoteLine(BaseModel):
     label = models.CharField(max_length=190, verbose_name=_("Description"))
     amount = models.DecimalField(max_digits=14, decimal_places=2, default=0,
                                  verbose_name=_("Amount"))
-    currency = models.CharField(max_length=8, default='EUR', verbose_name=_("Currency"))
+    currency = models.ForeignKey('base.Currency', null=True, blank=True, on_delete=models.SET_NULL,
+                                 related_name='+', verbose_name=_("Currency"))
 
     class Meta:
         verbose_name = _("Quotation line")
@@ -646,7 +654,7 @@ class QuoteLine(BaseModel):
         ordering = ['sequence', 'id']
 
     def __str__(self):
-        return f"{self.label} — {self.amount:,.2f} {self.currency}"
+        return f"{self.label} — {self.amount:,.2f} {getattr(self.currency, 'code', '')}"
 
 
 class QuoteOption(BaseModel):

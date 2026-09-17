@@ -124,6 +124,8 @@ car_consignment_form_view = {
                              "widget": "switch"},
                         ]},
                         {"title": _("The price band and the commission"), "fields": [
+                            {"name": "currency", "string": _("Currency"), "widget": "relation", "displayField": "code", "multiSelect": False,
+                             "help": _("Pounds — the showroom's currency")},
                             {"name": "price_floor_egp", "string": _("Price band — from (EGP)"),
                              "widget": "number", "onChange": True,
                              "help": _("Selling below this is selling the owner's car for less than they allowed — management is asked")},

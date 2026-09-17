@@ -241,7 +241,8 @@ class FeeSchedule(BaseModel, EffectiveMixin):
                                  verbose_name=_("Amount"))
     amount_to = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True,
                                     verbose_name=_("Up to"), help_text=_("For a range, e.g. protection film"))
-    currency = models.CharField(max_length=8, default='EUR', verbose_name=_("Currency"))
+    currency = models.ForeignKey('base.Currency', null=True, blank=True, on_delete=models.SET_NULL,
+                                 related_name='+', verbose_name=_("Currency"))
     applies_to = models.CharField(max_length=16, choices=APPLIES_TO, default='always',
                                   verbose_name=_("Applies"))
     # Some figures exist but may never be said to a customer — the licence cost
@@ -255,7 +256,7 @@ class FeeSchedule(BaseModel, EffectiveMixin):
         ordering = ['code']
 
     def __str__(self):
-        return f'{self.name}: {self.amount} {self.currency}'
+        return f'{self.name}: {self.amount} {getattr(self.currency, "code", "")}'
 
 
 class FinancingPlan(BaseModel, EffectiveMixin):
@@ -316,8 +317,10 @@ class FxReference(BaseModel, EffectiveMixin):
     a conversion commission; both travel with the rate so a quote can say so.
     """
 
-    currency_from = models.CharField(max_length=8, default='EUR', verbose_name=_("From"))
-    currency_to = models.CharField(max_length=8, default='EGP', verbose_name=_("To"))
+    currency_from = models.ForeignKey('base.Currency', null=True, blank=True, on_delete=models.SET_NULL,
+                                      related_name='+', verbose_name=_("From"))
+    currency_to = models.ForeignKey('base.Currency', null=True, blank=True, on_delete=models.SET_NULL,
+                                    related_name='+', verbose_name=_("To"))
     rate = models.DecimalField(max_digits=14, decimal_places=6, verbose_name=_("Rate"))
     commission_pct_min = models.DecimalField(max_digits=5, decimal_places=2, default=1.5,
                                              verbose_name=_("Commission % from"))
@@ -333,7 +336,7 @@ class FxReference(BaseModel, EffectiveMixin):
         ordering = ['-effective_from', '-id']
 
     def __str__(self):
-        return f'{self.currency_from}/{self.currency_to} {self.rate}'
+        return f'{getattr(self.currency_from, "code", "?")}/{getattr(self.currency_to, "code", "?")} {self.rate}'
 
     def pre_save(self):
         """Publishing a rate is the company manager's decision, not an agent's.
@@ -343,10 +346,16 @@ class FxReference(BaseModel, EffectiveMixin):
         is a rate somebody will quote within the hour.
         """
         super().pre_save()
+        from car_import.services import currencies
+        if self.currency_from_id is None:
+            self.currency_from = currencies.eur()
+        if self.currency_to_id is None:
+            self.currency_to = currencies.egp()
         if self.pk:
             return
         from .approval import require
         require('fx_rate', None, field='rate',
                 reason=_("Publish %(pair)s at %(rate)s") % {
-                    'pair': f'{self.currency_from}/{self.currency_to}', 'rate': self.rate},
+                    'pair': f'{getattr(self.currency_from, "code", "?")}/{getattr(self.currency_to, "code", "?")}',
+                    'rate': self.rate},
                 user=getattr(getattr(self, 'env', None), 'user', None))

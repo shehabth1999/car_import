@@ -189,6 +189,8 @@ class Contract(BaseModel, BranchMixin, FullChatterMixin):
     car_configuration = models.CharField(max_length=128, blank=True,
                                          verbose_name=_("Configuration number"))
 
+    currency = models.ForeignKey('base.Currency', null=True, blank=True, on_delete=models.SET_NULL,
+                                 related_name='+', verbose_name=_("Currency"))
     total_eur = models.DecimalField(max_digits=12, decimal_places=2, default=0,
                                     verbose_name=_("Total contract value (EUR)"))
     down_payment_eur = models.DecimalField(max_digits=12, decimal_places=2, default=0,
@@ -340,6 +342,9 @@ class Contract(BaseModel, BranchMixin, FullChatterMixin):
     def pre_create(self):
         super().pre_create()
         self.prefill_from_deal()
+        if self.currency_id is None:
+            from car_import.services import currencies
+            self.currency = currencies.eur()
 
     # ── live reactions on the form ──────────────────────────────────────────
     @onchange('deal')
