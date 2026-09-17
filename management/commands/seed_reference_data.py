@@ -286,6 +286,15 @@ class Command(BaseCommand):
                  'Showroom closes at 9pm (winter hours, client 2026-09-16)'),
                 ('car_import.quiet_hours_end', '9',
                  'Showroom opens at 9am (winter hours, client 2026-09-16)'),
+                # The two human switches. Seeded so they EXIST — a switch nobody
+                # can find in the settings screen is not a switch. Values are the
+                # safe defaults; management flips them, no deploy needed.
+                ('car_import.stage_messages_enabled', '1',
+                 'زر الطوارئ: 0 يقفل كل رسايل المراحل فوراً لكل العملاء. أي قيمة تانية = شغال. '
+                 '(كل مرحلة ليها مفتاحها في شاشة المراحل، وكل صفقة ليها «إيقاف رسائل العميل».)'),
+                ('car_import.ai_may_quote_published_fees', '0',
+                 'هل المساعد الذكي يقول الأرقام المنشورة (المصاريف وشروط التقسيط)؟ 0 = لا، بيحوّل لزميل. '
+                 '1 = يقولها زي ما هي من الجداول المعتمدة. قيمة قسط أو حساب بنكي: أبداً، مهما كانت القيمة.'),
             ):
                 ConfigParameter.objects.update_or_create(
                     key=key, defaults={'value': value, 'description': note})
