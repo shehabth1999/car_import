@@ -513,8 +513,9 @@ def _file_discount_request(partner, context, reason):
         "instalment amount, a complaint about the car's condition, anything legal or about the contract, or any "
         "request you are not certain about. It hands the conversation to a human, sends the customer a short "
         "holding message and notifies the team. Before calling it you MUST have a one-line reason. After it "
-        "succeeds, say nothing else. Never send an account number or confirm that a transfer arrived — use this "
-        "tool instead."
+        "succeeds, reply with an EMPTY message: the platform sends the customer the holding line itself, and "
+        "anything you write would reach them as a second message. Never send an account number or confirm "
+        "that a transfer arrived — use this tool instead."
     ),
     category="car_import",
     side_effect=True,
@@ -556,9 +557,13 @@ def ka_escalate_conversation_to_staff(context, reason: str, topic: Optional[str]
             conversation.social_platform_data = data
             conversation.save(update_fields=['handled_by_ai', 'social_platform_data'])
 
-        holding = "تمام يا فندم 🙏 هحوّل حضرتك لزميلي وهو هيرد على حضرتك حالاً."
-        from modules.chat.services.omnichannel_send_service import OmnichannelSendService
-        OmnichannelSendService().send_and_broadcast(partner, {'text': holding}, message_type='text')
+        # The holding line is NOT sent from here. It is the turn's reply, and
+        # the outbound gate (`patches._gate`) emits it exactly once when it
+        # sees this run handed over. Sending it here as well made the bridge
+        # see an empty reply, re-run the turn, escalate again and send the
+        # sentence twice — live on 2026-09-17, two notes and two messages.
+        from car_import.services.supervisor import HOLDING_TEXT
+        holding = HOLDING_TEXT
 
         # The client's decision of 2026-09-16: the assistant stays closed AND
         # the colleague picking this up is shown the approved figures to check
@@ -586,7 +591,8 @@ def ka_escalate_conversation_to_staff(context, reason: str, topic: Optional[str]
                 "topic": topic or 'other',
                 "reason": reason,
                 "approval_request_id": approval_id,
-                "holding_message_sent": True,
+                "customer_will_receive": holding,
+                "next_step": "Reply with an empty message. The platform sends the holding line; do not write it yourself.",
                 "team_briefed_with_figures": briefed,
                 "note": "A human must switch the AI back on when the case is resolved.",
             },

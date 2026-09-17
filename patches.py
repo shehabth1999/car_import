@@ -65,11 +65,10 @@ def apply_patches():
 def _gate(result, workflow_id, kwargs, started):
     import dataclasses
 
-    text = getattr(result, 'output', None)
-    if not isinstance(text, str) or not text.strip():
-        return result                       # nothing to inspect: empty, dict, interrupt
     if not getattr(result, 'success', False):
         return result                       # a failure is the bridge's to handle
+    if getattr(result, 'status', 'completed') == 'interrupted':
+        return result
 
     name = _workflow_name(workflow_id)
     if not name.startswith(OUR_WORKFLOW_PREFIX):
@@ -78,6 +77,19 @@ def _gate(result, workflow_id, kwargs, started):
     from car_import.services import supervisor
 
     conversation = kwargs.get('conversation')
+    text = getattr(result, 'output', None)
+
+    # The hand-over tool fired in this run. The holding line is the whole
+    # reply, sent from here exactly once — the tool itself sends nothing.
+    # Without this, the bridge reads the agent's (correct) silence as a
+    # failed run, re-runs the turn, and the customer gets the sentence twice.
+    if _escalated_during(conversation, started):
+        if isinstance(text, str) and text.strip() and text.strip() != supervisor.HOLDING_TEXT:
+            logger.info("car_import: dropping the agent's text after a hand-over: %r", text[:200])
+        return dataclasses.replace(result, output=supervisor.HOLDING_TEXT, escalated_this_run=True)
+
+    if not isinstance(text, str) or not text.strip():
+        return result                       # nothing to inspect: empty or a dict
     replacement, problems = supervisor.gate(text, conversation=conversation,
                                             since=started, workflow_name=name)
     if problems:
@@ -89,6 +101,26 @@ def _gate(result, workflow_id, kwargs, started):
     # the holding sentence even though `handled_by_ai` is now False. That is
     # exactly what `escalated_this_run` exists for (workflow_executor.py:80).
     return dataclasses.replace(result, output=replacement, escalated_this_run=True)
+
+
+def _escalated_during(conversation, started):
+    """Did our hand-over stamp land during this run? Re-read the row: the
+    object the bridge passed in may predate the tool's write."""
+    if conversation is None or started is None:
+        return False
+    try:
+        from datetime import timedelta
+        from django.utils.dateparse import parse_datetime
+        row = (type(conversation)._base_manager.filter(pk=conversation.pk)
+               .values_list('handled_by_ai', 'social_platform_data').first())
+        if row is None or row[0]:
+            return False
+        data = row[1] if isinstance(row[1], dict) else {}
+        when = parse_datetime(str(data.get('car_import_escalated_at') or ''))
+        return bool(when and when >= started - timedelta(seconds=2))
+    except Exception:
+        logger.exception('car_import: could not read the hand-over stamp')
+        return False
 
 
 def _workflow_name(workflow_id):
