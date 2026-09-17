@@ -219,7 +219,8 @@ class Command(BaseCommand):
             for data in FEES:
                 FeeSchedule.objects.update_or_create(
                     code=data['code'],
-                    defaults=dict({k: v for k, v in data.items() if k != 'code'},
+                    defaults=dict({k: (currencies.by_code(v) if k == 'currency' else v)
+                                   for k, v in data.items() if k != 'code'},
                                   effective_from=CONFIRMED, source_note=SOURCE))
             counts['fees'] = len(FEES)
 
@@ -252,7 +253,8 @@ class Command(BaseCommand):
             for data in CALCULATOR_FEES:
                 FeeSchedule.objects.update_or_create(
                     code=data['code'],
-                    defaults=dict({k: v for k, v in data.items() if k != 'code'},
+                    defaults=dict({k: (currencies.by_code(v) if k == 'currency' else v)
+                                   for k, v in data.items() if k != 'code'},
                                   effective_from=date(2026, 9, 16),
                                   source_note="the client's calculator, 2026-09-16"))
             counts['calculator fees'] = len(CALCULATOR_FEES)
