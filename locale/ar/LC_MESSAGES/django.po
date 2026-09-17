@@ -43,6 +43,10 @@ msgstr "%(customer)s على برنامج %(programme)s"
 msgid "%(name)s has no open deal to move."
 msgstr "%(name)s معندوش صفقة مفتوحة تتنقل."
 
+msgctxt "ui/views/switch_views.py"
+msgid "0 = off, 1 = on for the yes/no switches; a number for the hours. Takes effect immediately"
+msgstr "0 = مقفول، 1 = شغال للمفاتيح نعم/لا؛ ورقم للساعات. بيشتغل فوراً"
+
 msgctxt "ui/views/contract_views.py"
 msgid "14 digits. Filed against the deal's paperwork too"
 msgstr "14 رقم. بيتسجل كمان ضمن أوراق الصفقة"
@@ -903,6 +907,10 @@ msgstr "الغرفة التجارية"
 msgctxt "ui/views/contract_views.py"
 msgid "Chamber of commerce"
 msgstr "الغرفة التجارية"
+
+msgctxt "ui/views/switch_views.py"
+msgid "Changed"
+msgstr "آخر تغيير"
 
 msgid "Channel"
 msgstr "القناة"
@@ -3415,6 +3423,17 @@ msgstr "الصفقات المفتوحة"
 msgid "Opening a deal on a programme that needs management"
 msgstr "فتح صفقة على برنامج يتطلب موافقة الإدارة"
 
+msgctxt "ui/views/switch_views.py"
+msgid "Operating switch"
+msgstr "مفتاح تشغيل"
+
+msgid "Operating switches"
+msgstr "مفاتيح التشغيل"
+
+msgctxt "ui/views/switch_views.py"
+msgid "Operating switches"
+msgstr "مفاتيح التشغيل"
+
 msgid "Operations"
 msgstr "العمليات"
 
@@ -4701,6 +4720,10 @@ msgctxt "ui/views/reference_views.py"
 msgid "Suspended"
 msgstr "موقوف"
 
+msgctxt "ui/views/switch_views.py"
+msgid "Switch"
+msgstr "المفتاح"
+
 msgid "Switched the AI on or off for %(count)d conversation(s)"
 msgstr "تم تشغيل/إيقاف المساعد لـ %(count)d محادثة"
 
@@ -4972,6 +4995,10 @@ msgstr "سنة الموديل مش سنة الترخيص — قواعد المب
 msgctxt "ui/views/contract_views.py"
 msgid "The money"
 msgstr "الفلوس"
+
+msgctxt "ui/views/switch_views.py"
+msgid "The name the code reads. Never changes"
+msgstr "الاسم اللي الكود بيقراه. ما يتغيّرش"
 
 msgid "The number on the German advert — everything else follows from it"
 msgstr "الرقم اللي على الإعلان الألماني — كل حاجة تانية بتتحسب منه"
@@ -5433,6 +5460,10 @@ msgctxt "ui/views/pricing_views.py"
 msgid "Value"
 msgstr "القيمة"
 
+msgctxt "ui/views/switch_views.py"
+msgid "Value"
+msgstr "القيمة"
+
 msgid "Value (EUR)"
 msgstr "القيمة (يورو)"
 
@@ -5539,6 +5570,10 @@ msgstr "اللي بيغطيه"
 msgctxt "ui/views/reference_views.py"
 msgid "What it covers"
 msgstr "اللي بيغطيه"
+
+msgctxt "ui/views/switch_views.py"
+msgid "What it does"
+msgstr "بيعمل إيه"
 
 msgctxt "ui/views/vehicle_views.py"
 msgid "What the Germany team got off the advert. Above 500 € it needs management"
