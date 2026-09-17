@@ -2,11 +2,12 @@
 """The contract screens.
 
 The form is arranged the way somebody fills a contract in front of a customer:
-who they are as their ID spells it, which car, what they are paying and when.
-Most of it arrives prefilled from the deal and the accepted quotation — the
-fields exist so a person can correct them, because the name on a national ID
-and the name in a WhatsApp profile are regularly not the same string, and the
-contract has to match the ID.
+the deal on top, then tabs — who they are as their ID spells it, which car,
+what they are paying and when, the document itself. Most of it arrives
+prefilled the moment the deal is picked (`onChange`), because the name on a
+national ID and the name in a WhatsApp profile are regularly not the same
+string, and the contract has to match the ID. The money adds itself up in the
+footer and complains while you type, not six weeks later.
 """
 from django.utils.translation import gettext as _
 
@@ -28,8 +29,6 @@ _CONTRACT_ACTIONS = [
         "as": "button",
         "variant": "secondary",
         "view_type": ["form"],
-        # It puts a contract in front of a customer. Nobody presses it twice by
-        # accident.
         "confirm_required": True,
     },
     {
@@ -114,47 +113,72 @@ car_contract_form_view = {
                             {"name": "state", "string": _("Status"), "widget": "select",
                              "invisible": True},
                             {"name": "deal", "string": _("Deal"), "widget": "relation",
-                             "displayField": "name", "required": True, "multiSelect": False},
+                             "displayField": "name", "required": True, "multiSelect": False,
+                             "onChange": True,
+                             "help": _("Picking the deal fills the customer, the car, the accepted quotation's money, the issuer and the template")},
                             {"name": "quote", "string": _("Quotation"), "widget": "relation",
-                             "displayField": "name", "multiSelect": False},
+                             "displayField": "name", "multiSelect": False,
+                             "help": _("The accepted offer the money came from. Only an offer — the deal's own contract figures win")},
                         ]},
                         {"fields": [
                             {"name": "template", "string": _("Template"), "widget": "relation",
-                             "displayField": "name", "multiSelect": False},
+                             "displayField": "name", "multiSelect": False,
+                             "help": _("The lawyer's .docx for this programme. Generation refuses when a required blank has no value")},
                             {"name": "contract_date", "string": _("Contract date"),
-                             "widget": "date"},
+                             "widget": "date",
+                             "help": _("Printed as day / month / year on page one, and decides which signatory was authorised")},
                             {"name": "issuer", "string": _("Issued by"), "widget": "relation",
                              "displayField": "name", "multiSelect": False},
-                            # Selectable per contract, because signatories change
-                            # and a contract naming somebody who did not sign it
-                            # is a contract with a hole in it.
                             {"name": "signatory", "string": _("Signed for the company by"),
-                             "widget": "relation", "displayField": "name", "multiSelect": False},
+                             "widget": "relation", "displayField": "name", "multiSelect": False,
+                             "help": _("Whoever is authorised on the contract date. Their name and ID replace the literal ones in the template")},
                         ]},
                     ],
                 },
-                {
-                    # As the ID spells it. The contract has to match the document
-                    # the customer will present at customs, not the name they use
-                    # on WhatsApp — and those differ more often than not.
-                    "title": _("The customer, exactly as their ID reads"),
+            ],
+            "footer": {
+                "fields": [
+                    {"name": "total_eur", "string": _("Total €"), "widget": "number", "highlight": True},
+                    {"separator": "thin"},
+                    {"name": "down_payment_eur", "string": _("At signing €"), "widget": "number"},
+                    {"separator": "thin"},
+                    {"name": "bank_transfer_eur", "string": _("Transfer €"), "widget": "number"},
+                    {"separator": "thin"},
+                    {"name": "cash_on_bl_eur", "string": _("On B/L €"), "widget": "number"},
+                ],
+                "position": "end",
+            },
+        },
+        "tabs": [
+            {
+                "title": _("The customer"),
+                "sections": [{
+                    "title": _("Exactly as their ID reads"),
                     "groups": [
                         {"fields": [
                             {"name": "customer_name", "string": _("Name as on the ID"),
-                             "widget": "text", "required": True},
+                             "widget": "text", "required": True,
+                             "help": _("Not the WhatsApp name. The contract is void against a name that is not on the ID")},
                             {"name": "customer_national_id", "string": _("National ID number"),
-                             "widget": "text", "required": True},
+                             "widget": "text", "required": True,
+                             "help": _("14 digits. Filed against the deal's paperwork too")},
                             {"name": "shipping_name", "string": _("Ships in the name of"),
-                             "widget": "text"},
+                             "widget": "text",
+                             "help": _("Usually the customer. On a provided initiative it is the initiative holder — the customs papers carry this name")},
                         ]},
                         {"fields": [
-                            {"name": "customer_address", "string": _("Address"), "widget": "text"},
-                            {"name": "customer_email", "string": _("Email"), "widget": "text"},
+                            {"name": "customer_address", "string": _("Address"), "widget": "text",
+                             "help": _("As on the ID — clause 10 sends formal notices there")},
+                            {"name": "customer_email", "string": _("Email"), "widget": "email",
+                             "help": _("Formal correspondence goes here as well as by registered post")},
                         ]},
                     ],
-                },
-                {
-                    "title": _("The car"),
+                }],
+            },
+            {
+                "title": _("The car"),
+                "sections": [{
+                    "title": _("As the annex prints it"),
                     "groups": [
                         {"fields": [
                             {"name": "car_model", "string": _("Model"), "widget": "text",
@@ -162,85 +186,101 @@ car_contract_form_view = {
                             {"name": "car_trim", "string": _("Trim"), "widget": "text"},
                         ]},
                         {"fields": [
-                            {"name": "car_model_year", "string": _("Model year"), "widget": "text"},
+                            {"name": "car_model_year", "string": _("Model year"), "widget": "text",
+                             "help": _("Replaces the literal year the lawyer typed in the template")},
                             {"name": "car_configuration", "string": _("Configuration number"),
-                             "widget": "text"},
+                             "widget": "text",
+                             "help": _("The manufacturer's build code — Annex 2 settles disputes about options against it")},
                         ]},
                     ],
-                },
-                {
-                    "title": _("The money"),
+                }],
+            },
+            {
+                "title": _("The money"),
+                "sections": [
+                    {
+                        "title": _("Article 4 — the price and how it is paid"),
+                        "groups": [
+                            {"fields": [
+                                {"name": "total_eur", "string": _("Total contract value (€)"),
+                                 "widget": "number", "required": True, "onChange": True,
+                                 "help": _("The three payments below must add up to this — the form says so as you type, and the save refuses otherwise")},
+                                {"name": "deposit_pct", "string": _("Deposit %"), "widget": "number",
+                                 "help": _("From the quotation's band")},
+                            ]},
+                            {"fields": [
+                                {"name": "down_payment_eur", "string": _("Received at signing (€)"),
+                                 "widget": "number", "onChange": True},
+                                {"name": "bank_transfer_eur", "string": _("Bank transfer (€)"),
+                                 "widget": "number", "onChange": True},
+                                {"name": "cash_on_bl_eur", "string": _("Cash on bill of lading (€)"),
+                                 "widget": "number", "onChange": True,
+                                 "help": _("Due when the bill of lading is issued — before the ship sails")},
+                            ]},
+                        ],
+                    },
+                    {
+                        "title": _("Annex 1 — the payment schedule"),
+                        "groups": [
+                            {"fields": [
+                                {"name": "instalment_1_date", "string": _("Payment 1 — date"),
+                                 "widget": "date"},
+                                {"name": "instalment_2_date", "string": _("Payment 2 — date"),
+                                 "widget": "date"},
+                                {"name": "instalment_3_date", "string": _("Payment 3 — date"),
+                                 "widget": "date"},
+                            ]},
+                            {"fields": [
+                                {"name": "instalment_1_amount", "string": _("Payment 1 — amount"),
+                                 "widget": "number"},
+                                {"name": "instalment_2_amount", "string": _("Payment 2 — amount"),
+                                 "widget": "number"},
+                                {"name": "instalment_3_amount", "string": _("Payment 3 — amount"),
+                                 "widget": "number"},
+                            ]},
+                        ],
+                    },
+                ],
+            },
+            {
+                "title": _("The document"),
+                "sections": [{
+                    "title": "",
                     "groups": [
-                        {"fields": [
-                            {"name": "total_eur", "string": _("Total contract value (€)"),
-                             "widget": "number", "required": True},
-                            {"name": "deposit_pct", "string": _("Deposit %"), "widget": "number"},
-                        ]},
-                        {"fields": [
-                            {"name": "down_payment_eur", "string": _("Received at signing (€)"),
-                             "widget": "number"},
-                            {"name": "bank_transfer_eur", "string": _("Bank transfer (€)"),
-                             "widget": "number"},
-                            {"name": "cash_on_bl_eur", "string": _("Cash on bill of lading (€)"),
-                             "widget": "number"},
-                        ]},
-                    ],
-                },
-                {
-                    # Annex 1. Three dates and three amounts, and clause 6 gives
-                    # the company a 7% monthly late charge against them — so a
-                    # wrong date here is not a typo, it is money.
-                    "title": _("Annex 1 — the payment schedule"),
-                    "groups": [
-                        {"fields": [
-                            {"name": "instalment_1_date", "string": _("Payment 1 — date"),
-                             "widget": "date"},
-                            {"name": "instalment_2_date", "string": _("Payment 2 — date"),
-                             "widget": "date"},
-                            {"name": "instalment_3_date", "string": _("Payment 3 — date"),
-                             "widget": "date"},
-                        ]},
-                        {"fields": [
-                            {"name": "instalment_1_amount", "string": _("Payment 1 — amount"),
-                             "widget": "number"},
-                            {"name": "instalment_2_amount", "string": _("Payment 2 — amount"),
-                             "widget": "number"},
-                            {"name": "instalment_3_amount", "string": _("Payment 3 — amount"),
-                             "widget": "number"},
-                        ]},
-                    ],
-                },
-                {
-                    "title": _("The document"),
-                    "groups": [
-                        {"fields": [
+                        {"title": _("Generated"), "fields": [
                             {"name": "document", "string": _("Generated contract"),
-                             "widget": "file", "readonly": True},
+                             "widget": "file", "readonly": True,
+                             "help": _("Kept as generated, never rebuilt from today's data — it is what the customer holds")},
                             {"name": "generated_at", "string": _("Generated at"),
                              "widget": "datetime", "readonly": True},
-                        ]},
-                        {"fields": [
                             {"name": "generated_by", "string": _("Generated by"),
                              "widget": "relation", "displayField": "name", "readonly": True,
                              "multiSelect": False},
-                            {"name": "signed_on", "string": _("Signed on"), "widget": "date"},
-                            {"name": "signed_document", "string": _("Signed copy"),
-                             "widget": "file"},
                             {"name": "sent_at", "string": _("Sent at"), "widget": "datetime",
                              "readonly": True},
+                        ]},
+                        {"title": _("Signed"), "fields": [
+                            {"name": "signed_on", "string": _("Signed on"), "widget": "date"},
+                            {"name": "signed_document", "string": _("Signed copy"),
+                             "widget": "file",
+                             "help": _("The copy that came back with a signature. A generated file proves what we offered; only this proves what they agreed to")},
                             {"name": "void_reason", "string": _("Why it was voided"),
-                             "widget": "text"},
+                             "widget": "text",
+                             "invisible": {"field": "state", "operator": "ne", "value": "cancelled"}},
                         ]},
                     ],
-                },
-                {
-                    "title": _("Notes"),
+                }],
+            },
+            {
+                "title": _("Notes"),
+                "sections": [{
+                    "title": "",
                     "groups": [{"fullWidth": True, "fields": [
-                        {"name": "notes", "string": _("Notes"), "widget": "textarea"},
+                        {"name": "notes", "string": _("Notes"), "widget": "textarea", "rows": 5},
                     ]}],
-                },
-            ],
-        },
+                }],
+            },
+        ],
     },
 }
 
@@ -279,19 +319,20 @@ car_contract_template_form_view = {
                 {"fields": [
                     {"name": "code", "string": _("Code"), "widget": "text", "required": True},
                     {"name": "name", "string": _("Name"), "widget": "text", "required": True},
-                    {"name": "program", "string": _("Programme"), "widget": "select"},
+                    {"name": "program", "string": _("Programme"), "widget": "select",
+                     "help": _("Which deals it is offered to. 'Any programme' is the fallback")},
                 ]},
                 {"fields": [
-                    {"name": "docx", "string": _("Template file"), "widget": "file"},
-                    {"name": "is_fillable", "string": _("Can be filled"), "widget": "switch"},
+                    {"name": "docx", "string": _("Template file"), "widget": "file",
+                     "help": _("The lawyer's Word file, with its blanks turned into named fields by import_contract_templates")},
+                    {"name": "is_fillable", "string": _("Can be filled"), "widget": "switch",
+                     "help": _("Off for the documents the lawyer has not delivered in a fillable form yet")},
                     {"name": "source_filename", "string": _("Original filename"), "widget": "text",
                      "readonly": True},
                 ]},
             ]},
             {"title": _("Fields this template asks for"), "groups": [
                 {"fullWidth": True, "fields": [
-                    # Read-only: the list comes from the file itself, and editing
-                    # it here would describe a template that does not exist.
                     {"name": "tokens", "string": _("Fields"), "widget": "text",
                      "readonly": True},
                     {"name": "notes", "string": _("Notes"), "widget": "textarea"},
@@ -339,7 +380,8 @@ car_contract_issuer_form_view = {
                     {"name": "name", "string": _("Company name"), "widget": "text",
                      "required": True},
                     {"name": "name_en", "string": _("Company name (English)"), "widget": "text"},
-                    {"name": "represents", "string": _("Marketing agent for"), "widget": "text"},
+                    {"name": "represents", "string": _("Marketing agent for"), "widget": "text",
+                     "help": _("K&T contracts as marketing agent for the German company — the clause names it")},
                 ]},
                 {"fields": [
                     {"name": "commercial_register", "string": _("Commercial register"),
@@ -357,20 +399,18 @@ car_contract_issuer_form_view = {
                      "widget": "text"},
                 ]},
                 {"fields": [
-                    {"name": "email", "string": _("Notice email (clause 10)"), "widget": "text"},
+                    {"name": "email", "string": _("Notice email (clause 10)"), "widget": "email"},
                     {"name": "address", "string": _("Address"), "widget": "text"},
                 ]},
             ]},
             {
-                # The list the whole model exists for. Signatories change, and a
-                # contract naming somebody who did not sign it is a contract
-                # with a hole in it.
                 "title": _("Authorised signatories"),
                 "groups": [{"fullWidth": True, "fields": [
                     {"name": "signatories", "string": "", "widget": "list",
                      "required": False, "minRows": 0, "maxRows": 20,
                      "createable": True, "deleteable": True, "selectable": False,
                      "editable": True,
+                     "help": _("Dated on purpose: 'who could sign in March?' gets asked once, by a lawyer, about a disputed contract"),
                      "listConfig": {"fields": [
                          {"name": "signatories.name", "widget": "text", "string": _("Name"),
                           "required": True},

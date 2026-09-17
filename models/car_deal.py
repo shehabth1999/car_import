@@ -5,7 +5,7 @@ from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from modules.base.decorators import action
+from modules.base.decorators import action, onchange
 from modules.base.fields import AttachmentForeignKeyField
 from modules.base.models.base import BaseModel
 from modules.base.models.managers import BranchAwareManager
@@ -322,10 +322,22 @@ class CarDeal(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
         super().clean()
         self._check_instalments_allowed()
 
+    def pre_create(self):
+        super().pre_create()
+        # The person who opens the deal is its agent unless somebody says
+        # otherwise. The row-level rule "an agent sees their own deals" reads
+        # `assigned_to`; a deal with nobody on it is a deal its author cannot
+        # find again.
+        user = getattr(getattr(self, 'env', None), 'user', None)
+        if self.assigned_to_id is None and getattr(user, 'pk', None):
+            self.assigned_to = user
+
     def pre_save(self):
         super().pre_save()
         self._check_instalments_allowed()
         self._check_approvals()
+        if self.amount_agreed is not None and self.amount_paid_marked is not None:
+            self.amount_due_marked = max(self.amount_agreed - self.amount_paid_marked, 0)
         stored_stage_id = self._stored_stage_id()
         self._stage_changed_from = stored_stage_id
         self._stage_did_change = bool(self.import_stage_id) and self.import_stage_id != stored_stage_id
@@ -525,39 +537,95 @@ class CarDeal(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
         return {'status': True, 'open_mode': 'message', 'data': {},
                 'message': _("Moved %(count)d deal(s)") % {'count': moved}}
 
+    @staticmethod
+    def _set_state(queryset, state, only_from=None):
+        """Through save(), never queryset.update(): the update path skips
+        pre_save, which is where the cancellation approval and the chatter
+        tracking live. The Cancel button used to bypass the very rule the
+        client wrote for it."""
+        done, refused = 0, []
+        for deal in queryset:
+            if only_from and deal.state != only_from:
+                continue
+            deal.state = state
+            try:
+                deal.save()
+            except ValidationError as exc:
+                refused.append(f"{deal.name}: {'; '.join(exc.messages)}")
+                continue
+            done += 1
+        return done, refused
+
     @action
     def action_hold(queryset):
         """Pause a deal without losing its stage."""
-        count = queryset.update(state='on_hold')
-        return {
-            'status': True,
-            'open_mode': 'message',
-            'message': _("Put %(count)d deal(s) on hold") % {'count': count},
-            'data': {},
-            'on_success': {'type': 'refresh'},
-        }
+        count, refused = CarDeal._set_state(queryset, 'on_hold', only_from='open')
+        message = _("Put %(count)d deal(s) on hold") % {'count': count}
+        if refused:
+            message += "\n" + "\n".join(refused)
+        return {'status': True, 'open_mode': 'message', 'message': message,
+                'data': {}, 'on_success': {'type': 'refresh'}}
 
     @action
     def action_resume(queryset):
         """Reopen a held deal."""
-        count = queryset.filter(state='on_hold').update(state='open')
-        return {
-            'status': True,
-            'open_mode': 'message',
-            'message': _("Reopened %(count)d deal(s)") % {'count': count},
-            'data': {},
-            'on_success': {'type': 'refresh'},
-        }
+        count, refused = CarDeal._set_state(queryset, 'open', only_from='on_hold')
+        message = _("Reopened %(count)d deal(s)") % {'count': count}
+        if refused:
+            message += "\n" + "\n".join(refused)
+        return {'status': True, 'open_mode': 'message', 'message': message,
+                'data': {}, 'on_success': {'type': 'refresh'}}
 
     @action
     def action_cancel(queryset):
-        """Cancel a deal. Nothing is deleted, and no message goes to the customer."""
-        count = queryset.update(state='cancelled')
-        return {
-            'status': True,
-            'open_mode': 'message',
-            'message': _("Cancelled %(count)d deal(s). The customer is told by a person, not by the system.")
-                       % {'count': count},
-            'data': {},
-            'on_success': {'type': 'refresh'},
-        }
+        """Cancel a deal. Nothing is deleted, and no message goes to the customer.
+        Management's approval is asked on the way (the client's rule 4)."""
+        count, refused = CarDeal._set_state(queryset, 'cancelled')
+        message = _("Cancelled %(count)d deal(s). The customer is told by a person, not by the system.") \
+            % {'count': count}
+        if refused:
+            message += "\n" + "\n".join(refused)
+        return {'status': bool(count) or not refused, 'open_mode': 'message', 'message': message,
+                'data': {}, 'on_success': {'type': 'refresh'}}
+
+    # ── live reactions on the form ──────────────────────────────────────────
+    @onchange('partner')
+    def _onchange_partner(self):
+        """Pick up the customer's latest lead, and the programme it says."""
+        if not self.partner_id or self.lead_id:
+            return
+        try:
+            from modules.crm.models import Lead
+            lead = Lead.all_objects.filter(partner_id=self.partner_id).order_by('-id').first()
+        except Exception:
+            lead = None
+        if lead is None:
+            return
+        self.lead = lead
+        program = getattr(lead, 'ka_program', None)
+        if program in dict(self.PROGRAM):
+            self.program = program
+
+    @onchange('amount_agreed')
+    def _onchange_amount_agreed(self):
+        return self._due_from_marks()
+
+    @onchange('amount_paid_marked')
+    def _onchange_amount_paid(self):
+        return self._due_from_marks()
+
+    def _due_from_marks(self):
+        if self.amount_agreed is None:
+            return None
+        paid = self.amount_paid_marked or 0
+        return {'value': {'amount_due_marked': float(max(self.amount_agreed - paid, 0))}}
+
+    @onchange('financing_type')
+    def _onchange_financing_type(self):
+        """The bank only means something on bank financing; the rate and the
+        term only on a plan with instalments."""
+        if self.financing_type != 'bank':
+            self.financing_bank = ''
+        if self.financing_type == 'cash':
+            self.financing_term_months = None
+            self.cheques_received = False

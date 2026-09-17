@@ -33,6 +33,42 @@ ACCESS_CONDITIONS = [
         "permissions": [1, 1, 1, 0],
         "groups": ["car_import.sales_agent"],
     },
+    # The same line, drawn around everything that hangs off a deal: an
+    # agent's quotations, contracts and paperwork are theirs; another agent's
+    # are not. Until now a sales agent could open any quotation in the company
+    # and read every price ever given.
+    {
+        "name": "car import: an agent sees their own quotations",
+        "model": "car_import.quote",
+        "condition": create_own_records_condition('assigned_to'),
+        "permissions": [1, 1, 1, 0],
+        "groups": ["car_import.sales_agent"],
+    },
+    {
+        "name": "car import: an agent sees their own deals' contracts",
+        "model": "car_import.contract",
+        "condition": {'filters': {"operator": "and", "filters": [
+            {"field": "deal.assigned_to", "operator": "eq", "value": "user.id"},
+        ]}},
+        "permissions": [1, 1, 1, 0],
+        "groups": ["car_import.sales_agent"],
+    },
+    {
+        "name": "car import: an agent sees their own deals' paperwork",
+        "model": "car_import.dealdocument",
+        "condition": {'filters': {"operator": "and", "filters": [
+            {"field": "deal.assigned_to", "operator": "eq", "value": "user.id"},
+        ]}},
+        "permissions": [1, 1, 1, 0],
+        "groups": ["car_import.sales_agent"],
+    },
+    {
+        "name": "car import: an agent sees the approvals they asked for",
+        "model": "car_import.approvalrequest",
+        "condition": create_own_records_condition('requested_by'),
+        "permissions": [1, 0, 0, 0],
+        "groups": ["car_import.sales_agent"],
+    },
     {
         "name": "car import: an agent sees their own deals' message log",
         "model": "car_import.stagechangelog",

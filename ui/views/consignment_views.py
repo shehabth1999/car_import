@@ -2,10 +2,10 @@
 """The consignment screens — L6, the sixth revenue line.
 
 The form is laid out around the question the business actually asks about one
-of these: *is a commission owed, and how much?* Everything that decides the
-answer — the dates, the tail, the introduction date, the price band — sits in
-one section rather than scattered among the car's details, because those four
-fields are the ones a dispute turns on.
+of these: *is a commission owed, and how much?* The four things that decide it
+— the dates, the tail, the introduction date, the price band — sit together in
+one tab, the sale in the next, and the commission recomputes in the footer as
+the figures are typed.
 """
 from django.utils.translation import gettext as _
 
@@ -80,78 +80,106 @@ car_consignment_form_view = {
                         {"name": "name", "string": _("Reference"), "widget": "text",
                          "readonly": True},
                         {"name": "owner", "string": _("Owner"), "widget": "relation",
-                         "displayField": "name", "required": True, "multiSelect": False},
+                         "displayField": "name", "required": True, "multiSelect": False,
+                         "help": _("The person whose car we sell for them — the contract's first party")},
                         {"name": "assigned_to", "string": _("Broker"), "widget": "relation",
                          "displayField": "name", "multiSelect": False},
                     ]},
                     {"fields": [
-                        # Most consignment cars are not ours and never will be,
-                        # so the description is the normal case and the vehicle
-                        # link is the exception.
-                        {"name": "car_description", "string": _("Car"), "widget": "text"},
+                        {"name": "car_description", "string": _("Car"), "widget": "text",
+                         "help": _("Free text when the car is not one of ours — most of them are not")},
                         {"name": "vehicle", "string": _("…or one of our cars"),
                          "widget": "relation", "displayField": "name", "multiSelect": False},
                     ]},
                 ]},
-                {"title": _("What decides the commission"), "groups": [
-                    {"fields": [
-                        {"name": "signed_on", "string": _("Signed on"), "widget": "date"},
-                        {"name": "expires_on", "string": _("Runs until"), "widget": "date"},
-                        {"name": "tail_days", "string": _("Tail (days)"), "widget": "number"},
-                        {"name": "cure_days", "string": _("Cure period (days)"),
-                         "widget": "number"},
-                    ]},
-                    {"fields": [
-                        {"name": "is_exclusive", "string": _("Exclusive"), "widget": "switch"},
-                        {"name": "auto_renews", "string": _("Renews automatically"),
-                         "widget": "switch"},
-                        {"name": "price_floor_egp", "string": _("Price band — from (EGP)"),
-                         "widget": "number"},
-                        {"name": "price_ceiling_egp", "string": _("Price band — to (EGP)"),
-                         "widget": "number"},
-                    ]},
-                ]},
-                {"title": _("The commission"), "groups": [
-                    {"fields": [
-                        # No default anywhere. It is blank in their own template,
-                        # and a plausible guess here becomes a number somebody
-                        # quotes to an owner.
-                        {"name": "commission_pct", "string": _("Commission %"),
-                         "widget": "number"},
-                        {"name": "commission_fixed_egp", "string": _("…or a fixed amount (EGP)"),
-                         "widget": "number"},
-                    ]},
-                    {"fields": [
-                        {"name": "marketing_cost_note", "string": _("Marketing costs"),
-                         "widget": "text"},
-                    ]},
-                ]},
-                {"title": _("The sale"), "groups": [
-                    {"fields": [
-                        {"name": "buyer", "string": _("Buyer"), "widget": "relation",
-                         "displayField": "name", "multiSelect": False},
-                        {"name": "buyer_introduced_on", "string": _("Buyer introduced on"),
-                         "widget": "date"},
-                        {"name": "deposit_taken_egp", "string": _("Deposit taken as agent (EGP)"),
-                         "widget": "number"},
-                    ]},
-                    {"fields": [
-                        {"name": "sold_on", "string": _("Sold on"), "widget": "date"},
-                        {"name": "sold_price_egp", "string": _("Sold for (EGP)"),
-                         "widget": "number"},
-                        {"name": "commission_due_egp", "string": _("Commission due (EGP)"),
-                         "widget": "number", "readonly": True},
-                        {"name": "commission_paid", "string": _("Commission received"),
-                         "widget": "switch"},
-                    ]},
-                ]},
-                {"title": _("Notes"), "groups": [
-                    {"fullWidth": True, "fields": [
-                        {"name": "notes", "string": _("Notes"), "widget": "textarea"},
-                    ]},
-                ]},
             ],
+            "footer": {
+                "fields": [
+                    {"name": "sold_price_egp", "string": _("Sold for EGP"), "widget": "number"},
+                    {"separator": "thin"},
+                    {"name": "commission_due_egp", "string": _("Commission due EGP"), "widget": "number",
+                     "highlight": True},
+                ],
+                "position": "end",
+            },
         },
+        "tabs": [
+            {
+                "title": _("The mandate"),
+                "sections": [{
+                    "title": _("What decides whether a commission is owed"),
+                    "groups": [
+                        {"title": _("Dates"), "fields": [
+                            {"name": "signed_on", "string": _("Signed on"), "widget": "date"},
+                            {"name": "expires_on", "string": _("Runs until"), "widget": "date",
+                             "help": _("A sale after this date owes nothing — unless the buyer was ours and the tail applies")},
+                            {"name": "tail_days", "string": _("Tail (days)"), "widget": "number",
+                             "help": _("A buyer we introduced who signs within this many days after the mandate ends still owes commission")},
+                            {"name": "cure_days", "string": _("Cure period (days)"),
+                             "widget": "number",
+                             "help": _("Days the owner has to put a breach right before it counts")},
+                            {"name": "is_exclusive", "string": _("Exclusive"), "widget": "switch",
+                             "help": _("While it runs, the owner may not sell the car themselves")},
+                            {"name": "auto_renews", "string": _("Renews automatically"),
+                             "widget": "switch"},
+                        ]},
+                        {"title": _("The price band and the commission"), "fields": [
+                            {"name": "price_floor_egp", "string": _("Price band — from (EGP)"),
+                             "widget": "number", "onChange": True,
+                             "help": _("Selling below this is selling the owner's car for less than they allowed — management is asked")},
+                            {"name": "price_ceiling_egp", "string": _("Price band — to (EGP)"),
+                             "widget": "number", "onChange": True},
+                            {"name": "commission_pct", "string": _("Commission %"),
+                             "widget": "number", "onChange": True,
+                             "help": _("Of the final price. Blank in the client's own template — ask before quoting a number")},
+                            {"name": "commission_fixed_egp", "string": _("…or a fixed amount (EGP)"),
+                             "widget": "number", "onChange": True,
+                             "help": _("Wins over the percentage when both are set")},
+                            {"name": "marketing_cost_note", "string": _("Marketing costs"),
+                             "widget": "text",
+                             "help": _("Borne by the broker; anything extraordinary needs the owner in writing")},
+                        ]},
+                    ],
+                }],
+            },
+            {
+                "title": _("The sale"),
+                "sections": [{
+                    "title": "",
+                    "groups": [
+                        {"title": _("The buyer"), "fields": [
+                            {"name": "buyer", "string": _("Buyer"), "widget": "relation",
+                             "displayField": "name", "multiSelect": False},
+                            {"name": "buyer_introduced_on", "string": _("Buyer introduced on"),
+                             "widget": "date", "onChange": True,
+                             "help": _("The date that decides whether the tail applies. Undated means no claim")},
+                            {"name": "deposit_taken_egp", "string": _("Deposit taken as agent (EGP)"),
+                             "widget": "number",
+                             "help": _("Held for the owner, not the company's money")},
+                        ]},
+                        {"title": _("The close"), "fields": [
+                            {"name": "sold_on", "string": _("Sold on"), "widget": "date", "onChange": True},
+                            {"name": "sold_price_egp", "string": _("Sold for (EGP)"),
+                             "widget": "number", "onChange": True},
+                            {"name": "commission_due_egp", "string": _("Commission due (EGP)"),
+                             "widget": "number", "readonly": True,
+                             "help": _("Computed: inside the mandate or its tail, by the percentage or the fixed amount")},
+                            {"name": "commission_paid", "string": _("Commission received"),
+                             "widget": "switch"},
+                        ]},
+                    ],
+                }],
+            },
+            {
+                "title": _("Notes"),
+                "sections": [{
+                    "title": "",
+                    "groups": [{"fullWidth": True, "fields": [
+                        {"name": "notes", "string": _("Notes"), "widget": "textarea", "rows": 5},
+                    ]}],
+                }],
+            },
+        ],
     },
 }
 
@@ -175,8 +203,6 @@ car_consignment_search_view = {
              "filter": {"field": "state", "operator": "eq", "value": "active"}},
             {"name": "sold", "string": _("Sold"),
              "filter": {"field": "state", "operator": "eq", "value": "sold"}},
-            # The one that costs money if nobody looks: a commission earned and
-            # never collected.
             {"name": "commission_unpaid", "string": _("Commission not received"),
              "filter": {"field": "commission_paid", "operator": "eq", "value": False}},
             {"name": "no_commission_set", "string": _("No commission agreed"),

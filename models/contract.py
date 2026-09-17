@@ -17,7 +17,7 @@ from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from modules.base.decorators import action
+from modules.base.decorators import action, onchange
 from modules.base.fields import AttachmentForeignKeyField
 from modules.base.models.base import BaseModel
 from modules.base.models.managers import BranchAwareManager
@@ -340,6 +340,37 @@ class Contract(BaseModel, BranchMixin, FullChatterMixin):
     def pre_create(self):
         super().pre_create()
         self.prefill_from_deal()
+
+    # ── live reactions on the form ──────────────────────────────────────────
+    @onchange('deal')
+    def _onchange_deal(self):
+        if self.deal_id:
+            self.prefill_from_deal()
+
+    def _live_sum(self):
+        total = self.total_eur or 0
+        parts = (self.down_payment_eur or 0) + (self.bank_transfer_eur or 0) + (self.cash_on_bl_eur or 0)
+        if total and parts and parts != total:
+            return {'errors': {'cash_on_bl_eur': str(_(
+                "The payments (%(parts)s €) do not add up to the contract total (%(total)s €).")
+                % {'parts': f'{parts:,.2f}', 'total': f'{total:,.2f}'})}}
+        return {'errors': {}}
+
+    @onchange('total_eur')
+    def _onchange_total(self):
+        return self._live_sum()
+
+    @onchange('down_payment_eur')
+    def _onchange_down(self):
+        return self._live_sum()
+
+    @onchange('bank_transfer_eur')
+    def _onchange_bank(self):
+        return self._live_sum()
+
+    @onchange('cash_on_bl_eur')
+    def _onchange_cash(self):
+        return self._live_sum()
 
     def pre_save(self):
         super().pre_save()

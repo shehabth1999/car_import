@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.db import models
+
+from modules.base.decorators import onchange
 from django.utils.translation import gettext_lazy as _
 
 from modules.base.fields import AttachmentForeignKeyField, AttachmentManyToManyField
@@ -206,6 +208,24 @@ class Vehicle(BaseModel):
         'كرواتيا', 'بلغاريا', 'ليتوانيا', 'لاتفيا', 'إستونيا', 'استونيا', 'أيرلندا', 'ايرلندا',
         'لوكسمبورغ', 'مالطا', 'قبرص',
     }
+
+    @onchange('price_gross_eur')
+    def _onchange_price_gross(self):
+        return self._net_from_gross()
+
+    @onchange('vatable')
+    def _onchange_vatable(self):
+        return self._net_from_gross()
+
+    def _net_from_gross(self):
+        """German VAT is 19%: a VAT-recoverable car nets to gross / 1.19,
+        anything else nets to what it costs."""
+        if not self.price_gross_eur:
+            return None
+        from decimal import Decimal
+        gross = Decimal(str(self.price_gross_eur))
+        net = (gross / Decimal('1.19')).quantize(Decimal('0.01')) if self.vatable else gross
+        return {'value': {'price_net_eur': float(net)}}
 
     def pre_save(self):
         super().pre_save()

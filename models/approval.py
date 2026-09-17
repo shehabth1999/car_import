@@ -46,6 +46,9 @@ SUBJECT = [
     ('sourcing_outside_eu', _("Sourcing outside Germany or the EU")),
     ('contract_signature', _("Signing the contract")),
     ('program_approval', _("Opening a deal on a programme that needs management")),
+    # A consignment sale below the band the owner agreed. Its own subject:
+    # the figures are EGP, and `car_discount` carries a EUR threshold.
+    ('consignment_below_band', _("Selling a consigned car below the agreed price band")),
 ]
 
 
@@ -179,8 +182,6 @@ class ApprovalRequest(BaseModel, FullChatterMixin):
 
 
 def _decide(queryset, state, template):
-    from django.utils.translation import gettext as _t
-
     done = 0
     for request in queryset:
         if request.state != 'pending':
@@ -189,10 +190,36 @@ def _decide(queryset, state, template):
         request.decided_at = timezone.now()
         request.decided_by = getattr(getattr(request, 'env', None), 'user', None)
         request.save()
+        _tell_the_requester(request)
         done += 1
     return {'status': bool(done), 'open_mode': 'message',
             'message': template % {'count': done}, 'data': {},
             'on_success': {'type': 'refresh'}}
+
+
+def _tell_the_requester(request):
+    """The agent who asked hears the answer where they asked — the thread —
+    and in their inbox. Until now a decision was a row nobody was told about,
+    and the agent found out by trying the save again."""
+    user = request.requested_by
+    if user is None:
+        return
+    verdict = 'تمت الموافقة ✅' if request.state == 'approved' else 'مرفوض ❌'
+    amount = (f'{request.amount:,.2f} {request.currency}' if request.amount is not None else '—')
+    who = getattr(request.decided_by, 'name', None) or getattr(request.decided_by, 'email', '') or ''
+    body = (f'{verdict} — {request.get_subject_display()}\n'
+            f'المبلغ: {amount}\n'
+            f'القرار: {who}' + (f'\nملاحظة: {request.decision_note}' if request.decision_note else '')
+            + ('\nممكن تحفظ التعديل دلوقتي.' if request.state == 'approved' else ''))
+    conversation = _conversation_for(request.partner)
+    if conversation is not None:
+        try:
+            from car_import.services import internal_note
+            internal_note.post(conversation, body, recipients=[user], subject='قرار الإدارة')
+            return
+        except Exception:
+            pass
+    _notify([user], 'قرار الإدارة', body)
 
 
 def _conversation_for(partner):
@@ -234,13 +261,28 @@ def require(subject, amount=None, *, deal=None, quote=None, partner=None,
     if policy is None or not policy.covers(amount):
         return None
 
-    existing = ApprovalRequest.objects.filter(
-        subject=subject, deal=deal, quote=quote, state='approved').order_by('-id').first()
+    # Match on whatever links the request has. A quotation being CREATED
+    # has no pk yet, so its request is filed with quote=None and the partner;
+    # matching on `quote=self` afterwards found nothing, and every later save
+    # of that quotation raised a fresh request — the discount could never be
+    # saved twice.
+    from django.db.models import Q
+    link = Q()
+    if deal is not None and getattr(deal, 'pk', None):
+        link |= Q(deal=deal)
+    if quote is not None and getattr(quote, 'pk', None):
+        link |= Q(quote=quote)
+    if partner is not None and getattr(partner, 'pk', None):
+        link |= Q(partner=partner, quote__isnull=True)
+    if not link:
+        link = Q(deal__isnull=True, quote__isnull=True, partner__isnull=True)
+    scope = ApprovalRequest.objects.filter(link, subject=subject)
+
+    existing = scope.filter(state='approved').order_by('-id').first()
     if existing is not None and (existing.amount or 0) >= Decimal(amount or 0):
         return existing
 
-    pending = ApprovalRequest.objects.filter(
-        subject=subject, deal=deal, quote=quote, state='pending').order_by('-id').first()
+    pending = scope.filter(state='pending').order_by('-id').first()
     if pending is None:
         pending = ApprovalRequest.objects.create(
             subject=subject, policy=policy, deal=deal, quote=quote, partner=partner,

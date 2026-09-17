@@ -33,7 +33,7 @@ from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from modules.base.decorators import action
+from modules.base.decorators import action, onchange
 from modules.base.models.base import BaseModel
 from modules.base.models.managers import BranchAwareManager
 from modules.base.models.mixins import BranchMixin, SequenceMixin
@@ -181,11 +181,48 @@ class ConsignmentMandate(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin
         if (self.sold_price_egp and self.price_floor_egp
                 and self.sold_price_egp < self.price_floor_egp):
             from .approval import require
-            require('car_discount', self.price_floor_egp - self.sold_price_egp,
+            # Its own subject: `car_discount` carries a EUR threshold and
+            # these are pounds, so "500" meant nothing here.
+            require('consignment_below_band', self.price_floor_egp - self.sold_price_egp,
                     partner=self.owner, field='sold_price_egp',
                     reason=_("Selling below the agreed price band"),
                     user=getattr(getattr(self, 'env', None), 'user', None))
         self.commission_due_egp = self.compute_commission()
+
+    # ── live commission on the form ─────────────────────────────────────────
+    def _live_commission(self):
+        errors = {}
+        if (self.price_floor_egp and self.price_ceiling_egp
+                and self.price_floor_egp > self.price_ceiling_egp):
+            errors['price_ceiling_egp'] = str(_("The price band runs backwards."))
+        if (self.sold_price_egp and self.price_floor_egp
+                and self.sold_price_egp < self.price_floor_egp):
+            errors['sold_price_egp'] = str(_("Below the agreed band — management will be asked on save."))
+        return {'value': {'commission_due_egp': float(self.compute_commission())}, 'errors': errors}
+
+    @onchange('sold_price_egp')
+    def _onchange_sold_price(self):
+        return self._live_commission()
+
+    @onchange('commission_pct')
+    def _onchange_commission_pct(self):
+        return self._live_commission()
+
+    @onchange('commission_fixed_egp')
+    def _onchange_commission_fixed(self):
+        return self._live_commission()
+
+    @onchange('sold_on')
+    def _onchange_sold_on(self):
+        return self._live_commission()
+
+    @onchange('buyer_introduced_on')
+    def _onchange_introduced(self):
+        return self._live_commission()
+
+    @onchange('price_ceiling_egp')
+    def _onchange_ceiling(self):
+        return self._live_commission()
 
     @action
     def action_mark_sold(queryset):

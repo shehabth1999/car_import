@@ -24,7 +24,7 @@ from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from modules.base.decorators import action
+from modules.base.decorators import action, onchange
 from modules.base.models.base import BaseModel
 from modules.base.models.managers import BranchAwareManager
 from modules.base.models.mixins import BranchMixin, SequenceMixin
@@ -306,6 +306,12 @@ class Quote(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
         if self.paid_eur and self.paid_eur < 0:
             raise ValidationError({'paid_eur': _("A payment cannot be negative.")})
 
+        # Candidates first: if this quotation carries several cars, its own
+        # figures are the chosen car's — INCLUDING the discount typed on the
+        # option row. Checking the discount before adopting it let an option's
+        # discount through unapproved.
+        self.adopt_accepted_option()
+
         # The client's own rule, and the one this screen used to ignore: *any*
         # discount on the company's fees is management's to give, not an
         # agent's. It raises rather than warning — the discount is not saved
@@ -320,11 +326,6 @@ class Quote(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
                     % {'customer': getattr(self.partner, 'name', '') or '—'},
                     user=getattr(getattr(self, 'env', None), 'user', None))
 
-        # Candidates first: if this quotation carries several cars, its own
-        # figures are the chosen car's, and choosing is what the agent does on
-        # the option rows rather than by retyping a price up here.
-        self.adopt_accepted_option()
-
         # Price first, then judge the result. Checking `total_eur` before the
         # calculator runs would reject a quote that is being created and
         # accepted in the same save — which is exactly what happens when a
@@ -336,8 +337,47 @@ class Quote(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
                 "There is no price yet. %(why)s") % {
                     'why': self.pricing_error or _("Enter the car's price with VAT.")}})
 
+    def pre_create(self):
+        super().pre_create()
+        user = getattr(getattr(self, 'env', None), 'user', None)
+        if self.assigned_to_id is None and getattr(user, 'pk', None):
+            self.assigned_to = user
+        if self.deal_id and self.partner_id is None:
+            self.partner_id = self.deal.partner_id
+
     def post_save(self):
         self._write_lines()
+        self._sync_deal_marks()
+
+    def _sync_deal_marks(self):
+        """The deal's payment marks follow the accepted quotation's money.
+
+        Two places held "what was paid": `paid_eur` here, and the deal's
+        `amount_paid_marked` / `payment_state`, which nothing kept in step.
+        The dashboard summed the deal; the offer read the quote; a customer
+        marked fully paid on one screen was unpaid on the other.
+        """
+        if not self.deal_id:
+            return
+        deal = self.deal
+        if deal.accepted_quote_id != self.pk:
+            return
+        paid = self.paid_eur or Decimal(0)
+        state = ('fully_paid' if self.fully_paid else 'deposit_paid' if self.deposit_covered
+                 else 'partially_paid' if paid > 0 else 'not_paid')
+        changed = []
+        for field, value in (('payment_state', state), ('amount_agreed', self.total_eur),
+                             ('amount_paid_marked', paid), ('amount_due_marked', self.remaining_eur),
+                             ('currency_note', 'EUR')):
+            if getattr(deal, field) != value:
+                setattr(deal, field, value)
+                changed.append(field)
+        if changed:
+            if 'payment_state' in changed:
+                deal.payment_marked_at = timezone.now()
+                deal.payment_marked_by = getattr(getattr(self, 'env', None), 'user', None)
+                changed += ['payment_marked_at', 'payment_marked_by']
+            deal.save(update_fields=changed)
 
     def _write_lines(self):
         if self._pending_lines is None:
@@ -349,6 +389,81 @@ class Quote(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
                       label=line['label_ar'], amount=line['amount'], currency=line['currency'])
             for index, line in enumerate(lines)
         ])
+
+    # ── live recalculation on the form ──────────────────────────────────────
+    # Every input has an onchange that re-runs the calculator and hands the
+    # frozen columns back as display values. Nothing is written: the result
+    # fields are editable=False, the save re-runs the engine anyway, and the
+    # form simply stops making the salesman press Recalculate to read a price.
+    _LIVE_RESULT_FIELDS = (
+        'band_label', 'net_eur', 'vat_reclaimable_eur', 'shipping_eur',
+        'admin_fee_before_discount_eur', 'admin_fee_eur', 'eur1_eur', 'shipping_extra_eur',
+        'total_eur', 'deposit_pct', 'deposit_eur', 'balance_eur', 'port_fee_egp',
+        'showroom_fee_egp', 'egp_due_on_arrival', 'total_egp_indicative',
+        'remaining_eur', 'overpaid_eur', 'deposit_covered', 'fully_paid', 'pricing_error',
+    )
+
+    def _live_values(self):
+        self.recalculate(save_lines=False)
+        self._pending_lines = None
+        values = {}
+        for field in self._LIVE_RESULT_FIELDS:
+            value = getattr(self, field)
+            values[field] = float(value) if isinstance(value, Decimal) else value
+        errors = {'gross_price_eur': self.pricing_error} if self.pricing_error else {}
+        return {'value': values, 'errors': errors}
+
+    @onchange('gross_price_eur')
+    def _onchange_gross_price(self):
+        return self._live_values()
+
+    @onchange('with_eur1')
+    def _onchange_with_eur1(self):
+        return self._live_values()
+
+    @onchange('shipping_type')
+    def _onchange_shipping_type(self):
+        return self._live_values()
+
+    @onchange('port')
+    def _onchange_port(self):
+        return self._live_values()
+
+    @onchange('collect_from_showroom')
+    def _onchange_collect(self):
+        return self._live_values()
+
+    @onchange('admin_fee_discount_eur')
+    def _onchange_fee_discount(self):
+        return self._live_values()
+
+    @onchange('vat_rate_pct')
+    def _onchange_vat(self):
+        return self._live_values()
+
+    @onchange('fx_rate_egp')
+    def _onchange_fx(self):
+        return self._live_values()
+
+    @onchange('paid_eur')
+    def _onchange_paid(self):
+        return self._live_values()
+
+    @onchange('partner')
+    def _onchange_partner(self):
+        """The customer's open deal, and its car, when they have one."""
+        if not self.partner_id or self.deal_id:
+            return
+        from .car_deal import CarDeal
+        deal = (CarDeal.all_objects.filter(partner_id=self.partner_id)
+                .exclude(state__in=['cancelled', 'done']).order_by('-id').first())
+        if deal is None:
+            return
+        self.deal = deal
+        if deal.vehicle_id and not self.vehicle_id:
+            self.vehicle_id = deal.vehicle_id
+        if deal.assigned_to_id and not self.assigned_to_id:
+            self.assigned_to_id = deal.assigned_to_id
 
     # ── buttons ─────────────────────────────────────────────────────────────
     @action

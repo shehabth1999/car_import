@@ -154,6 +154,7 @@ APPROVALS = [
     # `requires_management_approval` (commercial import), and until now the
     # flag was displayed and enforced nowhere.
     ('program_approval', 'فتح صفقة على برنامج محتاج موافقة الإدارة (الاستيراد التجاري)', None, 'EUR'),
+    ('consignment_below_band', 'بيع عربية وساطة بأقل من نطاق السعر المتفق عليه مع المالك', None, 'EGP'),
 ]
 
 
