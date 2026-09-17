@@ -332,6 +332,9 @@ class CarDeal(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
         user = getattr(getattr(self, 'env', None), 'user', None)
         if self.assigned_to_id is None and getattr(user, 'pk', None):
             self.assigned_to = user
+        if not self.public_token:
+            from car_import.services.tracking import new_token
+            self.public_token = new_token()
         if self.currency_id is None:
             from car_import.services import currencies
             self.currency = currencies.egp() if self.program == 'showroom' else currencies.eur()

@@ -34,6 +34,16 @@ SCHEDULES = [
         'task': 'car_import.tasks.refresh_listing_availability',
         'every': 1, 'period': 'days',
     },
+    {
+        'name': 'car_import: export the tracking feed',
+        'task': 'car_import.tasks.export_tracking_feed',
+        'every': 1, 'period': 'days',
+    },
+    {
+        'name': 'car_import: judge a sample of the assistant replies',
+        'task': 'car_import.tasks.judge_recent_replies',
+        'every': 1, 'period': 'days',
+    },
 ]
 
 

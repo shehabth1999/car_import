@@ -51,6 +51,67 @@ def _visible_lines(quote, currency):
             and (line.amount or line.code in ('gross', 'net'))]
 
 
+def _options(quote):
+    """The candidate cars, when the offer compares more than one."""
+    if not quote.pk:
+        return []
+    rows = list(quote.options.select_related('vehicle').order_by('sequence', 'id'))
+    return rows if len(rows) > 1 else []
+
+
+def _option_label(option, index):
+    car = option.label or (str(option.vehicle) if option.vehicle_id else '')
+    return car or f'عربية {index}'
+
+
+def _options_text(quote):
+    rows = _options(quote)
+    if not rows:
+        return []
+    out = ['العربيات المرشحة (كل واحدة بسعرها الكامل):']
+    for index, option in enumerate(rows, 1):
+        mark = ' ✅' if option.is_accepted else ''
+        if option.pricing_error or not option.total_eur:
+            out.append(f'{index}- {_option_label(option, index)}: {option.pricing_error or "مفيش سعر"}')
+            continue
+        out.append(
+            f'{index}- {_option_label(option, index)}{mark}: الإجمالي {_amount(option.total_eur, EUR)} — '
+            f'الوديعة {_pct(option.deposit_pct)}% ({_amount(option.deposit_eur, EUR)})')
+        if option.listing_url:
+            out.append(f'   {option.listing_url}')
+    if any(o.is_accepted for o in rows):
+        out.append('التفاصيل تحت للعربية المختارة ✅.')
+    out.append('')
+    return out
+
+
+def _options_html(quote):
+    rows = _options(quote)
+    if not rows:
+        return ''
+    body = ''
+    for index, option in enumerate(rows, 1):
+        mark = ' ✅' if option.is_accepted else ''
+        link = (f'<br><a href="{_escape(option.listing_url)}">{_escape(option.listing_url)}</a>'
+                if option.listing_url else '')
+        cls = ' class="chosen"' if option.is_accepted else ''
+        if option.pricing_error or not option.total_eur:
+            body += (f'<tr><td>{index}</td><td>{_escape(_option_label(option, index))}{mark}{link}</td>'
+                     f'<td class="n" colspan="3">{_escape(option.pricing_error or "مفيش سعر")}</td></tr>')
+            continue
+        body += (f'<tr{cls}><td>{index}</td>'
+                 f'<td>{_escape(_option_label(option, index))}{mark}{link}</td>'
+                 f'<td class="n">{_amount(option.gross_price_eur or 0, EUR)}</td>'
+                 f'<td class="n">{_amount(option.total_eur, EUR)}</td>'
+                 f'<td class="n">{_pct(option.deposit_pct)}% — {_amount(option.deposit_eur, EUR)}</td></tr>')
+    chosen_note = ('<p class="meta">التفاصيل تحت للعربية المختارة ✅.</p>'
+                   if any(o.is_accepted for o in rows) else '')
+    return ('<h2>العربيات المرشحة</h2>'
+            '<table class="options"><tr class="head"><td>#</td><td>العربية</td>'
+            '<td class="n">سعر الإعلان</td><td class="n">الإجمالي</td><td class="n">الوديعة</td></tr>'
+            f'{body}</table>{chosen_note}')
+
+
 def as_text(quote):
     """The offer as a WhatsApp message, in Arabic."""
     customer = getattr(quote.partner, 'name', '') or ''
@@ -65,6 +126,7 @@ def as_text(quote):
     if quote.name:
         out.append(f'رقم العرض: {quote.name}')
     out.append('')
+    out.extend(_options_text(quote))
 
     for line in _visible_lines(quote, EUR):
         out.append(f'{line.label}: {_amount(line.amount, EUR)}')
@@ -163,6 +225,9 @@ def as_html(quote):
     — the right characters in the wrong order, which is worse than either. */
  bdi {{ unicode-bidi: isolate; }}
  tr.total td {{ font-weight: 700; border-top: 2px solid #16324f; border-bottom: none; }}
+ table.options tr.head td {{ font-weight: 700; color: #55708c; font-size: .85rem; }}
+ table.options tr.chosen td {{ background: #eef6f1; font-weight: 600; }}
+ table.options a {{ color: #55708c; font-size: .8rem; text-decoration: none; }}
  ol {{ color: #55708c; font-size: .9rem; line-height: 1.8; }}
  /* Printed on A4 by a salesman with a customer waiting. One page, no chrome. */
  @media print {{ body {{ margin: 1.2cm; }} }}
@@ -173,6 +238,7 @@ def as_html(quote):
   التاريخ: <bdi>{quote.quote_date:%Y-%m-%d}</bdi> &nbsp;·&nbsp;
   رقم العرض: <bdi>{_escape(quote.name or '—')}</bdi>
 </div>
+{_options_html(quote)}
 <table>{rows_eur}
 <tr class="total"><td>إجمالي سعر البيع</td><td class="n">{_amount(quote.total_eur, EUR)}</td></tr>
 <tr><td>مقدم جدية الحجز <bdi>({_pct(quote.deposit_pct)}%)</bdi></td>

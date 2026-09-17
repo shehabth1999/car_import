@@ -353,6 +353,58 @@ uv run python manage.py purge_demo_data --deal KA/2026/0002 --confirm
 `purge_demo_data` refuses on a database whose name lacks `test` unless
 `--i-mean-production` is passed. Restore notes are in `ops/backup/README.md`.
 
+## 7. Go-live: the production tenant, end to end
+
+Everything below is ours; the client hands over only the domain, the two
+numbers, the keys and the three sheets. Order matters — a step out of place
+either messages a customer or leaves a rule unenforced.
+
+```bash
+# 0. on central — provision the tenant on a host with capacity, with the
+#    extension declared on the Deployment row (this is how khaled_test was made)
+#    Deployment: extensions_repo_url = github.com/shehabth1999/car_import, extensions_branch = main
+#    ProvisioningService.push_env(d)  → writes EXTENSIONS_PATHS into the tenant .env
+
+# 1. on the tenant host, as genie_<slug>
+uv run python manage.py load_apps && uv run python manage.py install car_import
+uv run python manage.py migrate car_import
+uv run python manage.py sync_all                       # views, menus, actions, onchange, groups
+uv run python manage.py sync_access_conditions         # the agent row rules — NOT inside sync_all
+uv run python manage.py seed_import_stages             # 14 stages, all SILENT
+uv run python manage.py seed_reference_data            # programmes, fees, bands, approvals, switches
+uv run python manage.py load_official_values --file <the client's values sheet>
+uv run python manage.py import_contract_templates --dir <the lawyer's .docx files>
+uv run python manage.py build_ka_knowledge             # RAG collection (needs the OpenAI key)
+uv run python manage.py build_ka_workflows             # one workflow: KA Sales
+uv run python manage.py seed_ka_followups              # 2 / 5 / 10-day cadence
+uv run python manage.py schedule_car_import_jobs       # beat rows
+genie-ops <slug> build                                 # the calculator page is in the bundle
+genie-ops <slug> restart all                           # Celery reads prompts and the gate at import
+
+# 2. people and data (the client's three sheets)
+uv run python manage.py setup_car_import_org --csv people.csv        # seats raised first
+uv run python manage.py import_contacts --file contacts.csv
+uv run python manage.py import_open_deals --file deals.csv           # SUPPRESSED by construction
+uv run python manage.py setup_car_import_org --report                # every group has somebody
+
+# 3. keys — on the Deployment row (DeploymentEnv), never in the repo
+#    ANTHROPIC_API_KEY / OPENAI_API_KEY (the client's), MOBILE_DE_*, DROPBOX_*
+
+# 4. the switches — Configuration → مفاتيح التشغيل
+#    car_import.stage_messages_enabled = 0 until the wording is signed off;
+#    then per stage: "Notify customer" on, template linked, one stage at a time
+#    car_import.ai_may_quote_published_fees — the owner's decision, default 0
+
+# 5. the numbers, carefully
+uv run python manage.py build_ka_workflows --canary <staff partner id>   # staff phones first
+uv run python manage.py build_ka_workflows --release <whatsapp account id>   # per number, when quiet for a week
+
+# 6. hygiene
+install the backup timer (ops/backup/README.md); purge_demo_data is for TEST tenants only
+```
+
+Sign-off checklist before step 5: `docs/06_قائمة_الفحص.md` sections و3 and ز.
+
 ## What this release does
 
 - The deal (`CarDeal`), the 13 stages, the change log and the car record.

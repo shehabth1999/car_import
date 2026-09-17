@@ -85,6 +85,20 @@ def _config_int(key, default):
 
 
 @shared_task
+def export_tracking_feed():
+    """Nightly: the website's tracking feed, one JSON entry per open deal."""
+    from django.core.management import call_command
+    call_command('export_tracking_feed')
+
+
+@shared_task
+def judge_recent_replies():
+    """Daily: the judge model reads a sample of yesterday's replies."""
+    from car_import.services import reply_judge
+    return reply_judge.run(hours=24, limit=30)
+
+
+@shared_task
 def chase_abandoned_escalations():
     """Find customers the assistant handed over and nobody answered.
 

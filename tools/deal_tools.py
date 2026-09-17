@@ -510,6 +510,29 @@ def ka_get_fee_and_licensing_costs(context) -> Dict[str, Any]:
         "required": ["reason"],
     },
 )
+def _file_discount_request(partner, context, reason):
+    """One pending fee-discount request per customer; the amount is management's
+    to fill in when they decide. Returns the request id, or None."""
+    try:
+        from car_import.models.approval import ApprovalPolicy, ApprovalRequest
+        pending = (ApprovalRequest.objects
+                   .filter(subject='fee_discount', partner=partner, state='pending')
+                   .order_by('-id').first())
+        if pending is not None:
+            return pending.pk
+        deal = _deal_for(context)
+        deal = deal if getattr(deal, 'pk', None) else None
+        policy = ApprovalPolicy.for_subject('fee_discount')
+        request = ApprovalRequest.objects.create(
+            subject='fee_discount', policy=policy, deal=deal, partner=partner,
+            currency=getattr(policy, 'currency', None),
+            reason=f'طلب خصم جاي من الشات (المساعد): {reason}')
+        return request.pk
+    except Exception:
+        logger.exception("car_import: could not file the discount approval request")
+        return None
+
+
 def ka_escalate_conversation_to_staff(context, reason: str, topic: Optional[str] = None) -> Dict[str, Any]:
     """Switch the conversation to a human and tell the customer someone is coming."""
     try:
@@ -547,6 +570,13 @@ def ka_escalate_conversation_to_staff(context, reason: str, topic: Optional[str]
         briefed = money_briefing.notify(partner, conversation=conversation,
                                         topic=topic, reason=reason)
 
+        # A discount is management's decision, and the customer just asked for
+        # one. File the request now, in the queue management already watches,
+        # so the agent does not have to ask in chat and then again in a form.
+        approval_id = None
+        if (topic or '').strip().lower() == 'discount':
+            approval_id = _file_discount_request(partner, context, reason)
+
         logger.info("car_import: escalated conversation for partner %s (%s): %s", partner.pk, topic, reason)
         return {
             "success": True,
@@ -555,6 +585,7 @@ def ka_escalate_conversation_to_staff(context, reason: str, topic: Optional[str]
                 "handled_by_ai": False,
                 "topic": topic or 'other',
                 "reason": reason,
+                "approval_request_id": approval_id,
                 "holding_message_sent": True,
                 "team_briefed_with_figures": briefed,
                 "note": "A human must switch the AI back on when the case is resolved.",
