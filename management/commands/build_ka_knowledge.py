@@ -31,7 +31,11 @@ from django.db import transaction
 from django.utils import timezone
 
 #: What the collection is called. `build_ka_workflows` resolves it by this name.
-COLLECTION_NAME = 'KA — الإجابات المعتمدة'
+# ASCII on purpose: the retriever's TOOL NAME is derived from this
+# (`search_<name>`, node_executor.py:1687) and the providers accept only
+# [a-zA-Z0-9_-]. An Arabic name here made every agent turn a 400.
+COLLECTION_NAME = 'ka_approved_answers'
+COLLECTION_TITLE = 'KA — الإجابات المعتمدة'
 KNOWLEDGE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(
     os.path.abspath(__file__)))), 'knowledge')
 
@@ -80,7 +84,7 @@ class Command(BaseCommand):
             collection, created = Collection.objects.get_or_create(
                 name=COLLECTION_NAME,
                 defaults={'source_type': 'document', 'is_public': True,
-                          'description': 'الإجابات والسياسات المعتمدة من الشركة، بدون أرقام. '
+                          'description': COLLECTION_TITLE + ' — الإجابات والسياسات المعتمدة من الشركة، بدون أرقام. '
                                          'Built by build_ka_knowledge from car_import/knowledge/.'})
             if created or not collection.is_indexed:
                 result = service.create_collection(collection)

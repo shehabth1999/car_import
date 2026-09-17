@@ -77,7 +77,7 @@ TOOL_NAMES = [
 #: The approved-answers collection `build_ka_knowledge` indexes. Resolved by
 #: name at build time; the node carries the id. A tenant without it gets an
 #: agent with no retriever rather than a broken one.
-KNOWLEDGE_COLLECTION_NAME = 'KA — الإجابات المعتمدة'
+KNOWLEDGE_COLLECTION_NAME = 'ka_approved_answers'   # ASCII: it becomes the tool name
 
 ERROR_MESSAGE = "بعتذر لحضرتك، هحوّل حضرتك لزميلي يكمل مع حضرتك دلوقتي."
 
