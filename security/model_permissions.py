@@ -71,6 +71,12 @@ MODEL_PERMISSIONS = [
     {'model': 'car_import.quoteline', 'group': 'car_import.operations', 'permissions': VIEW_ONLY},
     {'model': 'car_import.quoteline', 'group': 'car_import.management', 'permissions': FULL},
 
+    # ── the operating switches (base.ConfigParameter) ─────────────────────
+    # Management flips them from the screen; nobody deletes one — a missing
+    # row silently reverts to the code's default.
+    {'model': 'base.configparameter', 'group': 'car_import.management', 'permissions': MANAGE},
+    {'model': 'base.configparameter', 'group': 'car_import.sales_manager', 'permissions': VIEW_ONLY},
+
     # ── chat wizards ────────────────────────────────────────────────────────
     # Transient rows behind the chat-header actions. Whoever may act may
     # open the wizard; the action it runs enforces the real rules.

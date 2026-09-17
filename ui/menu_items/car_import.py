@@ -338,6 +338,19 @@ menu_dict = {
                         "sequence": 80,
                         "allowed_groups": ["car_import.management", "car_import.sales_manager"],
                     },
+                    "car_import_menu_switches": {
+                        "name": _("Operating switches"),
+                        "icon": "ToggleRight",
+                        "module": "car_import",
+                        "model": "base.configparameter",
+                        "view_types": "list,form",
+                        "sequence": 5,
+                        # Only this module's rows: the platform's key/value table
+                        # also holds every other module's parameters.
+                        "domain": {"filters": {"operator": "and", "filters": [
+                            {"field": "key", "operator": "contains", "value": "car_import."}]}},
+                        "allowed_groups": ["car_import.management", "car_import.sales_manager"],
+                    },
                     "car_import_menu_fx": {
                         "name": _("Exchange rates"),
                         "icon": "ArrowRightLeft",

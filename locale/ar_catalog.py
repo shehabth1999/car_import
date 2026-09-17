@@ -1150,4 +1150,12 @@ CATALOG = {
     "Euros — the German advert's currency. Every figure on this quotation is in it": "يورو — عملة الإعلان الألماني. كل رقم في عرض السعر ده بيها",
     "Pounds — the showroom's currency": "جنيه — عملة المعرض",
     "Calculator": "الآلة الحاسبة",
+    # operating switches screen
+    'Operating switches': 'مفاتيح التشغيل',
+    'Operating switch': 'مفتاح تشغيل',
+    'Switch': 'المفتاح',
+    'What it does': 'بيعمل إيه',
+    'Changed': 'آخر تغيير',
+    'The name the code reads. Never changes': 'الاسم اللي الكود بيقراه. ما يتغيّرش',
+    '0 = off, 1 = on for the yes/no switches; a number for the hours. Takes effect immediately': '0 = مقفول، 1 = شغال للمفاتيح نعم/لا؛ ورقم للساعات. بيشتغل فوراً',
 }
