@@ -11,7 +11,6 @@ from decimal import Decimal, InvalidOperation
 
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect, JsonResponse
-from django.shortcuts import render
 from django.views.decorators.http import require_POST
 
 SALES_GROUPS = ['car_import.sales_agent', 'car_import.sales_manager', 'car_import.management']
@@ -55,18 +54,23 @@ def _quote_from(payload):
 
 @login_required
 def calculator_page(request):
+    """The Inertia page: pages/Calculator/index.tsx, built into the bundle from
+    EXTENSIONS_PATHS as `car_import::Calculator/index`."""
+    from inertia import render as inertia_render
+
     if not _may_use(request.user):
-        return render(request, 'car_import/calculator.html', {'forbidden': True}, status=403)
+        return inertia_render(request, 'car_import::Calculator/index', {
+            'forbidden': True, 'shipping_types': [], 'ports': [], 'fx_rate': '', 'fx_note': '', 'can_save': False})
     from car_import.models import FxReference, Quote
     latest_fx = FxReference.objects.order_by('-effective_from', '-id').first()
-    return render(request, 'car_import/calculator.html', {
+    return inertia_render(request, 'car_import::Calculator/index', {
         'forbidden': False,
-        'shipping_types': [(k or 'standard', str(v)) for k, v in Quote.SHIPPING_TYPE],
-        'ports': [(k, str(v)) for k, v in Quote.PORT],
+        'shipping_types': [[k or 'standard', str(v)] for k, v in Quote.SHIPPING_TYPE],
+        'ports': [[k, str(v)] for k, v in Quote.PORT],
         'fx_rate': float(latest_fx.rate) if latest_fx else '',
         'fx_note': (f'سعر الإدارة يوم {latest_fx.effective_from:%Y-%m-%d}' if latest_fx and latest_fx.effective_from
                     else 'مفيش سعر صرف منشور — اكتب سعر اليوم لو عايز رقم بالجنيه'),
-        'user_name': getattr(request.user, 'name', '') or getattr(request.user, 'email', ''),
+        'can_save': True,
     })
 
 
