@@ -2,15 +2,19 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Head, usePage } from '@inertiajs/react';
 import Button from '@/components/Base/Button';
 import Lucide from '@/components/Base/Lucide';
+import { FormInput, FormLabel, FormSelect, FormSwitch } from '@/components/Base/Form';
 import toast from '@/utils/toast';
 
 declare const window: Window & { axios: any };
 
 /**
- * The calculator, compact: one strip of inputs, two dense ledgers under it.
- * Every change posts to /car-import/calculator/compute/, which runs
+ * The calculator — the client's spreadsheet as a screen.
+ *
+ * Two cards: what the salesman types, and what the customer is told. Every
+ * change posts to /car-import/calculator/compute/, which runs
  * `Quote._live_values()` — the quotation form's own engine. Nothing here
- * computes a price.
+ * computes a price. Styled with the app's semantic tokens (surface / content /
+ * edge / primary / warning) so it themes light and dark by construction.
  */
 
 type Choice = [string, string];
@@ -40,59 +44,33 @@ interface Inputs {
 
 const fmt = new Intl.NumberFormat('en-EG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const money = (n: number | null | undefined) => (n === null || n === undefined ? '—' : fmt.format(Math.abs(Number(n))));
-const SHIPPING_LABEL: Record<string, string> = { standard: 'عادي', vip_roro: 'VIP RORO', container: 'كونتينر' };
+const SHIPPING_LABEL: Record<string, string> = { standard: 'عادي (RORO)', vip_roro: 'VIP RORO', container: 'كونتينر' };
 const PORT_LABEL: Record<string, string> = { alexandria: 'الإسكندرية', port_said: 'بورسعيد' };
 
-/* ── controls ─────────────────────────────────────────────────────────── */
+/* ── pieces ───────────────────────────────────────────────────────────── */
 
-function Field({ label, children, className = '' }: { label: string; children: React.ReactNode; className?: string }) {
+function Card({ title, aside, children }: { title: string; aside?: React.ReactNode; children: React.ReactNode }) {
   return (
-    <div className={`flex flex-col gap-0.5 ${className}`}>
-      <span className="text-[11px] leading-none text-slate-500">{label}</span>
+    <section className="rounded-lg border border-edge bg-surface shadow-sm">
+      <header className="flex items-center justify-between gap-2 border-b border-edge px-4 py-2.5">
+        <h2 className="m-0 text-sm font-semibold text-content">{title}</h2>
+        {aside}
+      </header>
       {children}
-    </div>
+    </section>
   );
 }
 
-function Segmented<V extends string>({ options, value, onChange, label }:
-  { options: Choice[]; value: V; onChange: (v: V) => void; label: string }) {
+function Row({ k, v, neg, muted, sum, tone = 'primary' }:
+  { k: React.ReactNode; v: number | null | undefined; neg?: boolean; muted?: boolean; sum?: boolean; tone?: 'primary' | 'warning' }) {
+  const sumCls = tone === 'primary' ? 'bg-primary/10 text-primary' : 'bg-warning/10 text-warning';
   return (
-    <div role="group" aria-label={label} className="inline-flex h-8 rounded-md border border-slate-300 overflow-hidden">
-      {options.map(([key, text]) => {
-        const on = key === value;
-        return (
-          <button key={key} type="button" aria-pressed={on} onClick={() => onChange(key as V)}
-            className={`px-2.5 text-[12.5px] border-e last:border-e-0 border-slate-300 focus:outline-none focus-visible:ring-2 ring-slate-400 ${on ? 'bg-slate-800 text-white' : 'bg-white text-slate-700 hover:bg-slate-50'}`}>
-            {text}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-function Check({ on, onChange, label }: { on: boolean; onChange: (v: boolean) => void; label: string }) {
-  return (
-    <button type="button" role="switch" aria-checked={on} onClick={() => onChange(!on)}
-      className={`h-8 inline-flex items-center gap-1.5 rounded-md border px-2.5 text-[12.5px] focus:outline-none focus-visible:ring-2 ring-slate-400 ${on ? 'bg-emerald-700 border-emerald-700 text-white' : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'}`}>
-      <Lucide icon={on ? 'CheckSquare' : 'Square'} className="w-3.5 h-3.5" />{label}
-    </button>
-  );
-}
-
-const NUM = 'h-8 w-24 rounded-md border border-slate-300 bg-white px-2 font-mono text-[13px] text-left focus:outline-none focus:ring-2 ring-slate-400';
-
-/* ── ledger row ────────────────────────────────────────────────────────── */
-
-function Ln({ k, v, neg, sum, tone }: { k: React.ReactNode; v: number | null | undefined; neg?: boolean; sum?: boolean; tone: 'eur' | 'egp' }) {
-  const bg = sum ? (tone === 'eur' ? 'bg-emerald-50' : 'bg-orange-50') : '';
-  return (
-    <tr className={`border-t border-slate-100 ${bg} ${sum ? 'font-bold' : ''}`}>
-      <td className="py-1 px-2 text-slate-700">{k}</td>
-      <td dir="ltr" className={`py-1 px-2 text-right font-mono tabular-nums ${neg ? 'text-slate-400' : ''} ${sum ? 'text-[15px]' : ''}`}>
+    <div className={`flex items-baseline justify-between gap-3 px-4 py-1.5 border-t border-edge ${sum ? `${sumCls} font-bold` : ''} ${muted ? 'text-content-subtle' : ''}`}>
+      <span className={`text-sm ${sum ? '' : 'text-content-muted'}`}>{k}</span>
+      <span dir="ltr" className={`font-mono tabular-nums ${sum ? 'text-base' : 'text-sm'} ${neg ? 'text-content-subtle' : sum ? '' : 'text-content'}`}>
         {neg ? '− ' : ''}{money(v)}
-      </td>
-    </tr>
+      </span>
+    </div>
   );
 }
 
@@ -156,106 +134,145 @@ export default function Calculator() {
   }, [inputs]);
 
   if (forbidden) {
-    return <div dir="rtl" className="p-4 text-slate-500 text-sm">الآلة الحاسبة لفريق المبيعات. اطلب من مدير المبيعات يضيفك للمجموعة.</div>;
+    return <div dir="rtl" className="p-5 text-sm text-content-muted">الآلة الحاسبة لفريق المبيعات. اطلب من مدير المبيعات يضيفك للمجموعة.</div>;
   }
 
   return (
-    <div dir="rtl" className="p-3 text-[13px] text-slate-800">
+    <div dir="rtl" className="p-4 lg:p-5">
       <Head title="الآلة الحاسبة" />
-      <div className="rounded-lg border border-slate-200 bg-white">
 
-        {/* ── input strip ─────────────────────────────────────────── */}
-        <div className="flex flex-wrap items-end gap-x-4 gap-y-2 px-3 py-2.5 border-b border-slate-200">
-          <Field label="سعر الإعلان شامل الضريبة (€)">
-            <input inputMode="decimal" autoFocus autoComplete="off" placeholder="48001" dir="ltr"
-              value={inputs.gross_price_eur} onChange={e => set('gross_price_eur', e.target.value.replace(/[^\d.]/g, ''))}
-              className="h-9 w-36 rounded-md border border-slate-300 bg-white px-2 font-mono text-[17px] font-semibold text-left focus:outline-none focus:ring-2 ring-slate-400" />
-          </Field>
-          <Field label="الشحن">
-            <Segmented label="نوع الشحن" value={(inputs.shipping_type || 'standard') as any}
-              options={shipping_types.map(([k]) => [k, SHIPPING_LABEL[k] || k])}
-              onChange={v => set('shipping_type', (v === 'standard' ? '' : v) as Inputs['shipping_type'])} />
-          </Field>
-          <Field label="الميناء">
-            <Segmented label="الميناء" value={inputs.port} options={ports.map(([k]) => [k, PORT_LABEL[k] || k])} onChange={v => set('port', v)} />
-          </Field>
-          <Field label="خيارات">
-            <div className="flex gap-1.5">
-              <Check on={inputs.with_eur1} onChange={v => set('with_eur1', v)} label="EUR 1" />
-              <Check on={inputs.collect_from_showroom} onChange={v => set('collect_from_showroom', v)} label="استلام من المعرض" />
-            </div>
-          </Field>
-          <Field label="سعر الصرف (ج.م/€)">
-            <input inputMode="decimal" dir="ltr" placeholder="—" value={inputs.fx_rate_egp} onChange={e => set('fx_rate_egp', e.target.value)} className={NUM} title={fx_note} />
-          </Field>
-          {more && (
-            <>
-              <Field label="خصم المصاريف (€) — بموافقة الإدارة">
-                <input inputMode="decimal" dir="ltr" placeholder="0" value={inputs.admin_fee_discount_eur} onChange={e => set('admin_fee_discount_eur', e.target.value)} className={NUM} />
-              </Field>
-              <Field label="الضريبة %">
-                <input inputMode="decimal" dir="ltr" value={inputs.vat_rate_pct} onChange={e => set('vat_rate_pct', e.target.value)} className={NUM} />
-              </Field>
-            </>
-          )}
-          <button type="button" onClick={() => setMore(m => !m)} className="h-8 self-end text-[12px] text-slate-500 hover:text-slate-800 underline underline-offset-2">
-            {more ? 'أقل' : 'خصم / ضريبة'}
-          </button>
-          <div className="ms-auto flex gap-1.5 self-end">
-            <Button variant="outline-secondary" size="sm" disabled={!has} onClick={copy}><Lucide icon="Copy" className="w-3.5 h-3.5 ms-1" />انسخ</Button>
-            {can_save && <Button variant="primary" size="sm" disabled={!has || saving} onClick={save}><Lucide icon="Save" className="w-3.5 h-3.5 ms-1" />{saving ? 'بيتحفظ…' : 'احفظ كعرض سعر'}</Button>}
-          </div>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h1 className="m-0 text-lg font-semibold text-content">الآلة الحاسبة</h1>
+          <p className="m-0 text-xs text-content-muted">نفس محرك عرض السعر — الفئات والمصاريف المعتمدة، والأرقام بتتحسب على السيرفر وإنت بتكتب.</p>
         </div>
+        <div className="flex gap-2">
+          <Button variant="outline-secondary" size="sm" disabled={!has} onClick={copy}>
+            <Lucide icon="Copy" className="ms-1 h-4 w-4" /> انسخ الأرقام
+          </Button>
+          {can_save && (
+            <Button variant="primary" size="sm" disabled={!has || saving} onClick={save}>
+              <Lucide icon="Save" className="ms-1 h-4 w-4" /> {saving ? 'بيتحفظ…' : 'احفظ كعرض سعر'}
+            </Button>
+          )}
+        </div>
+      </div>
 
-        {error && <div className="px-3 py-1.5 text-[12.5px] text-red-700 bg-red-50 border-b border-red-100">{error}</div>}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        {/* ── inputs ─────────────────────────────────────────── */}
+        <Card title="اللي بتكتبه">
+          <div className="space-y-4 p-4">
+            <div>
+              <FormLabel htmlFor="price">سعر الإعلان في ألمانيا، شامل الضريبة (€)</FormLabel>
+              <FormInput id="price" inputMode="decimal" autoFocus autoComplete="off" placeholder="48001" dir="ltr"
+                value={inputs.gross_price_eur} onChange={e => set('gross_price_eur', e.target.value.replace(/[^\d.]/g, ''))}
+                className="font-mono text-lg font-semibold" />
+              <p className={`mt-1 text-xs ${error ? 'text-danger' : 'text-content-subtle'}`}>
+                {error || 'الرقم اللي على الإعلان. كل حاجة تحت بتتحسب منه.'}
+              </p>
+            </div>
 
-        {/* ── ledgers ─────────────────────────────────────────────── */}
-        {!has ? (
-          <div className="px-3 py-6 text-center text-slate-400">اكتب سعر الإعلان — الأرقام بتتحسب على السيرفر بنفس محرك عرض السعر</div>
-        ) : (
-          <div className="grid md:grid-cols-[3fr_2fr]">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="bg-emerald-50 text-emerald-800">
-                  <th className="py-1.5 px-2 text-start font-semibold">باليورو</th>
-                  <th className="py-1.5 px-2 text-end font-normal text-[12px]">{result!.band_label}</th>
-                </tr>
-              </thead>
-              <tbody>
-                <Ln tone="eur" k="سعر الإعلان (شامل الضريبة)" v={Number(inputs.gross_price_eur)} />
-                <Ln tone="eur" k="الضريبة الألمانية المستردة" v={result!.vat_reclaimable_eur} neg={Number(result!.vat_reclaimable_eur) > 0} />
-                <Ln tone="eur" k="صافي سعر العربية" v={result!.net_eur} />
-                <Ln tone="eur" k="الشحن" v={result!.shipping_eur} />
-                <Ln tone="eur" k="المصاريف الإدارية (حسب الفئة)" v={result!.admin_fee_before_discount_eur} />
-                {discount > 0.005 && <Ln tone="eur" k="خصم على المصاريف" v={discount} neg />}
-                {Number(result!.eur1_eur) > 0 && <Ln tone="eur" k="شهادة EUR 1" v={result!.eur1_eur} />}
-                {Number(result!.shipping_extra_eur) > 0 && <Ln tone="eur" k="إضافة الشحن" v={result!.shipping_extra_eur} />}
-                <Ln tone="eur" k="= إجمالي السعر" v={result!.total_eur} sum />
-                <Ln tone="eur" k={<>الوديعة <span className="text-slate-400">{Number(result!.deposit_pct) ? `${Number(result!.deposit_pct)}%` : ''}</span></>} v={result!.deposit_eur} />
-                <Ln tone="eur" k="الباقي قبل الشحن" v={result!.balance_eur} />
-              </tbody>
-            </table>
-            <table className="w-full border-collapse border-s border-slate-200 self-start">
-              <thead>
-                <tr className="bg-orange-50 text-orange-800">
-                  <th className="py-1.5 px-2 text-start font-semibold">بالجنيه — عند الوصول</th>
-                  <th className="py-1.5 px-2 text-end font-normal text-[11px]">ما بيتجمعش مع اليورو</th>
-                </tr>
-              </thead>
-              <tbody>
-                <Ln tone="egp" k="الميناء والتخليص" v={result!.port_fee_egp} />
-                {Number(result!.showroom_fee_egp) > 0 && <Ln tone="egp" k="استلام من المعرض" v={result!.showroom_fee_egp} />}
-                <Ln tone="egp" k="= المستحق عند الوصول" v={result!.egp_due_on_arrival} sum />
-                {result!.total_egp_indicative && Number(result!.total_egp_indicative) > 0 && (
-                  <tr className="border-t border-dashed border-slate-300 text-slate-500">
-                    <td className="py-1 px-2 text-[12px]">الإجمالي بالجنيه، تقريبي بسعر اليوم</td>
-                    <td dir="ltr" className="py-1 px-2 text-right font-mono tabular-nums">{money(result!.total_egp_indicative)}</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <FormLabel htmlFor="shipping">الشحن</FormLabel>
+                <FormSelect id="shipping" value={inputs.shipping_type || 'standard'}
+                  onChange={e => set('shipping_type', (e.target.value === 'standard' ? '' : e.target.value) as Inputs['shipping_type'])}>
+                  {shipping_types.map(([k]) => <option key={k} value={k}>{SHIPPING_LABEL[k] || k}</option>)}
+                </FormSelect>
+              </div>
+              <div>
+                <FormLabel htmlFor="port">ميناء الوصول</FormLabel>
+                <FormSelect id="port" value={inputs.port} onChange={e => set('port', e.target.value as Inputs['port'])}>
+                  {ports.map(([k]) => <option key={k} value={k}>{PORT_LABEL[k] || k}</option>)}
+                </FormSelect>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <FormSwitch className="flex items-center gap-2">
+                <FormSwitch.Input id="eur1" type="checkbox" checked={inputs.with_eur1} onChange={e => set('with_eur1', e.target.checked)} />
+                <FormSwitch.Label htmlFor="eur1" className="text-sm">
+                  شهادة EUR 1 <span className="block text-xs text-content-subtle">إثبات منشأ أوروبي — جمارك أقل</span>
+                </FormSwitch.Label>
+              </FormSwitch>
+              <FormSwitch className="flex items-center gap-2">
+                <FormSwitch.Input id="showroom" type="checkbox" checked={inputs.collect_from_showroom} onChange={e => set('collect_from_showroom', e.target.checked)} />
+                <FormSwitch.Label htmlFor="showroom" className="text-sm">
+                  استلام من المعرض <span className="block text-xs text-content-subtle">بدل التوصيل لحد الباب</span>
+                </FormSwitch.Label>
+              </FormSwitch>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <FormLabel htmlFor="fx">سعر الصرف (ج.م لكل €)</FormLabel>
+                <FormInput id="fx" inputMode="decimal" dir="ltr" placeholder="—" value={inputs.fx_rate_egp} onChange={e => set('fx_rate_egp', e.target.value)} className="font-mono" />
+                <p className="mt-1 text-xs text-content-subtle">{fx_note}</p>
+              </div>
+              <div className="flex items-end">
+                <button type="button" onClick={() => setMore(m => !m)} className="mb-1 text-xs text-content-muted underline underline-offset-2 hover:text-content">
+                  {more ? 'إخفاء الخصم والضريبة' : 'خصم على المصاريف / ضريبة مختلفة'}
+                </button>
+              </div>
+            </div>
+
+            {more && (
+              <div className="grid grid-cols-2 gap-3 rounded-md border border-edge bg-surface-sunken p-3">
+                <div>
+                  <FormLabel htmlFor="discount">خصم على المصاريف الإدارية (€)</FormLabel>
+                  <FormInput id="discount" inputMode="decimal" dir="ltr" placeholder="0" value={inputs.admin_fee_discount_eur} onChange={e => set('admin_fee_discount_eur', e.target.value)} className="font-mono" />
+                  <p className="mt-1 text-xs text-content-subtle">أي خصم محتاج موافقة الإدارة عند الحفظ</p>
+                </div>
+                <div>
+                  <FormLabel htmlFor="vat">الضريبة الألمانية %</FormLabel>
+                  <FormInput id="vat" inputMode="decimal" dir="ltr" value={inputs.vat_rate_pct} onChange={e => set('vat_rate_pct', e.target.value)} className="font-mono" />
+                </div>
+              </div>
+            )}
           </div>
-        )}
+        </Card>
+
+        {/* ── the stack ───────────────────────────────────────── */}
+        <Card title="السعر كما يراه العميل"
+          aside={has ? <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">{result!.band_label}</span> : null}>
+          {!has ? (
+            <div className="px-4 py-10 text-center text-sm text-content-subtle">اكتب سعر الإعلان عشان الأرقام تظهر</div>
+          ) : (
+            <div className="pb-2">
+              <div className="px-4 pt-3 pb-1 text-xs font-semibold text-primary">باليورو</div>
+              <Row k="سعر الإعلان (شامل الضريبة)" v={Number(inputs.gross_price_eur)} />
+              <Row k="الضريبة الألمانية المستردة" v={result!.vat_reclaimable_eur} neg={Number(result!.vat_reclaimable_eur) > 0} />
+              <Row k="صافي سعر العربية" v={result!.net_eur} />
+              <Row k="الشحن" v={result!.shipping_eur} />
+              <Row k="المصاريف الإدارية (حسب الفئة)" v={result!.admin_fee_before_discount_eur} />
+              {discount > 0.005 && <Row k="خصم على المصاريف" v={discount} neg />}
+              {Number(result!.eur1_eur) > 0 && <Row k="شهادة EUR 1" v={result!.eur1_eur} />}
+              {Number(result!.shipping_extra_eur) > 0 && <Row k="إضافة الشحن" v={result!.shipping_extra_eur} />}
+              <Row k="إجمالي السعر" v={result!.total_eur} sum />
+              <div className="grid grid-cols-2 border-t border-edge">
+                <div className="px-4 py-2">
+                  <div className="text-xs text-content-muted">الوديعة {Number(result!.deposit_pct) ? <span className="text-content-subtle">({Number(result!.deposit_pct)}%)</span> : null}</div>
+                  <div dir="ltr" className="text-right font-mono text-base font-semibold text-content tabular-nums">{money(result!.deposit_eur)}</div>
+                </div>
+                <div className="border-s border-edge px-4 py-2">
+                  <div className="text-xs text-content-muted">الباقي قبل الشحن</div>
+                  <div dir="ltr" className="text-right font-mono text-base font-semibold text-content tabular-nums">{money(result!.balance_eur)}</div>
+                </div>
+              </div>
+
+              <div className="mt-2 flex items-center justify-between px-4 pt-3 pb-1 text-xs font-semibold text-warning">
+                <span>بالجنيه — بيتدفع في مصر عند الوصول</span>
+                <span className="font-normal text-content-subtle">ما بيتجمعش مع اليورو</span>
+              </div>
+              <Row tone="warning" k="مصاريف الميناء والتخليص" v={result!.port_fee_egp} />
+              {Number(result!.showroom_fee_egp) > 0 && <Row tone="warning" k="استلام من المعرض" v={result!.showroom_fee_egp} />}
+              <Row tone="warning" k="المستحق عند الوصول" v={result!.egp_due_on_arrival} sum />
+              {result!.total_egp_indicative && Number(result!.total_egp_indicative) > 0 && (
+                <Row k="الإجمالي بالجنيه — تقريبي بسعر اليوم، مش وعد" v={result!.total_egp_indicative} muted />
+              )}
+            </div>
+          )}
+        </Card>
       </div>
     </div>
   );
