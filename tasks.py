@@ -149,11 +149,17 @@ def chase_abandoned_escalations():
                                                             'instagram', 'tiktok', 'webbot'))
                      .exclude(social_partner=None))
     for conversation in conversations:
-        last = (Message.objects.filter(conversation=conversation)
+        # Internal notes do not count as a reply. They used to: the chaser's own
+        # warning became "the newest message", so after one warning it went
+        # blind to the customer still waiting underneath it.
+        last = (Message.objects.filter(conversation=conversation, is_internal=False)
                 .order_by('-created_at').first())
-        # Nobody has replied when the newest message is still the customer's.
+        # Nobody has replied when the newest real message is still the customer's.
         if last is None or last.direction != 'inbound':
             continue
+        newest = Message.objects.filter(conversation=conversation).order_by('-created_at').first()
+        already_warned = bool(newest is not None and newest.pk != last.pk
+                              and getattr(newest, 'is_internal', False))
         if not (floor <= last.created_at <= cutoff):
             continue
         # And it must be a conversation the assistant actually handed over.
@@ -162,7 +168,7 @@ def chase_abandoned_escalations():
         if not _was_escalated(conversation):
             continue
         waited = int((now - last.created_at).total_seconds() // 60)
-        stale.append((conversation, waited))
+        stale.append((conversation, waited, already_warned))
 
     # Under the selling policy staff monitor; they are not on the queue. A
     # hand-over nobody answers goes back to the assistant, which then answers
@@ -173,19 +179,22 @@ def chase_abandoned_escalations():
         if policy.ai_first():
             limit = resume.resume_after_minutes()
             still_waiting = []
-            for conversation, waited in stale:
+            for conversation, waited, already_warned in stale:
                 # Minutes, not hours: someone who gave up this afternoon should
                 # hear from a person, not from a bot that woke up at night.
                 if limit <= waited <= resume.MAX_WAIT_MINUTES and resume.may_resume(conversation):
                     resume.give_back_to_ai(conversation, waited_minutes=waited)
                     resumed += 1
                 else:
-                    still_waiting.append((conversation, waited))
+                    still_waiting.append((conversation, waited, already_warned))
             stale = still_waiting
     except Exception:
         logger.exception('car_import: could not give abandoned conversations back to the assistant')
 
-    warned = sum(1 for conversation, waited in stale if _warn_about(conversation, waited))
+    # One warning per customer message: a note every few minutes teaches people
+    # to ignore the notes.
+    warned = sum(1 for conversation, waited, already_warned in stale
+                 if not already_warned and _warn_about(conversation, waited))
 
     if stale:
         logger.info('car_import: %d escalated conversation(s) waiting longer than %d minutes',
