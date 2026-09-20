@@ -110,8 +110,10 @@ def as_html(invoice):
  tr.total td {{ font-weight: 700; border-top: 2px solid #16324f; border-bottom: none; }}
  .due {{ margin: 6mm 0; padding: 4mm 5mm; background: #eef6f1; border-right: 4px solid #1f7a4d;
          font-size: 13.5pt; font-weight: 700; }}
+ /* Each line finds its own direction: the IBAN reads left to right, the
+    InstaPay name right to left, in the same block. */
  pre {{ font-family: inherit; white-space: pre-wrap; margin: 0; padding: 3mm 4mm;
-        background: #f6f8fb; direction: ltr; text-align: left; }}
+        background: #f6f8fb; unicode-bidi: plaintext; text-align: start; font-size: 10.5pt; }}
 </style></head><body>
 <div class="head">
   <h1>فاتورة مبدئية — Proforma Invoice</h1>
