@@ -163,7 +163,44 @@ def sales_facts(partner, deal):
     return '\n'.join(lines) if lines else 'مفيش عرض سعر ولا فاتورة لسه.'
 
 
-def turn_warnings(message, deal):
+#: Every way a customer asks where to send the money.
+BANK_WORDS = ['رقم الحساب', 'رقم حساب', 'الحسابات', 'حساباتك', 'حسابتك', 'حسابكم', 'حسابكو',
+              'الحساب البنكي', 'بيانات التحويل', 'iban', 'ايبان', 'أحوّل', 'احول', 'احوّل',
+              'التحويل على', 'انستاباي', 'إنستاباي', 'instapay', 'wise']
+
+#: How our own bank-details message begins (tools/bank_tools.py, sales_flow.send_proforma).
+BANK_MESSAGE_PREFIX = 'بيانات التحويل:'
+
+
+def bank_details_pending(conversation, hours=6):
+    """The customer asked where to transfer and has not been given the details.
+
+    Looked up, not inferred: a hint keyed on the current message alone died the
+    moment the customer followed up with "؟" or "ابعتها هنا" — two messages
+    with no bank word in them — and the assistant answered from old history
+    instead of calling the tool (live, 2026-09-20).
+    """
+    if conversation is None:
+        return False
+    try:
+        from datetime import timedelta
+        from modules.chat.models import Message
+        rows = (Message.objects.filter(conversation=conversation, is_internal=False,
+                                       created_at__gte=timezone.now() - timedelta(hours=hours))
+                .order_by('-created_at')[:30])
+        for m in rows:                          # newest first
+            content = getattr(m, 'content', None)
+            body = str((content.get('text') if isinstance(content, dict) else content) or '')
+            if m.direction == 'outbound' and body.lstrip().startswith(BANK_MESSAGE_PREFIX):
+                return False                    # already given, after the question
+            if m.direction == 'inbound' and any(w in body.lower() for w in BANK_WORDS):
+                return True
+    except Exception:
+        return False
+    return False
+
+
+def turn_warnings(message, deal, conversation=None):
     """What this particular message calls for. Short, and only when it applies:
     a warning raised on every turn gets read as standing orders."""
     from car_import.services import policy
@@ -171,6 +208,13 @@ def turn_warnings(message, deal):
     text = str(message or '').lower()
     ai_first = policy.ai_first()
     warnings = []
+
+    if ai_first:
+        # A standing order, on purpose. Long threads are full of replies written
+        # under the old policy, and the model copies its own past sentences.
+        warnings.append('السياسة اتغيّرت: إنت اللي بتسعّر العربية وتبعت عرض السعر والفاتورة المبدئية وبيانات '
+                        'التحويل بنفسك بالأدوات. أي رد قديم في المحادثة بيقول «زميلي هيسعّر» أو «بيانات التحويل '
+                        'مع الفاتورة» أو «الحسابات هتبعتها» اتلغى — متكررهوش.')
 
     if deal is not None and deal.program == 'initiative' and deal.customer_is_initiative_holder:
         warnings.append('العميل صاحب المبادرة: التقسيط مش متاح ليه.')
@@ -189,11 +233,10 @@ def turn_warnings(message, deal):
                             'معاه — متوعدش بأي خصم ومتحوّلش المحادثة.')
         if any(m in text for m in ['استرداد', 'ارجاع فلوس', 'إلغاء', 'الغاء', 'ألغي', 'الغي']):
             warnings.append('استرداد أو إلغاء: ده قرار بني آدم — حوّل لزميل.')
-        if any(m in text for m in ['رقم الحساب', 'رقم حساب', 'حساباتك', 'حسابتك', 'حسابكم', 'حسابكو',
-                                   'الحساب البنكي', 'iban', 'ايبان', 'أحوّل', 'احول', 'التحويل على',
-                                   'احوّل']):
-            warnings.append('العميل بيسأل يحوّل على أنهي حساب: استخدم ka_share_bank_details فوراً — الأداة '
-                            'بتبعتله بيانات التحويل المعتمدة بنفسها. متكتبش رقم حساب ولا اسم بنك من عندك أبداً.')
+        if any(m in text for m in BANK_WORDS) or bank_details_pending(conversation):
+            warnings.append('العميل سأل يحوّل على أنهي حساب ولسه مخدش البيانات: استخدم ka_share_bank_details '
+                            'دلوقتي حالاً، من غير شروط ومن غير ما تستنى عرض سعر أو فاتورة — الأداة بتبعتله '
+                            'بيانات التحويل المعتمدة بنفسها. متكتبش رقم حساب ولا اسم بنك من عندك أبداً.')
         if any(m in text for m in ['حولت', 'حوّلت', 'دفعت', 'التحويل تم', 'بعت الفلوس']):
             warnings.append('العميل بيقول إنه حوّل: اطلب صورة التحويل لو مبعتهاش، وسجّلها بـ '
                             'ka_record_payment_receipt. تأكيد وصول الفلوس للمحاسب بس.')
@@ -241,7 +284,7 @@ def _build(partner, conversation, message):
             facts.append('الميناء: %s' % deal.arrival_port)
         facts.append('حالة الدفع المسجّلة: %s' % deal.get_payment_state_display())
 
-    warnings = turn_warnings(message, deal)
+    warnings = turn_warnings(message, deal, conversation)
     return {
         'deal_reference': deal.name if deal is not None else '',
         'channel_label': channel_label(conversation),
