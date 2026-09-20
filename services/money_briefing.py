@@ -70,7 +70,7 @@ def build(partner, topic=None, reason=''):
 
     if quote:
         lines.append(f'— آخر عرض سعر للعميل ده ({quote["name"]}, {quote["date"]}):')
-        lines.append(f'   الإجمالي {quote["total"]} € · المقدم {quote["deposit"]} € '
+        lines.append(f'   الإجمالي {quote["total"]} € · مقدم التعاقد {quote["deposit"]} € '
                      f'({quote["deposit_pct"]}%) · الباقي {quote["balance"]} €')
         if quote['paid']:
             lines.append(f'   المدفوع {quote["paid"]} €'

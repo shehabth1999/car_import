@@ -129,7 +129,7 @@ def sales_facts(partner, deal):
                  .exclude(total_eur=0).order_by('-id').first())
         if quote is not None:
             state = 'العميل وافق عليه' if quote.state == 'accepted' else 'اتبعت ومستني رد العميل'
-            lines.append('عرض السعر %s (%s): %s — الإجمالي %s € — الجدية %s%% = %s €%s' % (
+            lines.append('عرض السعر %s (%s): %s — الإجمالي %s € — مقدم التعاقد %s%% = %s €%s' % (
                 quote.name, state, quote.car_label or (str(quote.vehicle) if quote.vehicle_id else '-'),
                 f'{quote.total_eur:,.2f}', f'{float(quote.deposit_pct):g}', f'{quote.deposit_eur:,.2f}',
                 (' — ساري لحد %s' % quote.valid_until) if quote.valid_until else ''))

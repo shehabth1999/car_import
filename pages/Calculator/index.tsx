@@ -124,7 +124,7 @@ export default function Calculator() {
       L('الشحن', result.shipping_eur), L('المصاريف الإدارية', result.admin_fee_eur),
       Number(result.eur1_eur) > 0 ? L('EUR 1', result.eur1_eur) : null,
       Number(result.shipping_extra_eur) > 0 ? L('إضافة الشحن', result.shipping_extra_eur) : null,
-      L('الإجمالي', result.total_eur), L('الوديعة', result.deposit_eur), L('الباقي', result.balance_eur),
+      L('الإجمالي', result.total_eur), L('مقدم التعاقد', result.deposit_eur), L('الباقي', result.balance_eur),
       L('عند الوصول', result.egp_due_on_arrival, 'ج.م'),
     ].filter(Boolean).join('\n');
     navigator.clipboard.writeText(text).then(() => toast.success('اتنسخت'), () => toast.error('المتصفح ما سمحش بالنسخ'));
@@ -257,7 +257,7 @@ export default function Calculator() {
               <Row k="إجمالي السعر" v={result!.total_eur} sum />
               <div className="grid grid-cols-2 border-t border-edge">
                 <div className="px-4 py-2">
-                  <div className="text-xs text-content-muted">الوديعة {Number(result!.deposit_pct) ? <span className="text-content-subtle">({Number(result!.deposit_pct)}%)</span> : null}</div>
+                  <div className="text-xs text-content-muted">مقدم التعاقد {Number(result!.deposit_pct) ? <span className="text-content-subtle">({Number(result!.deposit_pct)}%)</span> : null}</div>
                   <div dir="ltr" className="text-right font-mono text-base font-semibold text-content tabular-nums">{money(result!.deposit_eur)}</div>
                 </div>
                 <div className="border-s border-edge px-4 py-2">

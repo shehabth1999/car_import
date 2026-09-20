@@ -441,7 +441,7 @@ def accept_receipt(receipt, user=None):
         text += f'\nالمتبقي من إجمالي العربية: {remaining:,.2f} €.'
     told = send_text(receipt.partner, text)
 
-    contract = {'issued': False, 'sent': False, 'reason': 'الجدية لسه متغطتش بالكامل'}
+    contract = {'issued': False, 'sent': False, 'reason': 'مقدم التعاقد لسه متغطاش بالكامل'}
     if deal is not None and deposit_covered:
         contract = issue_and_send_contract(deal, user=user)
     elif deal is None:
@@ -485,7 +485,7 @@ CONTRACT_DETAIL_LABELS = {
     'customer_national_id': 'الرقم القومي',
     'car_model': 'موديل العربية',
     'contract_total_eur': 'إجمالي العقد',
-    'deposit_pct': 'نسبة الجدية',
+    'deposit_pct': 'نسبة مقدم التعاقد',
 }
 
 

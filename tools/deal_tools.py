@@ -184,7 +184,7 @@ def _quoting_refused() -> Dict[str, Any]:
 #: Arabic sentence.
 PAYMENT_STATE_AR = {
     'not_paid': 'لسه مش مدفوعة',
-    'deposit_paid': 'المقدم اتدفع',
+    'deposit_paid': 'مقدم التعاقد اتدفع',
     'partially_paid': 'مدفوعة جزئياً',
     'fully_paid': 'مدفوعة بالكامل',
 }

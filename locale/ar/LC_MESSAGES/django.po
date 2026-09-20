@@ -840,7 +840,7 @@ msgstr "تم إلغاء %(count)d فاتورة"
 
 msgctxt "ui/views/car_deal_views.py"
 msgid "Cancelling after a deposit needs management's approval — this reason goes on the request"
-msgstr "الإلغاء بعد الجدية محتاج موافقة الإدارة — السبب ده بيتكتب في الطلب"
+msgstr "الإلغاء بعد مقدم التعاقد محتاج موافقة الإدارة — السبب ده بيتكتب في الطلب"
 
 msgid "Cancelling this deal"
 msgstr "إلغاء هذه الصفقة"
@@ -1741,29 +1741,29 @@ msgstr "محضر الاستلام"
 
 msgctxt "ui/views/quote_views.py"
 msgid "Dep. %"
-msgstr "المقدم %"
+msgstr "مقدم التعاقد %"
 
 msgid "Deposit %"
-msgstr "المقدم %"
+msgstr "مقدم التعاقد %"
 
 msgctxt "ui/views/contract_views.py"
 msgid "Deposit %"
-msgstr "المقدم %"
+msgstr "مقدم التعاقد %"
 
 msgctxt "ui/views/payment_views.py"
 msgid "Deposit %"
-msgstr "المقدم %"
+msgstr "مقدم التعاقد %"
 
 msgctxt "ui/views/pricing_views.py"
 msgid "Deposit %"
-msgstr "المقدم %"
+msgstr "مقدم التعاقد %"
 
 msgctxt "ui/views/quote_views.py"
 msgid "Deposit %"
-msgstr "المقدم %"
+msgstr "مقدم التعاقد %"
 
 msgid "Deposit (EUR)"
-msgstr "المقدم (يورو)"
+msgstr "مقدم التعاقد (يورو)"
 
 msgid "Deposit (USD)"
 msgstr "الوديعة (دولار)"
@@ -1778,20 +1778,20 @@ msgstr "الوديعة (دولار)"
 
 msgctxt "ui/views/quote_views.py"
 msgid "Deposit (€)"
-msgstr "المقدم (€)"
+msgstr "مقدم التعاقد (€)"
 
 msgid "Deposit covered"
-msgstr "المقدم مغطّى"
+msgstr "مقدم التعاقد مغطّى"
 
 msgctxt "ui/views/quote_views.py"
 msgid "Deposit covered"
-msgstr "المقدم مغطّى"
+msgstr "مقدم التعاقد مغطّى"
 
 msgid "Deposit marked as received on %(count)d deal(s)"
-msgstr "تم تسجيل استلام المقدم على %(count)d صفقة"
+msgstr "تم تسجيل استلام مقدم التعاقد على %(count)d صفقة"
 
 msgid "Deposit paid"
-msgstr "المقدم مدفوع"
+msgstr "مقدم التعاقد مدفوع"
 
 msgid "Deposit paid on"
 msgstr "تاريخ دفع الوديعة"
@@ -1814,7 +1814,7 @@ msgstr "قيم الودائع"
 
 msgctxt "ui/views/quote_views.py"
 msgid "Deposit €"
-msgstr "المقدم €"
+msgstr "مقدم التعاقد €"
 
 msgid "Description"
 msgstr "الوصف"
@@ -2919,7 +2919,7 @@ msgstr "تعليم كمُباع"
 
 msgctxt "ui/views/car_deal_views.py"
 msgid "Mark deposit received"
-msgstr "تسجيل استلام المقدم"
+msgstr "تسجيل استلام مقدم التعاقد"
 
 msgctxt "ui/views/car_deal_views.py"
 msgid "Mark fully paid"
@@ -5253,10 +5253,10 @@ msgstr "الوديعة"
 
 msgctxt "ui/views/payment_views.py"
 msgid "The deposit this invoice asks for"
-msgstr "الجدية اللي الفاتورة دي بتطلبها"
+msgstr "مقدم التعاقد اللي الفاتورة دي بتطلبه"
 
 msgid "The deposit this invoice asks for. The balance follows the contract."
-msgstr "الجدية اللي الفاتورة دي بتطلبها. الباقي بيمشي على العقد."
+msgstr "مقدم التعاقد اللي الفاتورة دي بتطلبه. الباقي بيمشي على العقد."
 
 msgctxt "ui/views/contract_views.py"
 msgid "The document"
@@ -5617,7 +5617,7 @@ msgstr "إجمالي قيمة العقد (€)"
 
 msgctxt "ui/views/quote_views.py"
 msgid "Total minus deposit — due before the car ships"
-msgstr "الإجمالي ناقص الوديعة — بيستحق قبل شحن العربية"
+msgstr "الإجمالي ناقص مقدم التعاقد — بيستحق قبل شحن العربية"
 
 msgid "Total selling price"
 msgstr "إجمالي سعر البيع"
@@ -6143,7 +6143,7 @@ msgstr "الأسعار اللي الفئة دي بتغطيها"
 
 msgctxt "ui/views/quote_views.py"
 msgid "Which pricing band the gross price fell into — it fixes the admin fee and the deposit %"
-msgstr "أنهي فئة تسعير السعر الإجمالي وقع فيها — هي اللي بتحدد المصاريف الإدارية ونسبة الوديعة"
+msgstr "أنهي فئة تسعير السعر الإجمالي وقع فيها — هي اللي بتحدد المصاريف الإدارية ونسبة مقدم التعاقد"
 
 msgctxt "ui/views/consignment_views.py"
 msgid "While it runs, the owner may not sell the car themselves"

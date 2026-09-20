@@ -350,7 +350,7 @@ def ka_send_quotation(context, listing_reference: Optional[str] = None,
         sales_flow.note(
             partner,
             f'🧮 المساعد عمل عرض سعر {quote.name}: {quote.car_label or "—"}\n'
-            f'الإجمالي {quote.total_eur:,.2f} € — الجدية {float(quote.deposit_pct):g}% '
+            f'الإجمالي {quote.total_eur:,.2f} € — مقدم التعاقد {float(quote.deposit_pct):g}% '
             f'({quote.deposit_eur:,.2f} €)'
             + (f'\n⚠️ {source_note}' if source_note else '')
             + ('' if sent.get('sent') else f'\n⚠️ العرض متبعتش: {sent.get("error")}'),
@@ -443,7 +443,7 @@ def ka_issue_proforma_invoice(context, quotation_reference: Optional[str] = None
             partner,
             f'🧾 المساعد أصدر فاتورة مبدئية {invoice.name} على {quote.name}'
             + (f' وفتح الصفقة {deal.name}' if opened else f' — الصفقة {deal.name}') + '\n'
-            f'المطلوب: {invoice.amount_due:,.2f} € (الجدية {float(invoice.deposit_pct):g}%)'
+            f'المطلوب: {invoice.amount_due:,.2f} € (مقدم التعاقد {float(invoice.deposit_pct):g}%)'
             + ('' if invoice.bank_details_text else
                '\n⚠️ بيانات الحساب مش متسجّلة (car_import.bank_details_text) — ابعتها للعميل بنفسك.')
             + ('' if sent.get('sent') else f'\n⚠️ الفاتورة متبعتش: {sent.get("error")}'),

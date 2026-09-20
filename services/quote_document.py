@@ -76,7 +76,7 @@ def _options_text(quote):
             continue
         out.append(
             f'{index}- {_option_label(option, index)}{mark}: الإجمالي {_amount(option.total_eur, EUR)} — '
-            f'الوديعة {_pct(option.deposit_pct)}% ({_amount(option.deposit_eur, EUR)})')
+            f'مقدم التعاقد {_pct(option.deposit_pct)}% ({_amount(option.deposit_eur, EUR)})')
         if option.listing_url:
             out.append(f'   {option.listing_url}')
     if any(o.is_accepted for o in rows):
@@ -108,7 +108,7 @@ def _options_html(quote):
                    if any(o.is_accepted for o in rows) else '')
     return ('<h2>العربيات المرشحة</h2>'
             '<table class="options"><tr class="head"><td>#</td><td>العربية</td>'
-            '<td class="n">سعر الإعلان</td><td class="n">الإجمالي</td><td class="n">الوديعة</td></tr>'
+            '<td class="n">سعر الإعلان</td><td class="n">الإجمالي</td><td class="n">مقدم التعاقد</td></tr>'
             f'{body}</table>{chosen_note}')
 
 
@@ -140,7 +140,7 @@ def as_text(quote):
 
     out.append('')
     out.append(f'إجمالي سعر البيع: {_amount(quote.total_eur, EUR)}')
-    out.append(f'مقدم جدية الحجز ({_pct(quote.deposit_pct)}%): {_amount(quote.deposit_eur, EUR)}')
+    out.append(f'مقدم التعاقد ({_pct(quote.deposit_pct)}%): {_amount(quote.deposit_eur, EUR)}')
     out.append(f'الباقي: {_amount(quote.balance_eur, EUR)}')
 
     egp_lines = _visible_lines(quote, EGP)
@@ -183,7 +183,7 @@ def _notes(quote):
         notes.append(
             f'الاستلام من المعرض بيخصم {abs(quote.showroom_fee_egp):,.0f} جنيه من مصاريف الميناء، '
             f'فالمستحق عند الوصول {quote.egp_due_on_arrival:,.0f} جنيه.')
-    notes.append(f'نسبة مقدم جدية الحجز من إجمالي سعر البيع: {_pct(quote.deposit_pct)}%.')
+    notes.append(f'نسبة مقدم التعاقد من إجمالي سعر البيع: {_pct(quote.deposit_pct)}%.')
     if quote.total_egp_indicative:
         notes.append(
             f'أي رقم بالجنيه تقريبي بسعر اليوم ({quote.fx_rate_egp:,.2f}) وعليه عمولة تحويل '
@@ -249,7 +249,7 @@ def as_html(quote):
 {_options_html(quote)}
 <table>{rows_eur}
 <tr class="total"><td>إجمالي سعر البيع</td><td class="n">{_amount(quote.total_eur, EUR)}</td></tr>
-<tr><td>مقدم جدية الحجز <bdi>({_pct(quote.deposit_pct)}%)</bdi></td>
+<tr><td>مقدم التعاقد <bdi>({_pct(quote.deposit_pct)}%)</bdi></td>
     <td class="n">{_amount(quote.deposit_eur, EUR)}</td></tr>
 <tr><td>الباقي</td><td class="n">{_amount(quote.balance_eur, EUR)}</td></tr>
 </table>

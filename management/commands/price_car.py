@@ -51,7 +51,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(
             f"  {'إجمالي سعر البيع':<44} {result['total_eur']:>12,.2f} €"))
         self.stdout.write(
-            f"  {'مقدم جدية الحجز':<44} {result['deposit_eur']:>12,.2f} €"
+            f"  {'مقدم التعاقد':<44} {result['deposit_eur']:>12,.2f} €"
             f"   ({result['deposit_pct']:g}%)")
         self.stdout.write(f"  {'الباقي':<44} {result['balance_eur']:>12,.2f} €")
 

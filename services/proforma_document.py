@@ -51,8 +51,8 @@ def as_text(invoice):
         out.append(f'على عرض السعر: {invoice.quote.name}')
     out += ['',
             f'إجمالي سعر البيع: {_money(invoice.total_amount)}',
-            f'الجدية ({_pct(invoice.deposit_pct)}%) — المطلوب دلوقتي: {_money(invoice.amount_due)}',
-            f'الباقي بعد الجدية: {_money((invoice.total_amount or 0) - (invoice.amount_due or 0))}']
+            f'مقدم التعاقد ({_pct(invoice.deposit_pct)}%) — المطلوب دلوقتي: {_money(invoice.amount_due)}',
+            f'الباقي بعد مقدم التعاقد: {_money((invoice.total_amount or 0) - (invoice.amount_due or 0))}']
     if invoice.valid_until:
         out.append(f'الفاتورة سارية لحد: {invoice.valid_until:%Y-%m-%d}')
     out += ['', 'الفاتورة دي طلب دفع مش إيصال استلام. استلام المبلغ بيتأكد من الحسابات بعد التحويل.']
@@ -131,8 +131,8 @@ def as_html(invoice):
 <table>{lines}
   <tr class="total"><td>إجمالي سعر البيع</td><td class="n">{_money(invoice.total_amount)}</td></tr>
 </table>
-<div class="due">المطلوب دلوقتي — الجدية ({_pct(invoice.deposit_pct)}%): <bdi>{_money(invoice.amount_due)}</bdi></div>
-<p>الباقي بعد الجدية: <bdi>{_money((invoice.total_amount or 0) - (invoice.amount_due or 0))}</bdi>،
+<div class="due">المطلوب دلوقتي — مقدم التعاقد ({_pct(invoice.deposit_pct)}%): <bdi>{_money(invoice.amount_due)}</bdi></div>
+<p>الباقي بعد مقدم التعاقد: <bdi>{_money((invoice.total_amount or 0) - (invoice.amount_due or 0))}</bdi>،
    ومستحق خلال 5 أيام عمل من التعاقد مع المورد.</p>
 {bank}
 <p class="meta">الفاتورة دي طلب دفع مش إيصال استلام. استلام المبلغ بيتأكد من الحسابات بعد التحويل،
