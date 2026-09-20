@@ -164,13 +164,34 @@ def chase_abandoned_escalations():
         waited = int((now - last.created_at).total_seconds() // 60)
         stale.append((conversation, waited))
 
+    # Under the selling policy staff monitor; they are not on the queue. A
+    # hand-over nobody answers goes back to the assistant, which then answers
+    # what the customer already wrote (services/resume.py says what never does).
+    resumed = 0
+    try:
+        from car_import.services import policy, resume
+        if policy.ai_first():
+            limit = resume.resume_after_minutes()
+            still_waiting = []
+            for conversation, waited in stale:
+                # Minutes, not hours: someone who gave up this afternoon should
+                # hear from a person, not from a bot that woke up at night.
+                if limit <= waited <= resume.MAX_WAIT_MINUTES and resume.may_resume(conversation):
+                    resume.give_back_to_ai(conversation, waited_minutes=waited)
+                    resumed += 1
+                else:
+                    still_waiting.append((conversation, waited))
+            stale = still_waiting
+    except Exception:
+        logger.exception('car_import: could not give abandoned conversations back to the assistant')
+
     warned = sum(1 for conversation, waited in stale if _warn_about(conversation, waited))
 
     if stale:
         logger.info('car_import: %d escalated conversation(s) waiting longer than %d minutes',
                     len(stale), minutes)
     return {'checked': conversations.count(), 'waiting': len(stale),
-            'warned': warned, 'sla_minutes': minutes, 'max_age_hours': max_age_hours}
+            'warned': warned, 'given_back_to_ai': resumed, 'sla_minutes': minutes, 'max_age_hours': max_age_hours}
 
 
 def _sla_minutes():

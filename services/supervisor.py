@@ -130,22 +130,44 @@ def _canonical(value):
     return forms
 
 
+#: A number is MONEY when a currency or a percent sign sits right against it.
+#: "Near a money word" was the old test, and it is how "E200 زيرو بيورو 1" —
+#: a model name next to the name of a certificate — became "an invented price
+#: of 200", blocked a correct reply, and handed the client himself to a queue
+#: nobody was watching (2026-09-20).
+_CURRENCY = r'(?:€|\$|يورو|اليورو|euro|eur|جنيه|الجنيه|ج\.م|egp|le|دولار|usd|ألف|الف|آلاف|مليون|%|٪)'
+_MONEY_AFTER = re.compile(r'^\s{0,2}' + _CURRENCY, re.I)
+_MONEY_BEFORE = re.compile(r'(?:€|\$)\s?$')
+#: Not glued to a letter or another digit: E200, GLA180, 1600cc, 4MATIC, X5.
+_STANDALONE_NUMBER = re.compile(r'(?<![A-Za-z\d.,])(\d[\d.,]*\d|\d)(?![A-Za-z\d])')
+#: The EUR 1 certificate is a document, not a price.
+_EUR1 = re.compile(r'(يورو|اليورو|eur|euro)\s*\.?\s*(1|١|وان|one)(?![\d.,])', re.I)
+_ARABIC_DIGITS = str.maketrans('٠١٢٣٤٥٦٧٨٩٫٬', '0123456789.,')
+
+
+def figures_in(text):
+    """Every number in a text, for building the allowed set."""
+    return [m.group(1) for m in _STANDALONE_NUMBER.finditer(str(text or '').translate(_ARABIC_DIGITS))]
+
+
 def _untraceable_figures(text, allowed):
-    """Money-ish numbers in the reply that the tools did not supply."""
+    """Amounts of money in the reply that no tool, search or rule supplied."""
     allowed_forms = set()
     for a in allowed:
         for form in _canonical(a):
             allowed_forms.add(form.lstrip('~'))
+    text = _EUR1.sub(' ', str(text or '').translate(_ARABIC_DIGITS))
     found = []
-    for match in re.finditer(r'(\d[\d.,]{1,})', text):
+    for match in _STANDALONE_NUMBER.finditer(text):
         number = _normalise_number(match.group(1))
         if not number or len(number) < 3:
-            continue                  # years, counts, small numbers
+            continue                  # counts, small percentages, a year's last digits
+        is_money = (_MONEY_AFTER.match(text[match.end():match.end() + 12])
+                    or _MONEY_BEFORE.search(text[max(0, match.start() - 2):match.start()]))
+        if not is_money:
+            continue                  # a model, a year, an engine size, a mileage
         if {f.lstrip('~') for f in _canonical(match.group(1))} & allowed_forms:
             continue
-        window = text[max(0, match.start() - 24):match.end() + 24]
-        if not any(word in window for word in MONEY_WORDS):
-            continue                  # not presented as money
         found.append(match.group(1))
     return found
 
@@ -205,12 +227,52 @@ def figures_from_tool_messages(conversation, since):
         return []
     figures = []
     for content in rows:
-        for match in re.finditer(r'\d[\d.,]{1,}', str(content or '')):
+        # Permissive on purpose: anything a tool printed may be said back.
+        for match in re.finditer(r'\d[\d.,]{1,}', str(content or '').translate(_ARABIC_DIGITS)):
             figures.append(match.group(0))
     return figures
 
 
 FIGURE_WINDOW_HOURS = 72
+
+#: Under the selling policy, the only replies worth stopping are the two that
+#: cost money the moment they are read: an account number the accountant did
+#: not write, and "your money arrived". Everything else is sent and FLAGGED —
+#: a note to the people watching, next to the reply. A block hands the customer
+#: to a queue, and the client's instruction is that staff monitor, not answer:
+#: a false alarm there is a customer talking to nobody.
+BLOCKING_UNDER_AI_FIRST = {'bank_details'}
+BLOCKING_WHY_UNDER_AI_FIRST = {'confirming money arrived'}
+
+_PROMPT_FIGURES = None
+
+
+def _prompt_figures():
+    """Numbers the assistant's own rules tell it to say (27%, 3,000 جنيه, …).
+    It is told to quote them; blocking it for obeying would be perverse."""
+    global _PROMPT_FIGURES
+    if _PROMPT_FIGURES is None:
+        try:
+            from car_import.agent_prompts import system_prompt
+            _PROMPT_FIGURES = figures_in(system_prompt())
+        except Exception:
+            _PROMPT_FIGURES = []
+    return list(_PROMPT_FIGURES)
+
+
+def _apply_policy(problems):
+    try:
+        from car_import.services import policy
+        if not policy.ai_first():
+            return problems
+    except Exception:
+        return problems
+    out = []
+    for problem in problems:
+        keep_block = (problem['rule'] in BLOCKING_UNDER_AI_FIRST
+                      or problem.get('why') in BLOCKING_WHY_UNDER_AI_FIRST)
+        out.append(problem if keep_block else dict(problem, severity='warn'))
+    return out
 
 
 def tool_text(conversation, since):
@@ -252,8 +314,10 @@ def gate(text, conversation=None, since=None, workflow_name=''):
     # no tool ever returned.
     from datetime import timedelta
     window = (since - timedelta(hours=FIGURE_WINDOW_HOURS)) if since is not None else None
-    problems = check_reply(text, allowed_figures=figures_from_tool_messages(conversation, window),
+    allowed = figures_from_tool_messages(conversation, window) + _prompt_figures()
+    problems = check_reply(text, allowed_figures=allowed,
                            allowed_text=tool_text(conversation, window))
+    problems = _apply_policy(problems)
     if not problems:
         return text, problems
 

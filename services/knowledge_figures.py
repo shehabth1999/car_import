@@ -59,6 +59,15 @@ def fees_document():
         if fees.get(key) in (None, ''):
             continue
         lines += [f'## {label}', f'{label}: {_n(fees[key]) if not isinstance(fees[key], str) else fees[key]} {currency}.', '']
+    try:
+        from car_import.services.pricing import SHOWROOM_FEE, _fee
+        saving = _fee(SHOWROOM_FEE, None)
+    except Exception:
+        saving = None
+    if saving:
+        lines += ['## الاستلام من المعرض بدل التوصيل لحد البيت',
+                  f'مصاريف الميناء والتخليص شاملة التوصيل لحد باب البيت. لو العميل هيستلم العربية بنفسه من '
+                  f'المعرض، بيتخصم {_n(abs(saving))} جنيه من مصاريف الميناء — يعني بيدفع أقل، مش أكتر.', '']
     lines += ['## تكلفة الرخصة نفسها',
               'تكلفة الرخصة نفسها مش بتتقال: بتختلف حسب العربية والمرور. وجّه العميل لمكتب الترخيص. '
               'الترخيص مش شامل في سعر العربية، وممكن يبدأ بعد أسبوعين من خروج العربية من الميناء.', '',

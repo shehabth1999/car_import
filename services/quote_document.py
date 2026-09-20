@@ -181,7 +181,8 @@ def _notes(quote):
         notes.append('الأسعار باليورو مش شاملة مصاريف الميناء في مصر.')
     if quote.showroom_fee_egp:
         notes.append(
-            f'الاستلام من المعرض عليه {quote.showroom_fee_egp:,.0f} جنيه إضافية.')
+            f'الاستلام من المعرض بيخصم {abs(quote.showroom_fee_egp):,.0f} جنيه من مصاريف الميناء، '
+            f'فالمستحق عند الوصول {quote.egp_due_on_arrival:,.0f} جنيه.')
     notes.append(f'نسبة مقدم جدية الحجز من إجمالي سعر البيع: {_pct(quote.deposit_pct)}%.')
     if quote.total_egp_indicative:
         notes.append(

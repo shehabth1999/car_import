@@ -116,8 +116,16 @@ def quote(gross_price_eur, *, eur1=False, shipping_type=None, port='alexandria',
     port_fee_code = PORT_FEES.get(port_key)
     port_fee_egp = _fee(port_fee_code, 55000 if port_key == 'alexandria' else 105000) \
         if port_fee_code else None
-    showroom_egp = _fee(SHOWROOM_FEE, 5000) if collect_from_showroom else Decimal(0)
-    egp_total = _money((port_fee_egp or Decimal(0)) + showroom_egp)
+    # Collecting from the showroom is a SAVING, not a charge. The port and
+    # clearance fee covers delivery to the customer's door; a customer who
+    # collects the car themselves is not charged for that leg, so the amount
+    # comes OFF what is due on arrival. The port fee line itself never moves:
+    # 55,000 stays 55,000 and the customer pays 50,000; 105,000 → 100,000.
+    # (This was added instead of subtracted until 2026-09-20 — every quotation
+    # with showroom collection overstated the EGP total by twice the amount.)
+    showroom_saving = _fee(SHOWROOM_FEE, 5000) if collect_from_showroom else Decimal(0)
+    showroom_saving = min(abs(showroom_saving or Decimal(0)), port_fee_egp or Decimal(0))
+    egp_total = _money((port_fee_egp or Decimal(0)) - showroom_saving)
 
     lines = [
         {'code': 'gross', 'label_ar': 'إجمالي سعر العربية شامل الضريبة',
@@ -150,9 +158,9 @@ def quote(gross_price_eur, *, eur1=False, shipping_type=None, port='alexandria',
         port_label = 'ميناء الإسكندرية' if port_key == 'alexandria' else 'ميناء بورسعيد'
         egp_lines.append({'code': 'port', 'label_ar': f'مصاريف {port_label}',
                           'amount': _money(port_fee_egp), 'currency': 'EGP'})
-    if showroom_egp:
-        egp_lines.append({'code': 'showroom', 'label_ar': 'الاستلام من المعرض',
-                          'amount': _money(showroom_egp), 'currency': 'EGP'})
+    if showroom_saving:
+        egp_lines.append({'code': 'showroom', 'label_ar': 'خصم الاستلام من المعرض',
+                          'amount': -_money(showroom_saving), 'currency': 'EGP'})
 
     result = {
         'band': str(band),

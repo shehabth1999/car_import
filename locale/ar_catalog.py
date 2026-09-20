@@ -1234,4 +1234,8 @@ CATALOG = {
     'Where the customer was told to pay': 'العميل اتقاله يحوّل على فين',
     'Written by the assistant: anything that did not match the invoice, the customer or the calendar': 'كتبها المساعد: أي حاجة ما طابقتش الفاتورة أو اسم العميل أو التاريخ',
     "Confirm that this amount reached the company's account? The customer is told, the deal is credited, and the contract is issued and sent.": 'تأكيد إن المبلغ ده وصل حساب الشركة؟ العميل هيتبلّغ، والمبلغ هيتسجّل على الصفقة، والعقد هيطلع ويتبعت.',
+    # showroom collection is a saving (2026-09-20)
+    "Door delivery is included in the port fee. A customer who collects from the showroom gets the amount on the arrival tab taken OFF what is due on arrival": "التوصيل لحد البيت داخل في مصاريف الميناء. العميل اللي هيستلم من المعرض بيتخصمله المبلغ اللي في تبويب الوصول من المستحق عند الوصول",
+    "Showroom collection discount (EGP)": "خصم الاستلام من المعرض (جنيه)",
+    "A minus: it comes off the port fee. The port fee line itself does not change": "بالسالب: بيتخصم من مصاريف الميناء. سطر مصاريف الميناء نفسه ما بيتغيّرش",
 }

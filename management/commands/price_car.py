@@ -122,6 +122,23 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(
                 f'  a loaded quote\'s rows add up to its total ({summed:,.2f} €)  ✓'))
 
+        # Showroom collection takes its amount OFF what is due on arrival; the
+        # port fee line itself does not move (client, 2026-09-20).
+        for port, fee, due in (('alexandria', Decimal('55000'), Decimal('50000')),
+                               ('port_said', Decimal('105000'), Decimal('100000'))):
+            got = pricing.quote(40000, port=port, collect_from_showroom=True)
+            by_code = {line['code']: line['amount'] for line in got['lines_egp']}
+            plain = pricing.quote(40000, port=port)
+            ok = (by_code.get('port') == fee and by_code.get('showroom') == Decimal('-5000')
+                  and got['egp_due_on_arrival'] == due and plain['egp_due_on_arrival'] == fee)
+            if not ok:
+                failures += 1
+                self.stdout.write(self.style.ERROR(
+                    f'  showroom collection at {port}: lines {by_code}, due {got["egp_due_on_arrival"]}'))
+            else:
+                self.stdout.write(self.style.SUCCESS(
+                    f'  showroom collection at {port}: {fee:,.0f} − 5,000 = {due:,.0f} due  ✓'))
+
         if failures:
             raise CommandError(f'{failures} case(s) disagree with the client\'s workbook.')
         self.stdout.write(self.style.SUCCESS(

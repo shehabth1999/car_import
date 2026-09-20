@@ -191,7 +191,7 @@ car_quote_form_view = {
                             {"name": "port", "string": _("Port of arrival"), "widget": "select", "onChange": True},
                             {"name": "collect_from_showroom", "string": _("Collected from the showroom"),
                              "widget": "switch", "onChange": True,
-                             "help": _("Door delivery is included; collection at the showroom carries the EGP fee shown on the arrival tab")},
+                             "help": _("Door delivery is included in the port fee. A customer who collects from the showroom gets the amount on the arrival tab taken OFF what is due on arrival")},
                             {"name": "admin_fee_discount_eur",
                              "string": _("Discount on the admin fee (€)"), "widget": "number", "onChange": True,
                              "help": _("Any discount on the company's fee needs management — the save raises the request and waits")},
@@ -259,7 +259,8 @@ car_quote_form_view = {
                         "groups": [
                             {"fields": [
                                 _ro("port_fee_egp", _("Port fees (EGP)")),
-                                _ro("showroom_fee_egp", _("Showroom collection (EGP)")),
+                                _ro("showroom_fee_egp", _("Showroom collection discount (EGP)"),
+                                    _("A minus: it comes off the port fee. The port fee line itself does not change")),
                             ]},
                             {"fields": [
                                 _ro("egp_due_on_arrival", _("Due on arrival (EGP)")),

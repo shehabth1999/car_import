@@ -130,8 +130,10 @@ CALCULATOR_FEES = [
      'currency': 'EGP', 'notes': 'Collected on arrival, in Egypt.'},
     {'code': 'port_said', 'name': 'مصاريف ميناء بورسعيد', 'amount': 105000, 'currency': 'EGP',
      'notes': 'Collected on arrival, in Egypt.'},
-    {'code': 'showroom_collection', 'name': 'الاستلام من المعرض', 'amount': 5000,
-     'currency': 'EGP', 'applies_to': 'optional'},
+    {'code': 'showroom_collection', 'name': 'خصم الاستلام من المعرض', 'amount': 5000,
+     'currency': 'EGP', 'applies_to': 'optional',
+     'notes': 'A SAVING: taken OFF the port fee when the customer collects from the showroom. '
+              'Alexandria 55,000 → 50,000 due; Port Said 105,000 → 100,000 due.'},
 ]
 
 

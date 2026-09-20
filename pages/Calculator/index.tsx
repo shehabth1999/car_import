@@ -265,7 +265,7 @@ export default function Calculator() {
                 <span className="font-normal text-content-subtle">ما بيتجمعش مع اليورو</span>
               </div>
               <Row tone="warning" k="مصاريف الميناء والتخليص" v={result!.port_fee_egp} />
-              {Number(result!.showroom_fee_egp) > 0 && <Row tone="warning" k="استلام من المعرض" v={result!.showroom_fee_egp} />}
+              {Number(result!.showroom_fee_egp) !== 0 && <Row tone="warning" k="خصم الاستلام من المعرض" v={-Math.abs(Number(result!.showroom_fee_egp))} />}
               <Row tone="warning" k="المستحق عند الوصول" v={result!.egp_due_on_arrival} sum />
               {result!.total_egp_indicative && Number(result!.total_egp_indicative) > 0 && (
                 <Row k="الإجمالي بالجنيه — تقريبي بسعر اليوم، مش وعد" v={result!.total_egp_indicative} muted />
