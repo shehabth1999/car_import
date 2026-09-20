@@ -59,6 +59,22 @@ def as_text(invoice):
     return '\n'.join(out)
 
 
+def _font_face():
+    """The system's own typeface, from the file the web app already ships.
+    No host package, nothing to install: if the file is not there the page
+    falls back to whatever Arabic face the host has."""
+    import os
+
+    from django.conf import settings
+    path = os.path.join(str(settings.BASE_DIR), 'project', 'web', 'src', 'assets', 'css',
+                        'fonts', 'cairo', 'Cairo-Variable.woff2')
+    if not os.path.exists(path):
+        return ''
+    url = 'file://' + path.replace(os.sep, '/')
+    return ("@font-face { font-family: 'Cairo'; font-weight: 200 1000; "
+            f"src: url('{url}') format('woff2'); }}")
+
+
 def as_html(invoice):
     issuer = _issuer()
     lines = ''
@@ -80,6 +96,7 @@ def as_html(invoice):
 <html lang="ar" dir="rtl"><head><meta charset="utf-8">
 <title>فاتورة مبدئية {_escape(invoice.name)}</title>
 <style>
+ {_font_face()}
  @page {{ size: A4; margin: 18mm 16mm; }}
  body {{ font-family: 'Cairo', 'Noto Naskh Arabic', 'Noto Sans Arabic', 'DejaVu Sans', sans-serif;
         color: #16324f; font-size: 11.5pt; line-height: 1.7; }}

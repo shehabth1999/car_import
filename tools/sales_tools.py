@@ -428,7 +428,13 @@ def ka_issue_proforma_invoice(context, quotation_reference: Optional[str] = None
 
         invoice, created = sales_flow.issue_proforma(quote, deal)
         sent = sales_flow.send_proforma(invoice) if (created or not invoice.sent_at) else {'sent': True}
-        contract, missing = sales_flow.save_contract_details(deal)
+        try:
+            contract, missing = sales_flow.save_contract_details(deal)
+        except Exception:
+            # The invoice is already with the customer; a contract draft that
+            # would not save must not turn that into a failed tool call.
+            logger.exception("car_import: could not open the contract draft for deal %s", deal.pk)
+            missing = ['customer_name', 'customer_national_id']
         labels = [sales_flow.CONTRACT_DETAIL_LABELS.get(m, m) for m in missing
                   if m in ('customer_name', 'customer_national_id')]
 
@@ -594,8 +600,12 @@ def ka_save_contract_details(context, full_name: str = '', national_id: str = ''
                 deal, full_name=full_name or '', national_id=national_id or '',
                 address=address or '', email=email or '')
         except ValidationError as exc:
-            return {"success": False, "error": "; ".join(exc.messages), "error_type": "invalid",
-                    "say_to_customer_ar": "الرقم القومي لازم يكون 14 رقم — ممكن حضرتك تبعته تاني؟"}
+            reply = {"success": False, "error": "; ".join(exc.messages), "error_type": "invalid"}
+            if 'customer_national_id' in getattr(exc, 'error_dict', {}):
+                reply["say_to_customer_ar"] = "الرقم القومي لازم يكون 14 رقم — ممكن حضرتك تبعته تاني؟"
+            else:
+                reply["must_escalate"] = True
+            return reply
 
         labels = [sales_flow.CONTRACT_DETAIL_LABELS.get(m, m) for m in missing]
         data = {"saved": True, "still_missing": labels, "deal_reference": deal.name}

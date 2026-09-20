@@ -328,6 +328,13 @@ class Contract(BaseModel, BranchMixin, FullChatterMixin):
             value = getattr(deal, source, None)
             if value:
                 setattr(self, field, value)
+        # The save refuses a contract whose payment lines do not add up to its
+        # total — and a prefilled one never did: total and down payment came
+        # from the quotation, the other two lines stayed at zero, and the very
+        # first save of a new contract failed. What is not the down payment is
+        # the transfer, until somebody splits it.
+        if self.total_eur and not self.bank_transfer_eur and not self.cash_on_bl_eur:
+            self.bank_transfer_eur = max(self.total_eur - (self.down_payment_eur or 0), 0)
         if self.issuer_id is None:
             self.issuer = ContractIssuer.default()
         if self.signatory_id is None and self.issuer_id:

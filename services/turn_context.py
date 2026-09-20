@@ -207,7 +207,15 @@ def turn_warnings(message, deal):
 
 
 def build(partner, conversation, message):
-    """Everything `prepare_turn` hands the model, in one call."""
+    """Everything `prepare_turn` hands the model, in one call. In Arabic: a
+    worker has no active language, and "Paid" in the middle of an Arabic
+    briefing is a word the model repeats to the customer."""
+    from django.utils import translation
+    with translation.override('ar'):
+        return _build(partner, conversation, message)
+
+
+def _build(partner, conversation, message):
     deal = None
     partner_id = getattr(partner, 'pk', None)
     try:

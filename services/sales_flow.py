@@ -495,7 +495,9 @@ def draft_contract(deal):
                 .order_by('-id').first())
     if contract is None:
         contract = Contract(deal=deal, branch=default_branch(deal))
-        contract.save()                    # pre_create prefills from the deal
+        contract.prefill_from_deal()
+        _balance_contract(contract)
+        contract.save()
     return contract
 
 
@@ -520,14 +522,15 @@ def save_contract_details(deal, full_name='', national_id='', address='', email=
     digits = ''.join(ch for ch in str(national_id or '') if ch.isdigit())
     if digits:
         if len(digits) != 14:
-            raise ValidationError(_("The national ID is 14 digits; this one has %(n)d.")
-                                  % {'n': len(digits)})
+            raise ValidationError({'customer_national_id': _(
+                "The national ID is 14 digits; this one has %(n)d.") % {'n': len(digits)}})
         contract.customer_national_id = digits
     if address.strip():
         contract.customer_address = address.strip()[:255]
     if email.strip():
         contract.customer_email = email.strip()
     contract.prefill_from_deal()
+    _balance_contract(contract)
     contract.save()
     return contract, missing_contract_fields(contract)
 
