@@ -174,7 +174,7 @@ def ka_search_showroom_cars(context, query: Optional[str] = None, limit: int = 5
     description=(
         "Use this tool when the customer asks to see a car, or right after you describe one they are "
         "interested in. Before calling it you MUST have the car's `reference` from "
-        "ka_search_vehicle_listings or ka_search_showroom_cars. It sends up to three photos to the "
+        "ka_search_cars. It sends up to three photos to the "
         "customer directly. After it succeeds, write one short line — do not describe the photos."
     ),
     category="car_import",
@@ -282,8 +282,8 @@ def ka_price_car(context, listing_reference: Optional[str] = None,
         data["advert_price_with_vat"] = _fmt(gross)
         if source_note:
             data["price_source"] = "customer_stated"
-        data["next_step"] = ("If the customer is interested, send the formal offer with ka_send_quotation "
-                             "using the same inputs.")
+        data["next_step"] = ("If the customer is interested, send the formal offer: call ka_quote_car again "
+                             "with send_offer=true and the same inputs.")
         return {"success": True, "data": data}
     except Exception as e:
         logger.exception("ka_price_car failed")
@@ -376,7 +376,7 @@ def ka_send_quotation(context, listing_reference: Optional[str] = None,
     display_name="Issue the proforma invoice",
     description=(
         "Use this tool when the customer clearly accepts a quotation and wants to pay the deposit. "
-        "Before calling it you MUST have sent them a quotation with ka_send_quotation. It opens the "
+        "Before calling it you MUST have sent them a quotation (ka_quote_car with send_offer=true). It opens the "
         "customer's deal, issues a numbered proforma invoice for the deposit, and sends the invoice file "
         "and the company's approved bank details to the customer by itself. After it succeeds, write a "
         "short message: ask them to send a screenshot of the transfer here, and ask for whatever "

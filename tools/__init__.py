@@ -35,6 +35,13 @@ __all__ = [
 ]
 from .bank_tools import ka_share_bank_details  # noqa: F401
 from .document_tools import ka_file_customer_document  # noqa: F401
+from .agent_tools import (  # noqa: F401 — the five the agent holds in place of thirteen
+    ka_search_cars,
+    ka_quote_car,
+    ka_customer_sent_image,
+    ka_deal_status,
+    ka_initiative_market,
+)
 from .sales_tools import (  # noqa: F401
     ka_search_showroom_cars,
     ka_send_car_photos,

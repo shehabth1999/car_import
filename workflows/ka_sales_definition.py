@@ -59,28 +59,22 @@ BACKUP_LLM_PROVIDER_NAME = BACKUP_LLM_MODEL_CANDIDATES[0][1]
 #: decided, which is a human's job, and handing it to a chat agent invites it to
 #: write minutes for a conversation that never happened.
 TOOL_NAMES = [
-    'ka_get_deal_status',
-    'ka_send_deal_status_update',
-    'ka_check_import_eligibility',
-    'ka_get_instalment_plan_terms',
-    'ka_get_fee_and_licensing_costs',
-    'ka_get_document_checklist',
-    'ka_search_vehicle_listings',
-    'ka_search_initiative_listings',
-    'ka_register_initiative_for_sale',
-    'ka_schedule_followup',
-    'ka_escalate_conversation_to_staff',
-    'ka_share_bank_details',
-    'ka_file_customer_document',
-    # The sale itself — the client's decision of 2026-09-20 (services/policy.py).
-    'ka_search_showroom_cars',
+    # Twelve, down from 21 (tools/agent_tools.py says why). What was knowledge —
+    # published fees, instalment terms, eligibility — lives in the approved-answers
+    # collection now; the five merged tools are thin fronts over the originals,
+    # which stay registered and can be bound again from here.
+    'ka_search_cars',                     # import adverts + showroom stock
     'ka_send_car_photos',
-    'ka_price_car',
-    'ka_send_quotation',
+    'ka_quote_car',                       # price, and with send_offer the quotation
     'ka_issue_proforma_invoice',
-    'ka_record_payment_receipt',
+    'ka_share_bank_details',
+    'ka_customer_sent_image',             # a transfer for the accountant, or a paper
     'ka_save_contract_details',
     'ka_request_discount',
+    'ka_deal_status',                     # status + missing papers + the written update
+    'ka_initiative_market',
+    'ka_schedule_followup',
+    'ka_escalate_conversation_to_staff',
 ]
 
 #: The approved-answers collection `build_ka_knowledge` indexes. Resolved by
@@ -297,10 +291,14 @@ def nodes(system_text=None):
                 # collection is not indexed on this tenant.
                 'rag_retriever': {
                     'enabled': True,
-                    'collections': [{'collection_id': None, 'search_type': 'mmr', 'k': 3,
-                                     'tool_description': 'ابحث في الإجابات والسياسات المعتمدة من الشركة: '
-                                                         'الإجراءات، المستندات، المدد، البرامج وشروطها. '
-                                                         'مفيش أرقام فيها — الأرقام من الأدوات التانية.'}],
+                    'collections': [{'collection_id': None, 'search_type': 'mmr', 'k': 4,
+                                     'tool_description': (
+                                         'ابحث في معرفة الشركة المعتمدة عن أي معلومة عامة قبل ما تجاوب: '
+                                         'المصاريف والرسوم المعلنة، شروط التقسيط، قواعد الأهلية (مين يقدر '
+                                         'يستورد إيه)، المستندات المطلوبة، خطوات الشراء وطرق الدفع، البرامج '
+                                         '(مبادرة/شخصي/تجاري)، الضمان، المدد. اكتب البحث بكلمات الموضوع '
+                                         'ومرادفاتها، موضوع واحد في كل بحث. مفيهاش سعر عربية معيّنة ولا '
+                                         'بيانات عميل — دول من الأدوات.')}],
                 },
             },
             'x_position': 640, 'y_position': -40,

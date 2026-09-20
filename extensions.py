@@ -268,3 +268,20 @@ class ConversationCarImportExtension(ModelExtension):
             'context': {'default_fields': {}},
             'type': 'action',
             'title': _("Set stage — %(deal)s") % {'deal': deal.name}}}
+
+
+class ConfigParameterCarImportExtension(ModelExtension):
+    """Flipping a selling switch changes what the knowledge base may carry.
+
+    Published fees and instalment terms are indexed only while the assistant is
+    allowed to say them. The switch is a row a manager edits on a screen, so
+    the re-index has to follow the save — nobody runs a command after a toggle.
+    """
+
+    _inherit = 'base.configparameter'
+    _depends = ['base', 'car_import']
+
+    def post_save(self):
+        if self.key in ('car_import.ai_handles_sales', 'car_import.ai_may_quote_published_fees'):
+            from car_import.services import knowledge_figures
+            knowledge_figures.schedule_rebuild()

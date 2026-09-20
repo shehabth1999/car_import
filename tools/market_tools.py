@@ -86,7 +86,7 @@ def ka_search_vehicle_listings(context, make: Optional[str] = None, model: Optio
                 "cars": cars,
                 "simulated": meta['simulated'],
                 "price_policy": ("The advert price is the German price with VAT, not the customer's cost. "
-                                 "Use ka_price_car with the reference for what they will pay."
+                                 "Use ka_quote_car with the reference for what they will pay."
                                  if ai_first else
                                  "Never state or estimate a price from this tool. A colleague prices the car."),
             },

@@ -57,6 +57,15 @@ class Command(BaseCommand):
             raise CommandError(f'No .md files in {KNOWLEDGE_DIR}')
         self.stdout.write(f'{len(sources)} source(s): {", ".join(sources)}')
 
+        # The figures are GENERATED from the settings tables, never hand-written
+        # (services/knowledge_figures.py) — so they are exempt from the guard
+        # below, which exists to keep a person from typing a price into prose.
+        from car_import.services import knowledge_figures
+        generated = knowledge_figures.documents()
+        self.stdout.write(f'{len(generated)} generated: {", ".join(sorted(generated)) or "-"}'
+                          + ('' if knowledge_figures.may_publish()
+                             else '  (published figures are switched off)'))
+
         # Guard the one rule that matters: no money in the knowledge base.
         leaks = _money_leaks(sources)
         if leaks:
@@ -84,7 +93,7 @@ class Command(BaseCommand):
             collection, created = Collection.objects.get_or_create(
                 name=COLLECTION_NAME,
                 defaults={'source_type': 'document', 'is_public': True,
-                          'description': COLLECTION_TITLE + ' — الإجابات والسياسات المعتمدة من الشركة، بدون أرقام. '
+                          'description': COLLECTION_TITLE + ' — الإجابات والسياسات المعتمدة، والأرقام المعلنة من جداول الإعدادات. '
                                          'Built by build_ka_knowledge from car_import/knowledge/.'})
             if created or not collection.is_indexed:
                 result = service.create_collection(collection)
@@ -96,11 +105,14 @@ class Command(BaseCommand):
             RAGDocument.objects.filter(collection=collection, source_type='file',
                                        title__startswith='ka:').delete()
 
-            total_chunks = 0
+            items = []
             for name in sources:
-                path = os.path.join(KNOWLEDGE_DIR, name)
-                with open(path, 'rb') as handle:
-                    raw = handle.read()
+                with open(os.path.join(KNOWLEDGE_DIR, name), 'rb') as handle:
+                    items.append((name, handle.read()))
+            items += [(name, text.encode('utf-8')) for name, text in sorted(generated.items())]
+
+            total_chunks = 0
+            for name, raw in items:
                 # Stored as .txt, deliberately. The platform routes .md through
                 # UnstructuredMarkdownLoader, which needs the `unstructured`
                 # package the tenants do not carry; .txt goes through TextLoader
@@ -140,7 +152,7 @@ class Command(BaseCommand):
             raise CommandError(f'reindex failed: {result.get("error")}')
         collection.refresh_from_db()
         self.stdout.write(self.style.SUCCESS(
-            f'"{collection.name}" (id {collection.pk}) — {len(sources)} document(s), '
+            f'"{collection.name}" (id {collection.pk}) — {len(sources) + len(generated)} document(s), '
             f'{total_chunks} chunk(s), indexed={collection.is_indexed}'))
         self.stdout.write('Run `build_ka_workflows` so the agent node picks the collection up.')
 

@@ -104,7 +104,7 @@ CASES = [
             {'role': 'assistant', 'reference': True,
              'content': 'للأسف المبادرة بتسمح بموديل 2023 وأحدث، فموديل 2019 مش هينفع فيها.'},
         ],
-        'assertions': {'must_call_tools': ['ka_check_import_eligibility']},
+        'assertions': {'must_call_tools': ['search_ka_approved_answers']},
     },
     {
         'name': 'the payment state is said in Arabic, never in English',
@@ -113,7 +113,7 @@ CASES = [
             {'role': 'assistant', 'reference': True,
              'content': 'العربية دلوقتي في مرحلة الشحن الدولي، وحالة الدفع المسجّلة عندنا: لسه مش مدفوعة.'},
         ],
-        'assertions': {'must_call_tools': ['ka_get_deal_status']},
+        'assertions': {'must_call_tools': ['ka_deal_status']},
     },
     {
         'name': 'an empty message gets no reply at all',

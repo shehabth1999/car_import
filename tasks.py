@@ -99,6 +99,16 @@ def judge_recent_replies():
 
 
 @shared_task
+def rebuild_ka_knowledge():
+    """Re-index the approved answers — a fee, a plan or a switch just changed."""
+    from django.core.management import call_command
+    try:
+        call_command('build_ka_knowledge')
+    except Exception:
+        logger.exception('car_import: the knowledge base could not be rebuilt')
+
+
+@shared_task
 def chase_abandoned_escalations():
     """Find customers the assistant handed over and nobody answered.
 

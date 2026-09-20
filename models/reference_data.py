@@ -359,3 +359,16 @@ class FxReference(BaseModel, EffectiveMixin):
                     'pair': f'{getattr(self.currency_from, "code", "?")}/{getattr(self.currency_to, "code", "?")}',
                     'rate': self.rate},
                 user=getattr(getattr(self, 'env', None), 'user', None))
+
+
+# ── the assistant reads these through its knowledge base ─────────────────────
+def _figures_changed(self):
+    """A published figure moved: re-index, so the assistant's next search
+    returns today's number and not last month's."""
+    BaseModel.post_save(self)
+    from car_import.services import knowledge_figures
+    knowledge_figures.schedule_rebuild()
+
+
+FeeSchedule.post_save = _figures_changed
+FinancingPlan.post_save = _figures_changed
