@@ -393,7 +393,13 @@ uv run python manage.py setup_car_import_org --report                # every gro
 # 4. the switches — Configuration → مفاتيح التشغيل
 #    car_import.stage_messages_enabled = 0 until the wording is signed off;
 #    then per stage: "Notify customer" on, template linked, one stage at a time
-#    car_import.ai_may_quote_published_fees — the owner's decision, default 0
+#    car_import.ai_handles_sales = 1 — the client's decision of 2026-09-20: the assistant
+#      prices, quotes, issues the proforma and files transfer screenshots; the accountant
+#      confirms the money with one button and the contract goes out by itself. 0 = old policy.
+#    car_import.bank_details_text — the ACCOUNTANT pastes it, verbatim. Empty = the assistant
+#      tells the customer the accounts team will send it.
+#    car_import.ai_may_quote_simulated_cars = 0 in production. Always.
+#    Put the accountant in the group "Car Import / Accountant" or nobody is told a transfer waits.
 
 # 5. the numbers, carefully
 uv run python manage.py build_ka_workflows --canary <staff partner id>   # staff phones first
