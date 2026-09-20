@@ -361,8 +361,11 @@ def ka_check_import_eligibility(
         elif customer_budget_egp is not None and customer_budget_egp < 2_000_000:
             blocked_reason = ("الميزانية دي أقل من اللي الشركة بتشتغل عليه؛ الأنسب وكيل أو معرض في مصر.")
         elif program == 'initiative':
-            if model_year is not None and model_year < 2023:
-                blocked_reason = "المبادرة بتسمح بموديل 2023 وأحدث."
+            from django.utils import timezone as _tz
+            oldest = _tz.localdate().year - 3
+            if model_year is not None and model_year < oldest:
+                blocked_reason = ("المبادرة بتسمح بعربية مستعملة بحد أقصى ثلاث سنوات "
+                                  f"(موديل {oldest} وأحدث) أو زيرو موديل السنة.")
             if (initiative_region or '').lower() == 'gulf' and cc and cc > 1600:
                 warnings.append("مبادرة خليجي على موتور أكبر من 1600cc: الوديعة بتعدّي 60–70 ألف دولار "
                                 "لأن مفيش شهادة يورو وان — الأفضل موديل أقل من 1600cc.")
