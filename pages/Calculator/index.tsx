@@ -61,20 +61,21 @@ function Card({ title, aside, children }: { title: string; aside?: React.ReactNo
   );
 }
 
-function Row({ k, v, neg, muted, sum, saving, was, tone = 'primary' }:
+function Row({ k, v, neg, muted, sum, saving, added, was, tone = 'primary' }:
   { k: React.ReactNode; v: number | null | undefined; neg?: boolean; muted?: boolean; sum?: boolean;
     /** a discount: shown in green with a minus sign */ saving?: boolean;
+    /** an option the salesman switched on: shown with a plus sign, so it reads as added */ added?: boolean;
     /** the amount before a discount: shown struck through beside the new one */ was?: number | null;
     tone?: 'primary' | 'warning' }) {
   const sumCls = tone === 'primary' ? 'bg-primary/10 text-primary' : 'bg-warning/10 text-warning';
   return (
     <div className={`flex items-baseline justify-between gap-3 px-4 py-1.5 border-t border-edge ${sum ? `${sumCls} font-bold` : ''} ${muted ? 'text-content-subtle' : ''}`}>
       <span className={`text-sm ${sum ? '' : 'text-content-muted'}`}>{k}</span>
-      <span dir="ltr" className={`font-mono tabular-nums ${sum ? 'text-base' : 'text-sm'} ${saving ? 'text-success font-semibold' : neg ? 'text-content-subtle' : sum ? '' : 'text-content'}`}>
+      <span dir="ltr" className={`font-mono tabular-nums ${sum ? 'text-base' : 'text-sm'} ${saving ? 'text-success font-semibold' : added ? 'text-primary font-semibold' : neg ? 'text-content-subtle' : sum ? '' : 'text-content'}`}>
         {was !== undefined && was !== null && Number(was) !== Number(v) && (
           <span className="me-2 text-xs font-normal text-content-subtle line-through">{money(was)}</span>
         )}
-        {neg || saving ? '− ' : ''}{money(v)}
+        {neg || saving ? '− ' : added ? '+ ' : ''}{money(v)}
       </span>
     </div>
   );
@@ -198,7 +199,7 @@ export default function Calculator() {
               <FormSwitch className="flex items-center gap-2">
                 <FormSwitch.Input id="eur1" type="checkbox" checked={inputs.with_eur1} onChange={e => set('with_eur1', e.target.checked)} />
                 <FormSwitch.Label htmlFor="eur1" className="text-sm">
-                  شهادة EUR 1 <span className="block text-xs text-content-subtle">إثبات منشأ أوروبي — جمارك أقل</span>
+                  شهادة EUR 1 <span className="block text-xs text-content-subtle">تكلفتها بتتضاف على الإجمالي باليورو — وفايدتها جمارك أقل في مصر (خارج الحاسبة دي)</span>
                 </FormSwitch.Label>
               </FormSwitch>
               <FormSwitch className="flex items-center gap-2">
@@ -252,8 +253,8 @@ export default function Calculator() {
               <Row k="الشحن" v={result!.shipping_eur} />
               <Row k="المصاريف الإدارية (حسب الفئة)" v={result!.admin_fee_before_discount_eur} />
               {discount > 0.005 && <Row k="خصم على المصاريف" v={discount} neg />}
-              {Number(result!.eur1_eur) > 0 && <Row k="شهادة EUR 1" v={result!.eur1_eur} />}
-              {Number(result!.shipping_extra_eur) > 0 && <Row k="إضافة الشحن" v={result!.shipping_extra_eur} />}
+              {Number(result!.eur1_eur) > 0 && <Row added k={<span className="text-primary">شهادة EUR 1 (بتتضاف على الإجمالي)</span>} v={result!.eur1_eur} />}
+              {Number(result!.shipping_extra_eur) > 0 && <Row added k={<span className="text-primary">إضافة الشحن ({SHIPPING_LABEL[inputs.shipping_type] || ''})</span>} v={result!.shipping_extra_eur} />}
               <Row k="إجمالي السعر" v={result!.total_eur} sum />
               <div className="grid grid-cols-2 border-t border-edge">
                 <div className="px-4 py-2">
