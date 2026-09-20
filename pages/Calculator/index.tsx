@@ -61,14 +61,20 @@ function Card({ title, aside, children }: { title: string; aside?: React.ReactNo
   );
 }
 
-function Row({ k, v, neg, muted, sum, tone = 'primary' }:
-  { k: React.ReactNode; v: number | null | undefined; neg?: boolean; muted?: boolean; sum?: boolean; tone?: 'primary' | 'warning' }) {
+function Row({ k, v, neg, muted, sum, saving, was, tone = 'primary' }:
+  { k: React.ReactNode; v: number | null | undefined; neg?: boolean; muted?: boolean; sum?: boolean;
+    /** a discount: shown in green with a minus sign */ saving?: boolean;
+    /** the amount before a discount: shown struck through beside the new one */ was?: number | null;
+    tone?: 'primary' | 'warning' }) {
   const sumCls = tone === 'primary' ? 'bg-primary/10 text-primary' : 'bg-warning/10 text-warning';
   return (
     <div className={`flex items-baseline justify-between gap-3 px-4 py-1.5 border-t border-edge ${sum ? `${sumCls} font-bold` : ''} ${muted ? 'text-content-subtle' : ''}`}>
       <span className={`text-sm ${sum ? '' : 'text-content-muted'}`}>{k}</span>
-      <span dir="ltr" className={`font-mono tabular-nums ${sum ? 'text-base' : 'text-sm'} ${neg ? 'text-content-subtle' : sum ? '' : 'text-content'}`}>
-        {neg ? '− ' : ''}{money(v)}
+      <span dir="ltr" className={`font-mono tabular-nums ${sum ? 'text-base' : 'text-sm'} ${saving ? 'text-success font-semibold' : neg ? 'text-content-subtle' : sum ? '' : 'text-content'}`}>
+        {was !== undefined && was !== null && Number(was) !== Number(v) && (
+          <span className="me-2 text-xs font-normal text-content-subtle line-through">{money(was)}</span>
+        )}
+        {neg || saving ? '− ' : ''}{money(v)}
       </span>
     </div>
   );
@@ -198,7 +204,7 @@ export default function Calculator() {
               <FormSwitch className="flex items-center gap-2">
                 <FormSwitch.Input id="showroom" type="checkbox" checked={inputs.collect_from_showroom} onChange={e => set('collect_from_showroom', e.target.checked)} />
                 <FormSwitch.Label htmlFor="showroom" className="text-sm">
-                  استلام من المعرض <span className="block text-xs text-content-subtle">بدل التوصيل لحد الباب</span>
+                  استلام من المعرض <span className="block text-xs text-content-subtle">بدل التوصيل لحد الباب — بيخصم 5,000 ج.م من مصاريف الميناء</span>
                 </FormSwitch.Label>
               </FormSwitch>
             </div>
@@ -265,8 +271,11 @@ export default function Calculator() {
                 <span className="font-normal text-content-subtle">ما بيتجمعش مع اليورو</span>
               </div>
               <Row tone="warning" k="مصاريف الميناء والتخليص" v={result!.port_fee_egp} />
-              {Number(result!.showroom_fee_egp) !== 0 && <Row tone="warning" k="خصم الاستلام من المعرض" v={-Math.abs(Number(result!.showroom_fee_egp))} />}
-              <Row tone="warning" k="المستحق عند الوصول" v={result!.egp_due_on_arrival} sum />
+              {Number(result!.showroom_fee_egp) !== 0 && (
+                <Row tone="warning" saving k={<span className="text-success">خصم الاستلام من المعرض</span>} v={result!.showroom_fee_egp} />
+              )}
+              <Row tone="warning" k="المستحق عند الوصول" v={result!.egp_due_on_arrival} sum
+                   was={Number(result!.showroom_fee_egp) !== 0 ? result!.port_fee_egp : null} />
               {result!.total_egp_indicative && Number(result!.total_egp_indicative) > 0 && (
                 <Row k="الإجمالي بالجنيه — تقريبي بسعر اليوم، مش وعد" v={result!.total_egp_indicative} muted />
               )}
