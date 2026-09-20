@@ -122,12 +122,23 @@ msgctxt "ui/views/approval_views.py"
 msgid "Above"
 msgstr "أكثر من"
 
+msgctxt "ui/views/payment_views.py"
+msgid "Accept — money received"
+msgstr "قبول — الفلوس وصلت"
+
+msgid "Accepted"
+msgstr "مقبول"
+
+msgctxt "ui/views/payment_views.py"
 msgid "Accepted"
 msgstr "مقبول"
 
 msgctxt "ui/views/quote_views.py"
 msgid "Accepted"
 msgstr "مقبول"
+
+msgid "Accepted %(count)d payment(s)"
+msgstr "تم قبول %(count)d دفعة"
 
 msgid "Accepted %(count)d quotation(s)"
 msgstr "تم قبول %(count)d عرض سعر"
@@ -138,6 +149,13 @@ msgstr "عرض السعر المقبول"
 msgctxt "ui/views/car_deal_views.py"
 msgid "Accepted quotation"
 msgstr "عرض السعر المقبول"
+
+msgid "Accepted — money received"
+msgstr "مقبول — الفلوس وصلت"
+
+msgctxt "ui/views/payment_views.py"
+msgid "Accepting adds the credited amount to this quotation's paid total, and the deal follows it"
+msgstr "القبول بيضيف المبلغ على المدفوع في عرض السعر ده، والصفقة بتتحدّث وراه"
 
 msgid "Accident-free"
 msgstr "خالية من الحوادث"
@@ -207,6 +225,13 @@ msgstr "قيمة المصاريف الإدارية"
 msgctxt "ui/views/supplier_listing_views.py"
 msgid "Advert"
 msgstr "الإعلان"
+
+msgid "Advert it was priced from"
+msgstr "الإعلان اللي اتسعّر منه"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Advert it was priced from"
+msgstr "الإعلان اللي اتسعّر منه"
 
 msgid "Advert link"
 msgstr "رابط الإعلان"
@@ -306,6 +331,20 @@ msgctxt "ui/views/reference_views.py"
 msgid "Amount"
 msgstr "المبلغ"
 
+msgid "Amount on the screenshot"
+msgstr "المبلغ في صورة التحويل"
+
+msgctxt "ui/views/payment_views.py"
+msgid "Amount on the screenshot"
+msgstr "المبلغ في صورة التحويل"
+
+msgid "Amount to credit (EUR)"
+msgstr "المبلغ اللي هيتسجّل (يورو)"
+
+msgctxt "ui/views/payment_views.py"
+msgid "Amount to credit (EUR)"
+msgstr "المبلغ اللي هيتسجّل (يورو)"
+
 msgctxt "ui/views/pricing_views.py"
 msgid "Amount, or percentage"
 msgstr "مبلغ أو نسبة"
@@ -313,6 +352,9 @@ msgstr "مبلغ أو نسبة"
 msgctxt "ui/views/import_stage_views.py"
 msgid "An agent presses send"
 msgstr "المندوب يضغط إرسال"
+
+msgid "An invoice cannot ask for a negative amount."
+msgstr "الفاتورة ما ينفعش تطلب مبلغ بالسالب."
 
 msgctxt "ui/views/contract_views.py"
 msgid "Annex 1 — the payment schedule"
@@ -445,6 +487,10 @@ msgctxt "ui/views/contract_views.py"
 msgid "As the annex prints it"
 msgstr "زي ما بيتطبع في الملحق"
 
+msgctxt "ui/views/payment_views.py"
+msgid "As the assistant read it. Correct it if the picture says otherwise"
+msgstr "زي ما المساعد قراه. صحّحه لو الصورة بتقول غير كده"
+
 msgctxt "ui/views/contract_views.py"
 msgid "As the contract prints it"
 msgstr "كما يُطبع في العقد"
@@ -558,6 +604,17 @@ msgstr "البنك"
 msgctxt "ui/views/car_deal_views.py"
 msgid "Bank"
 msgstr "البنك"
+
+msgctxt "ui/views/payment_views.py"
+msgid "Bank"
+msgstr "البنك"
+
+msgid "Bank details as sent"
+msgstr "بيانات التحويل زي ما اتبعتت"
+
+msgctxt "ui/views/payment_views.py"
+msgid "Bank details as sent"
+msgstr "بيانات التحويل زي ما اتبعتت"
 
 msgid "Bank financing (cars in Egypt)"
 msgstr "تمويل بنكي (عربيات في مصر)"
@@ -711,6 +768,14 @@ msgctxt "ui/views/dashboard_views.py"
 msgid "By programme"
 msgstr "حسب البرنامج"
 
+msgctxt "ui/views/payment_views.py"
+msgid "By the assistant"
+msgstr "من المساعد"
+
+msgctxt "ui/views/quote_views.py"
+msgid "By the assistant"
+msgstr "من المساعد"
+
 msgid "Calculated at"
 msgstr "وقت الحساب"
 
@@ -753,6 +818,10 @@ msgctxt "ui/views/car_deal_views.py"
 msgid "Cancel deal"
 msgstr "إلغاء الصفقة"
 
+msgctxt "ui/views/payment_views.py"
+msgid "Cancel this invoice"
+msgstr "إلغاء الفاتورة"
+
 msgid "Cancellation, refund or settlement"
 msgstr "الإلغاء أو الاسترداد أو التسوية"
 
@@ -761,6 +830,9 @@ msgstr "ملغي"
 
 msgid "Cancelled %(count)d deal(s). The customer is told by a person, not by the system."
 msgstr "تم إلغاء %(count)d صفقة. العميل يبلّغه إنسان، مش النظام."
+
+msgid "Cancelled %(count)d invoice(s)"
+msgstr "تم إلغاء %(count)d فاتورة"
 
 msgctxt "ui/views/car_deal_views.py"
 msgid "Cancelling after a deposit needs management's approval — this reason goes on the request"
@@ -809,6 +881,10 @@ msgctxt "ui/views/listing_views.py"
 msgid "Car"
 msgstr "العربية"
 
+msgctxt "ui/views/payment_views.py"
+msgid "Car"
+msgstr "العربية"
+
 msgctxt "ui/views/quote_views.py"
 msgid "Car"
 msgstr "العربية"
@@ -816,6 +892,13 @@ msgstr "العربية"
 msgctxt "ui/views/vehicle_views.py"
 msgid "Car"
 msgstr "العربية"
+
+msgid "Car (as quoted)"
+msgstr "العربية (زي ما اتسعّرت)"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Car (as quoted)"
+msgstr "العربية (زي ما اتسعّرت)"
 
 msgid "Car Deal"
 msgstr "صفقة عربية"
@@ -957,6 +1040,9 @@ msgstr "المدينة"
 msgctxt "ui/views/supplier_listing_views.py"
 msgid "City"
 msgstr "المدينة"
+
+msgid "Clear"
+msgstr "واضحة"
 
 msgid "Closed %(count)d mandate(s)"
 msgstr "تم إغلاق %(count)d توكيل"
@@ -1147,6 +1233,31 @@ msgctxt "ui/views/vehicle_views.py"
 msgid "Configuration number"
 msgstr "رقم الكونفيجريشن"
 
+msgid "Confirmed at"
+msgstr "وقت التأكيد"
+
+msgctxt "ui/views/payment_views.py"
+msgid "Confirmed at"
+msgstr "وقت التأكيد"
+
+msgid "Confirmed by"
+msgstr "أكّدها"
+
+msgctxt "ui/views/payment_views.py"
+msgid "Confirmed by"
+msgstr "أكّدها"
+
+msgid "Confirmed so far"
+msgstr "المؤكَّد لحد دلوقتي"
+
+msgctxt "ui/views/payment_views.py"
+msgid "Confirmed so far"
+msgstr "المؤكَّد لحد دلوقتي"
+
+msgctxt "ui/views/payment_views.py"
+msgid "Confirmed €"
+msgstr "المؤكَّد €"
+
 msgctxt "ui/views/call_views.py"
 msgid "Consent"
 msgstr "الموافقة"
@@ -1273,6 +1384,9 @@ msgctxt "ui/views/contract_views.py"
 msgid "Contracts"
 msgstr "العقود"
 
+msgid "Conversation"
+msgstr "المحادثة"
+
 msgctxt "ui/views/reference_views.py"
 msgid "Conversion commission % from"
 msgstr "عمولة التحويل % من"
@@ -1342,6 +1456,10 @@ msgctxt "ui/views/contract_views.py"
 msgid "Currency"
 msgstr "العملة"
 
+msgctxt "ui/views/payment_views.py"
+msgid "Currency"
+msgstr "العملة"
+
 msgctxt "ui/views/quote_views.py"
 msgid "Currency"
 msgstr "العملة"
@@ -1374,6 +1492,10 @@ msgid "Customer"
 msgstr "العميل"
 
 msgctxt "ui/views/dashboard_views.py"
+msgid "Customer"
+msgstr "العميل"
+
+msgctxt "ui/views/payment_views.py"
 msgid "Customer"
 msgstr "العميل"
 
@@ -1449,6 +1571,10 @@ msgctxt "ui/views/contract_views.py"
 msgid "Date"
 msgstr "التاريخ"
 
+msgctxt "ui/views/payment_views.py"
+msgid "Date"
+msgstr "التاريخ"
+
 msgctxt "ui/views/quote_views.py"
 msgid "Date"
 msgstr "التاريخ"
@@ -1485,6 +1611,10 @@ msgid "Deal"
 msgstr "الصفقة"
 
 msgctxt "ui/views/document_views.py"
+msgid "Deal"
+msgstr "الصفقة"
+
+msgctxt "ui/views/payment_views.py"
 msgid "Deal"
 msgstr "الصفقة"
 
@@ -1613,6 +1743,10 @@ msgid "Deposit %"
 msgstr "المقدم %"
 
 msgctxt "ui/views/contract_views.py"
+msgid "Deposit %"
+msgstr "المقدم %"
+
+msgctxt "ui/views/payment_views.py"
 msgid "Deposit %"
 msgstr "المقدم %"
 
@@ -1788,6 +1922,17 @@ msgstr "مسودة"
 msgid "Dropbox file id"
 msgstr "معرّف ملف Dropbox"
 
+msgid "Due now"
+msgstr "المطلوب الآن"
+
+msgctxt "ui/views/payment_views.py"
+msgid "Due now"
+msgstr "المطلوب الآن"
+
+msgctxt "ui/views/payment_views.py"
+msgid "Due now €"
+msgstr "المطلوب الآن €"
+
 msgid "Due on arrival (EGP)"
 msgstr "المستحق عند الوصول (ج.م)"
 
@@ -1924,8 +2069,14 @@ msgctxt "ui/views/vehicle_views.py"
 msgid "Engine size (cc)"
 msgstr "سعة المحرك (cc)"
 
+msgid "Enter the amount to credit in EUR before accepting."
+msgstr "اكتب المبلغ اللي هيتسجّل باليورو قبل القبول."
+
 msgid "Enter the car's price with VAT."
 msgstr "اكتب سعر العربية شامل الضريبة."
+
+msgid "Entered by a person"
+msgstr "أدخلها موظف"
 
 msgid "Entered by hand"
 msgstr "مُدخل يدوياً"
@@ -2068,6 +2219,10 @@ msgstr "الملف"
 
 msgid "File name"
 msgstr "اسم الملف"
+
+msgctxt "ui/views/payment_views.py"
+msgid "Fill this before rejecting — the agent reads it in the chat"
+msgstr "اكتبه قبل الرفض — موظف المبيعات بيقراه في الشات"
 
 msgctxt "ui/views/listing_views.py"
 msgid "Film"
@@ -2229,6 +2384,10 @@ msgctxt "ui/views/contract_views.py"
 msgid "From the quotation's band"
 msgstr "من فئة عرض السعر"
 
+msgctxt "ui/views/payment_views.py"
+msgid "Frozen when the invoice was issued. Changing the company's account later does not rewrite this"
+msgstr "بتتثبّت وقت إصدار الفاتورة. تغيير حساب الشركة بعدين ما بيغيّرهاش"
+
 msgid "Fuel"
 msgstr "الوقود"
 
@@ -2345,6 +2504,9 @@ msgctxt "ui/views/car_deal_views.py"
 msgid "Handover"
 msgstr "التسليم"
 
+msgid "Hard to read"
+msgstr "صعبة القراءة"
+
 msgid "Has an expiry date"
 msgstr "له تاريخ انتهاء"
 
@@ -2372,6 +2534,13 @@ msgstr "صاحب المبادرة"
 msgctxt "ui/views/document_views.py"
 msgid "Holder"
 msgstr "صاحب المبادرة"
+
+msgid "How clear it was"
+msgstr "وضوح الصورة"
+
+msgctxt "ui/views/payment_views.py"
+msgid "How clear it was"
+msgstr "وضوح الصورة"
 
 msgid "Import Stage"
 msgstr "مرحلة استيراد"
@@ -2535,6 +2704,9 @@ msgctxt "ui/views/quote_views.py"
 msgid "Internal. Nothing here reaches the offer document"
 msgstr "داخلي. مفيش حاجة هنا بتوصل لمستند العرض"
 
+msgid "Invoice file"
+msgstr "ملف الفاتورة"
+
 msgid "Issued"
 msgstr "صادرة"
 
@@ -2545,8 +2717,22 @@ msgctxt "ui/views/contract_views.py"
 msgid "Issued by"
 msgstr "صادر عن"
 
+msgid "Issued by the assistant"
+msgstr "أصدرها المساعد"
+
+msgctxt "ui/views/payment_views.py"
+msgid "Issued by the assistant"
+msgstr "أصدرها المساعد"
+
 msgid "Issuer"
 msgstr "الجهة المُصدرة"
+
+msgid "Its currency"
+msgstr "عملة التحويل"
+
+msgctxt "ui/views/payment_views.py"
+msgid "Its currency"
+msgstr "عملة التحويل"
 
 msgctxt "ui/views/contract_views.py"
 msgid "K&T contracts as marketing agent for the German company — the clause names it"
@@ -2685,6 +2871,13 @@ msgstr "رابط الإعلان"
 msgctxt "ui/views/vehicle_views.py"
 msgid "Listing URL"
 msgstr "رابط الإعلان"
+
+msgid "Made by the assistant"
+msgstr "عمله المساعد"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Made by the assistant"
+msgstr "عمله المساعد"
 
 msgid "Make"
 msgstr "الماركة"
@@ -3149,6 +3342,10 @@ msgctxt "ui/views/consignment_views.py"
 msgid "Newest"
 msgstr "الأحدث"
 
+msgctxt "ui/views/payment_views.py"
+msgid "Newest"
+msgstr "الأحدث"
+
 msgctxt "ui/views/quote_views.py"
 msgid "Newest"
 msgstr "الأحدث"
@@ -3272,6 +3469,10 @@ msgctxt "ui/views/listing_views.py"
 msgid "Notes"
 msgstr "ملاحظات"
 
+msgctxt "ui/views/payment_views.py"
+msgid "Notes"
+msgstr "ملاحظات"
+
 msgctxt "ui/views/pricing_views.py"
 msgid "Notes"
 msgstr "ملاحظات"
@@ -3383,6 +3584,10 @@ msgctxt "ui/views/reference_views.py"
 msgid "On offer"
 msgstr "معروض"
 
+msgctxt "ui/views/payment_views.py"
+msgid "On the screenshot"
+msgstr "في الصورة"
+
 msgid "On the website"
 msgstr "على الموقع"
 
@@ -3403,6 +3608,9 @@ msgstr "للإجمالي التقريبي بالجنيه بس. الشركة ما
 msgid "Only one candidate car can be the chosen one."
 msgstr "عربية واحدة بس هي اللي تتعلّم كمختارة."
 
+msgid "Only the accountant or management confirms that money arrived."
+msgstr "تأكيد وصول الفلوس للمحاسب أو الإدارة بس."
+
 msgid "Only when asked for"
 msgstr "عند الطلب فقط"
 
@@ -3419,6 +3627,10 @@ msgstr "مفتوحة"
 msgctxt "ui/views/dashboard_views.py"
 msgid "Open deals"
 msgstr "الصفقات المفتوحة"
+
+msgctxt "ui/views/payment_views.py"
+msgid "Open the invoice"
+msgstr "فتح الفاتورة"
 
 msgid "Opening a deal on a programme that needs management"
 msgstr "فتح صفقة على برنامج يتطلب موافقة الإدارة"
@@ -3523,6 +3735,9 @@ msgstr "المالك"
 msgctxt "ui/views/consignment_views.py"
 msgid "Owner"
 msgstr "المالك"
+
+msgid "Paid"
+msgstr "مدفوعة"
 
 msgid "Paid in full"
 msgstr "مدفوعة بالكامل"
@@ -3649,9 +3864,34 @@ msgctxt "ui/views/car_deal_views.py"
 msgid "Payment plan"
 msgstr "خطة الدفع"
 
+msgid "Payment receipt"
+msgstr "إيصال تحويل"
+
+msgctxt "ui/views/payment_views.py"
+msgid "Payment receipt"
+msgstr "إيصال تحويل"
+
+msgid "Payment receipts"
+msgstr "إيصالات التحويل"
+
+msgctxt "ui/views/payment_views.py"
+msgid "Payment receipts"
+msgstr "إيصالات التحويل"
+
+msgctxt "ui/views/payment_views.py"
+msgid "Payment receipts search"
+msgstr "بحث إيصالات التحويل"
+
 msgctxt "ui/views/dashboard_views.py"
 msgid "Payment state"
 msgstr "حالة السداد"
+
+msgid "Payments to confirm"
+msgstr "تحويلات محتاجة تأكيد"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Payments to confirm"
+msgstr "تحويلات محتاجة تأكيد"
 
 msgid "Pending"
 msgstr "قيد الانتظار"
@@ -3832,6 +4072,24 @@ msgctxt "ui/views/vehicle_views.py"
 msgid "Production month"
 msgstr "شهر الإنتاج"
 
+msgid "Proforma invoice"
+msgstr "فاتورة مبدئية"
+
+msgctxt "ui/views/payment_views.py"
+msgid "Proforma invoice"
+msgstr "فاتورة مبدئية"
+
+msgid "Proforma invoices"
+msgstr "الفواتير المبدئية"
+
+msgctxt "ui/views/car_deal_views.py"
+msgid "Proforma invoices"
+msgstr "الفواتير المبدئية"
+
+msgctxt "ui/views/payment_views.py"
+msgid "Proforma invoices"
+msgstr "الفواتير المبدئية"
+
 msgid "Programme"
 msgstr "البرنامج"
 
@@ -3920,6 +4178,10 @@ msgctxt "ui/views/contract_views.py"
 msgid "Quotation"
 msgstr "عرض سعر"
 
+msgctxt "ui/views/payment_views.py"
+msgid "Quotation"
+msgstr "عرض سعر"
+
 msgctxt "ui/views/quote_views.py"
 msgid "Quotation"
 msgstr "عرض سعر"
@@ -3986,9 +4248,19 @@ msgstr "أعاد إرسالها مندوب"
 msgid "Reaching it marks the deal done"
 msgstr "الوصول لها يعني الصفقة اكتملت"
 
+msgid "Read by the assistant"
+msgstr "قراها المساعد"
+
+msgctxt "ui/views/payment_views.py"
+msgid "Read by the assistant"
+msgstr "قراها المساعد"
+
 msgctxt "ui/views/car_deal_views.py"
 msgid "Read from the lead: paid or organic, campaign, first click"
 msgstr "من العميل المحتمل: من إعلان أم طبيعي، الحملة، أول نقرة"
+
+msgid "Readable, check it"
+msgstr "مقروءة، راجعها"
 
 msgctxt "ui/views/supplier_listing_views.py"
 msgid "Real adverts only"
@@ -4077,6 +4349,10 @@ msgctxt "ui/views/dashboard_views.py"
 msgid "Reference"
 msgstr "المرجع"
 
+msgctxt "ui/views/payment_views.py"
+msgid "Reference"
+msgstr "المرجع"
+
 msgctxt "ui/views/quote_views.py"
 msgid "Reference"
 msgstr "المرجع"
@@ -4124,12 +4400,23 @@ msgctxt "ui/views/contract_views.py"
 msgid "Register"
 msgstr "السجل"
 
+msgctxt "ui/views/payment_views.py"
+msgid "Reject this receipt"
+msgstr "رفض الإيصال"
+
 msgid "Rejected"
 msgstr "مرفوض"
 
 msgctxt "ui/views/document_views.py"
 msgid "Rejected"
 msgstr "مرفوض"
+
+msgctxt "ui/views/payment_views.py"
+msgid "Rejected"
+msgstr "مرفوض"
+
+msgid "Rejected %(count)d receipt(s)"
+msgstr "تم رفض %(count)d إيصال"
 
 msgid "Renews automatically"
 msgstr "يتجدد تلقائياً"
@@ -4251,6 +4538,10 @@ msgctxt "ui/views/document_views.py"
 msgid "Selling the right"
 msgstr "بيع الحق"
 
+msgctxt "ui/views/payment_views.py"
+msgid "Send it to the customer again"
+msgstr "إعادة إرسالها للعميل"
+
 msgctxt "ui/views/quote_views.py"
 msgid "Send the offer to the customer"
 msgstr "إرسال العرض للعميل"
@@ -4277,6 +4568,9 @@ msgstr "مُرسل"
 msgid "Sent %(count)d contract(s)"
 msgstr "تم إرسال %(count)d عقد"
 
+msgid "Sent %(count)d invoice(s)"
+msgstr "تم إرسال %(count)d فاتورة"
+
 msgid "Sent %(count)d offer(s)"
 msgstr "تم إرسال %(count)d عرض"
 
@@ -4287,9 +4581,20 @@ msgctxt "ui/views/contract_views.py"
 msgid "Sent at"
 msgstr "وقت الإرسال"
 
+msgctxt "ui/views/payment_views.py"
+msgid "Sent at"
+msgstr "وقت الإرسال"
+
 msgctxt "ui/views/quote_views.py"
 msgid "Sent at"
 msgstr "وقت الإرسال"
+
+msgid "Sent by"
+msgstr "المحوِّل"
+
+msgctxt "ui/views/payment_views.py"
+msgid "Sent by"
+msgstr "المحوِّل"
 
 msgid "Sent the current stage update to %(count)d customer(s)"
 msgstr "تم إرسال تحديث المرحلة الحالية لـ %(count)d عميل"
@@ -4376,6 +4681,10 @@ msgstr "تُشحن باسم"
 msgctxt "ui/views/contract_views.py"
 msgid "Ships in the name of"
 msgstr "تُشحن باسم"
+
+msgctxt "ui/views/payment_views.py"
+msgid "Short on purpose: the German seller can sell the car meanwhile"
+msgstr "قصيرة عن قصد: البائع الألماني ممكن يبيع العربية في الوقت ده"
 
 msgid "Showroom car"
 msgstr "عربية معرض"
@@ -4632,6 +4941,10 @@ msgctxt "ui/views/document_views.py"
 msgid "Status"
 msgstr "الحالة"
 
+msgctxt "ui/views/payment_views.py"
+msgid "Status"
+msgstr "الحالة"
+
 msgctxt "ui/views/quote_views.py"
 msgid "Status"
 msgstr "الحالة"
@@ -4840,6 +5153,10 @@ msgctxt "ui/views/vehicle_views.py"
 msgid "The car"
 msgstr "العربية"
 
+msgctxt "ui/views/quote_views.py"
+msgid "The car in words — what the offer prints when no car record exists yet, which is every quotation the assistant makes from an advert"
+msgstr "العربية بالكلام — ده اللي بيتطبع في العرض لما مفيش سجل عربية لسه، وده حال كل عرض بيعمله المساعد من إعلان"
+
 msgctxt "ui/views/car_deal_views.py"
 msgid "The cash-on-B/L instalment in the contract falls due when this exists"
 msgstr "قسط «نقداً عند البوليصة» في العقد بيستحق لما ده يظهر"
@@ -4922,6 +5239,13 @@ msgctxt "ui/views/document_views.py"
 msgid "The deposit"
 msgstr "الوديعة"
 
+msgctxt "ui/views/payment_views.py"
+msgid "The deposit this invoice asks for"
+msgstr "الجدية اللي الفاتورة دي بتطلبها"
+
+msgid "The deposit this invoice asks for. The balance follows the contract."
+msgstr "الجدية اللي الفاتورة دي بتطلبها. الباقي بيمشي على العقد."
+
 msgctxt "ui/views/contract_views.py"
 msgid "The document"
 msgstr "المستند"
@@ -4940,6 +5264,13 @@ msgstr "صاحب المبادرة"
 msgctxt "ui/views/car_deal_views.py"
 msgid "The initiative the car ships under. Its holder's name goes on the contract's shipping clause"
 msgstr "المبادرة اللي العربية بتتشحن عليها. اسم صاحبها بيتكتب في بند الشحن في العقد"
+
+msgctxt "ui/views/payment_views.py"
+msgid "The invoice"
+msgstr "الفاتورة"
+
+msgid "The invoice is ready."
+msgstr "الفاتورة جاهزة."
 
 msgctxt "ui/views/car_deal_views.py"
 msgid "The key on the customer's tracking link — never share it in a group"
@@ -5000,6 +5331,9 @@ msgctxt "ui/views/switch_views.py"
 msgid "The name the code reads. Never changes"
 msgstr "الاسم اللي الكود بيقراه. ما يتغيّرش"
 
+msgid "The national ID is 14 digits; this one has %(n)d."
+msgstr "الرقم القومي 14 رقم؛ ده فيه %(n)d."
+
 msgid "The number on the German advert — everything else follows from it"
 msgstr "الرقم اللي على الإعلان الألماني — كل حاجة تانية بتتحسب منه"
 
@@ -5031,6 +5365,10 @@ msgstr "الشخص اللي بنبيع عربيته له — الطرف الأو
 msgctxt "ui/views/car_deal_views.py"
 msgid "The physical car. Leave empty until one is chosen — the quotation's candidates come first"
 msgstr "العربية الفعلية. سيبها فاضية لحد ما تتحدد — مرشحات عرض السعر الأول"
+
+msgctxt "ui/views/payment_views.py"
+msgid "The picture the customer sent. Compare it with the bank statement, not with this form"
+msgstr "الصورة اللي العميل بعتها. قارنها بكشف الحساب البنكي، مش بالشاشة دي"
 
 msgctxt "ui/views/dashboard_views.py"
 msgid "The pipeline"
@@ -5079,6 +5417,10 @@ msgctxt "ui/views/consignment_views.py"
 msgid "The sale"
 msgstr "البيع"
 
+msgctxt "ui/views/payment_views.py"
+msgid "The same reference on two receipts usually means the same transfer sent twice"
+msgstr "نفس رقم العملية في إيصالين معناه غالباً إن نفس التحويل اتبعت مرتين"
+
 msgid "The scan or photo the customer sent"
 msgstr "الصورة أو المسح اللي العميل بعته"
 
@@ -5098,6 +5440,10 @@ msgctxt "ui/views/car_deal_views.py"
 msgid "The stage 'contract signed and money transferred' is gated on this for instalment deals"
 msgstr "مرحلة «توقيع العقد وتحويل الفلوس» مشروطة بده في صفقات التقسيط"
 
+msgctxt "ui/views/payment_views.py"
+msgid "The sum of the receipts the accountant accepted against this invoice"
+msgstr "مجموع الإيصالات اللي المحاسب قبلها على الفاتورة دي"
+
 msgid "The supplier's order reference, printed on the contract"
 msgstr "مرجع طلبية المورد، بيتطبع في العقد"
 
@@ -5113,6 +5459,10 @@ msgctxt "ui/views/car_deal_views.py"
 msgid "The three payments must add up to the total — the contract refuses otherwise"
 msgstr "الدفعات التلاتة لازم مجموعها يساوي الإجمالي — العقد بيرفض غير كده"
 
+msgctxt "ui/views/payment_views.py"
+msgid "The transfer"
+msgstr "التحويل"
+
 msgid "The transfer rate and its commission"
 msgstr "سعر التحويل وعمولته"
 
@@ -5125,6 +5475,9 @@ msgstr "رقمه القومي"
 msgctxt "ui/views/contract_views.py"
 msgid "Their national ID"
 msgstr "رقمه القومي"
+
+msgid "There is no price for this car."
+msgstr "مفيش سعر للعربية دي."
 
 msgid "There is no price to print."
 msgstr "مفيش سعر يتطبع."
@@ -5147,12 +5500,18 @@ msgstr "الصفقة دي متوقفة: %(reason)s"
 msgid "This deal is cancelled. Reopen it before moving stages."
 msgstr "الصفقة دي ملغية. افتحها تاني قبل ما تنقل المراحل."
 
+msgid "This invoice has no file yet."
+msgstr "الفاتورة دي لسه مالهاش ملف."
+
 msgid "This number is"
 msgstr "الرقم ده هو"
 
 msgctxt "ui/views/reference_views.py"
 msgid "This number is"
 msgstr "الرقم ده هو"
+
+msgid "This receipt was already %(state)s."
+msgstr "الإيصال ده حالته بالفعل: %(state)s."
 
 msgctxt "ui/views/dashboard_views.py"
 msgid "This year"
@@ -5227,6 +5586,10 @@ msgctxt "ui/views/pricing_views.py"
 msgid "To (gross €) — empty means no ceiling"
 msgstr "إلى (€ شامل الضريبة) — فاضية يعني مفيش حد أعلى"
 
+msgctxt "ui/views/payment_views.py"
+msgid "To credit €"
+msgstr "هيتسجّل €"
+
 msgid "To stage"
 msgstr "إلى مرحلة"
 
@@ -5244,6 +5607,13 @@ msgctxt "ui/views/quote_views.py"
 msgid "Total minus deposit — due before the car ships"
 msgstr "الإجمالي ناقص الوديعة — بيستحق قبل شحن العربية"
 
+msgid "Total selling price"
+msgstr "إجمالي سعر البيع"
+
+msgctxt "ui/views/payment_views.py"
+msgid "Total selling price"
+msgstr "إجمالي سعر البيع"
+
 msgid "Total selling price (EUR)"
 msgstr "إجمالي سعر البيع (يورو)"
 
@@ -5256,6 +5626,10 @@ msgid "Total €"
 msgstr "الإجمالي €"
 
 msgctxt "ui/views/dashboard_views.py"
+msgid "Total €"
+msgstr "الإجمالي €"
+
+msgctxt "ui/views/payment_views.py"
 msgid "Total €"
 msgstr "الإجمالي €"
 
@@ -5286,6 +5660,27 @@ msgstr "التفريغ النصي"
 msgctxt "ui/views/call_views.py"
 msgid "Transcript"
 msgstr "التفريغ النصي"
+
+msgid "Transfer date"
+msgstr "تاريخ التحويل"
+
+msgctxt "ui/views/payment_views.py"
+msgid "Transfer date"
+msgstr "تاريخ التحويل"
+
+msgid "Transfer reference"
+msgstr "رقم العملية"
+
+msgctxt "ui/views/payment_views.py"
+msgid "Transfer reference"
+msgstr "رقم العملية"
+
+msgid "Transfer screenshot"
+msgstr "صورة التحويل"
+
+msgctxt "ui/views/payment_views.py"
+msgid "Transfer screenshot"
+msgstr "صورة التحويل"
 
 msgctxt "ui/views/contract_views.py"
 msgid "Transfer €"
@@ -5436,6 +5831,10 @@ msgstr "VIP RORO"
 msgid "Valid until"
 msgstr "ساري حتى"
 
+msgctxt "ui/views/payment_views.py"
+msgid "Valid until"
+msgstr "ساري حتى"
+
 msgctxt "ui/views/quote_views.py"
 msgid "Valid until"
 msgstr "ساري حتى"
@@ -5522,6 +5921,13 @@ msgctxt "ui/views/dashboard_views.py"
 msgid "Waiting for management"
 msgstr "في انتظار الإدارة"
 
+msgid "Waiting for the accountant"
+msgstr "في انتظار المحاسب"
+
+msgctxt "ui/views/payment_views.py"
+msgid "Waiting for the accountant"
+msgstr "في انتظار المحاسب"
+
 msgctxt "ui/views/dashboard_views.py"
 msgid "Waiting on paperwork"
 msgstr "في انتظار الأوراق"
@@ -5552,6 +5958,13 @@ msgctxt "ui/views/consignment_views.py"
 msgid "What decides whether a commission is owed"
 msgstr "إيه اللي بيحدد إن في عمولة مستحقة"
 
+msgid "What happened to the contract"
+msgstr "اللي حصل في العقد"
+
+msgctxt "ui/views/payment_views.py"
+msgid "What happened to the contract"
+msgstr "اللي حصل في العقد"
+
 msgctxt "ui/views/approval_views.py"
 msgid "What is being asked"
 msgstr "المطلوب"
@@ -5574,6 +5987,10 @@ msgstr "اللي بيغطيه"
 msgctxt "ui/views/switch_views.py"
 msgid "What it does"
 msgstr "بيعمل إيه"
+
+msgctxt "ui/views/payment_views.py"
+msgid "What it pays for"
+msgstr "التحويل ده على إيه"
 
 msgctxt "ui/views/vehicle_views.py"
 msgid "What the Germany team got off the advert. Above 500 € it needs management"
@@ -5614,6 +6031,13 @@ msgstr "اللي المندوب بيدخله"
 msgctxt "ui/views/qualify_views.py"
 msgid "What they want"
 msgstr "اللي هو عايزه"
+
+msgid "What to check"
+msgstr "اللي محتاج مراجعة"
+
+msgctxt "ui/views/payment_views.py"
+msgid "What to check"
+msgstr "اللي محتاج مراجعة"
 
 msgctxt "ui/views/call_views.py"
 msgid "What was said"
@@ -5669,6 +6093,10 @@ msgstr "موجودة فين"
 msgctxt "ui/views/vehicle_views.py"
 msgid "Where it was built, and for whom"
 msgstr "اتصنعت فين، ولمين"
+
+msgctxt "ui/views/payment_views.py"
+msgid "Where the customer was told to pay"
+msgstr "العميل اتقاله يحوّل على فين"
 
 msgid "Where this came from"
 msgstr "مصدر الرقم"
@@ -5761,6 +6189,10 @@ msgctxt "ui/views/document_views.py"
 msgid "Why it was rejected"
 msgstr "سبب الرفض"
 
+msgctxt "ui/views/payment_views.py"
+msgid "Why it was rejected"
+msgstr "سبب الرفض"
+
 msgid "Why it was voided"
 msgstr "سبب الإبطال"
 
@@ -5811,6 +6243,10 @@ msgstr "الصفقات المكسوبة حسب المندوب"
 msgctxt "ui/views/crm_dashboard_patch.py"
 msgid "Won deals by campaign"
 msgstr "الصفقات المكسوبة حسب الحملة"
+
+msgctxt "ui/views/payment_views.py"
+msgid "Written by the assistant: anything that did not match the invoice, the customer or the calendar"
+msgstr "كتبها المساعد: أي حاجة ما طابقتش الفاتورة أو اسم العميل أو التاريخ"
 
 msgctxt "ui/views/reference_views.py"
 msgid "Year"
