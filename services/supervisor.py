@@ -42,12 +42,17 @@ MONEY_WORDS = ('جنيه', 'يورو', 'دولار', 'ألف', 'الف', '٪', '
 # Sentences that promise something the company will not honour.
 PROMISE_PATTERNS = [
     (re.compile(r'(أضمن|بضمن|متأكد\s+إن|أوعدك|بوعدك)'), 'a promise the company has not made'),
-    (re.compile(r'(وصل|اتأكد).{0,12}(التحويل|الفلوس|المبلغ)'), 'confirming money arrived'),
+    # "The money arrived" is the accountant's sentence, and the system sends it
+    # when they press Accept. These catch the assistant AFFIRMING it — not
+    # "لما التحويل يوصل" or "استلمنا صورة التحويل", which it now says all day.
+    (re.compile(r'(?<![يتهن])(وصل|وصلنا|وصلتنا|وصلت)\s+(التحويل|الفلوس|المبلغ)'), 'confirming money arrived'),
+    (re.compile(r'(التحويل|الفلوس|المبلغ)\s+(وصل|وصلت|وصلنا|اتأكد|اتأكدت)(?!\w)'), 'confirming money arrived'),
+    (re.compile(r'(تم|اتأكدنا\s+من)\s+(تأكيد\s+)?(استلام|وصول)\s+(ال)?(تحويل|فلوس|مبلغ)'), 'confirming money arrived'),
     (re.compile(r'(خصم|تخفيض)\s*\d'), 'offering a discount'),
 ]
 
 
-def check_reply(text, allowed_figures=None, expect_arabic=True):
+def check_reply(text, allowed_figures=None, expect_arabic=True, allowed_text=''):
     """Look at one outgoing reply and report what is wrong with it.
 
     `allowed_figures` are the numbers the tools actually returned this turn.
@@ -60,7 +65,7 @@ def check_reply(text, allowed_figures=None, expect_arabic=True):
     if not text.strip():
         return problems              # silence is a valid, deliberate reply
 
-    if ACCOUNT_LIKE.search(text.replace('،', '')) or IBAN_LIKE.search(text):
+    if _unapproved_account(text, allowed_text):
         problems.append({'rule': 'bank_details', 'severity': 'block',
                          'why': 'the reply contains something shaped like an account number'})
 
@@ -86,19 +91,61 @@ def _has_arabic(text):
     return any('؀' <= ch <= 'ۿ' for ch in text)
 
 
+def _unapproved_account(text, allowed_text):
+    """An account-shaped string the tools did not hand over this conversation.
+    The approved bank template arrives through a tool; relaying it is the job."""
+    approved = _normalise_number(allowed_text)
+    hits = [m.group(0) for m in ACCOUNT_LIKE.finditer(text.replace('،', ''))]
+    hits += [m.group(0) for m in IBAN_LIKE.finditer(text)]
+    for hit in hits:
+        digits = _normalise_number(hit)
+        if not digits or digits not in approved:
+            return True
+    return False
+
+
+def _canonical(value):
+    """'12,000.00', '12.000,00', '12000' and '12 000' are one number.
+
+    Digits alone are not enough: a tool returns 12,000.00 and the assistant
+    says 12,000 — 1200000 against 12000 — and a correct reply is blocked.
+    Returns the forms that should be treated as the same figure.
+    """
+    raw = re.sub(r'[^\d.,]', '', str(value)).strip('.,')
+    if not any(ch.isdigit() for ch in raw):
+        return set()
+    last = max(raw.rfind(','), raw.rfind('.'))
+    whole, cents = raw, ''
+    if last != -1:
+        tail = raw[last + 1:]
+        both = (',' in raw) and ('.' in raw)
+        if tail.isdigit() and len(tail) in (1, 2) and (both or raw.count(raw[last]) == 1):
+            whole, cents = raw[:last], tail
+    whole_digits = ''.join(ch for ch in whole if ch.isdigit()).lstrip('0') or '0'
+    forms = {whole_digits}
+    if cents and cents.strip('0'):
+        forms = {whole_digits + '.' + cents.ljust(2, '0')}
+        rounded = str(int(whole_digits) + (1 if int(cents.ljust(2, '0')) >= 50 else 0))
+        forms.add('~' + rounded)          # the assistant may round a figure with cents
+    return forms
+
+
 def _untraceable_figures(text, allowed):
     """Money-ish numbers in the reply that the tools did not supply."""
-    allowed_digits = {_normalise_number(str(a)) for a in allowed}
+    allowed_forms = set()
+    for a in allowed:
+        for form in _canonical(a):
+            allowed_forms.add(form.lstrip('~'))
     found = []
     for match in re.finditer(r'(\d[\d.,]{1,})', text):
         number = _normalise_number(match.group(1))
         if not number or len(number) < 3:
             continue                  # years, counts, small numbers
+        if {f.lstrip('~') for f in _canonical(match.group(1))} & allowed_forms:
+            continue
         window = text[max(0, match.start() - 24):match.end() + 24]
         if not any(word in window for word in MONEY_WORDS):
             continue                  # not presented as money
-        if number in allowed_digits:
-            continue
         found.append(match.group(1))
     return found
 
@@ -163,6 +210,24 @@ def figures_from_tool_messages(conversation, since):
     return figures
 
 
+FIGURE_WINDOW_HOURS = 72
+
+
+def tool_text(conversation, since):
+    """Everything the tools returned in the window, as one string."""
+    if conversation is None or since is None:
+        return ''
+    try:
+        from modules.chat.models import Message
+        rows = (Message.objects_all.filter(conversation=conversation, type='tool',
+                                           created_at__gte=since)
+                .values_list('content', flat=True))
+        return ' '.join(str(c or '') for c in rows)
+    except Exception:
+        logger.exception("car_import: could not read the tool results")
+        return ''
+
+
 def gate(text, conversation=None, since=None, workflow_name=''):
     """Decide what leaves, and record why. Returns (text_to_send, problems).
 
@@ -180,7 +245,15 @@ def gate(text, conversation=None, since=None, workflow_name=''):
     re-run the model and then send a failure email, which is neither silent
     nor free.
     """
-    problems = check_reply(text, allowed_figures=figures_from_tool_messages(conversation, since))
+    # "This turn" was the right window while the assistant only relayed a tool.
+    # Now it sells: the customer asks "يعني المقدم كام؟" an hour after the offer,
+    # and the honest answer is a figure a tool returned EARLIER in this same
+    # conversation. Three days covers a sale; an invented number is still one
+    # no tool ever returned.
+    from datetime import timedelta
+    window = (since - timedelta(hours=FIGURE_WINDOW_HOURS)) if since is not None else None
+    problems = check_reply(text, allowed_figures=figures_from_tool_messages(conversation, window),
+                           allowed_text=tool_text(conversation, window))
     if not problems:
         return text, problems
 

@@ -45,6 +45,24 @@ ACCESS_CONDITIONS = [
         "groups": ["car_import.sales_agent"],
     },
     {
+        "name": "car import: an agent sees their own deals' payment receipts",
+        "model": "car_import.paymentreceipt",
+        "condition": {'filters': {"operator": "and", "filters": [
+            {"field": "deal.assigned_to", "operator": "eq", "value": "user.id"},
+        ]}},
+        "permissions": [1, 0, 0, 0],
+        "groups": ["car_import.sales_agent"],
+    },
+    {
+        "name": "car import: an agent sees their own deals' proforma invoices",
+        "model": "car_import.proformainvoice",
+        "condition": {'filters': {"operator": "and", "filters": [
+            {"field": "deal.assigned_to", "operator": "eq", "value": "user.id"},
+        ]}},
+        "permissions": [1, 0, 0, 0],
+        "groups": ["car_import.sales_agent"],
+    },
+    {
         "name": "car import: an agent sees their own deals' contracts",
         "model": "car_import.contract",
         "condition": {'filters': {"operator": "and", "filters": [

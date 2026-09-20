@@ -113,3 +113,131 @@ def recent_messages(conversation, partner, limit=6):
         stamp = timezone.localtime(created).strftime('%d/%m %H:%M') if created else ''
         lines.append('%s %s: %s' % (stamp, 'العميل' if mine else 'إحنا', body[:220]))
     return '\n'.join(lines)
+
+
+# ── where the sale stands, and what this message calls for ───────────────────
+def sales_facts(partner, deal):
+    """The open quotation, the proforma, a receipt waiting for the accountant,
+    and what the contract still needs — so the assistant never re-prices a car
+    it already quoted or asks twice for a national ID it already has."""
+    if partner is None:
+        return 'مفيش.'
+    lines = []
+    try:
+        from car_import.models import PaymentReceipt, ProformaInvoice, Quote
+        quote = (Quote.all_objects.filter(partner_id=partner.pk, state__in=['sent', 'accepted'])
+                 .exclude(total_eur=0).order_by('-id').first())
+        if quote is not None:
+            state = 'العميل وافق عليه' if quote.state == 'accepted' else 'اتبعت ومستني رد العميل'
+            lines.append('عرض السعر %s (%s): %s — الإجمالي %s € — الجدية %s%% = %s €%s' % (
+                quote.name, state, quote.car_label or (str(quote.vehicle) if quote.vehicle_id else '-'),
+                f'{quote.total_eur:,.2f}', f'{float(quote.deposit_pct):g}', f'{quote.deposit_eur:,.2f}',
+                (' — ساري لحد %s' % quote.valid_until) if quote.valid_until else ''))
+            if quote.paid_eur:
+                lines.append('المؤكَّد استلامه: %s € — المتبقي %s €' % (
+                    f'{quote.paid_eur:,.2f}', f'{quote.remaining_eur:,.2f}'))
+        invoice = (ProformaInvoice.all_objects.filter(partner_id=partner.pk)
+                   .exclude(state='cancelled').order_by('-id').first())
+        if invoice is not None:
+            lines.append('الفاتورة المبدئية %s: %s — المطلوب %s €' % (
+                invoice.name, invoice.get_state_display(), f'{invoice.remaining_due:,.2f}'))
+        waiting = PaymentReceipt.all_objects.filter(partner_id=partner.pk, state='pending').count()
+        if waiting:
+            lines.append('فيه %d تحويل مستني تأكيد المحاسب — متأكدش للعميل إن الفلوس وصلت.' % waiting)
+        if deal is not None:
+            from car_import.models import Contract
+            from car_import.services import sales_flow
+            contract = (Contract.all_objects.filter(deal_id=deal.pk).exclude(state='cancelled')
+                        .order_by('-id').first())
+            if contract is None or contract.state == 'draft':
+                missing = (sales_flow.missing_contract_fields(contract) if contract is not None
+                           else ['customer_name', 'customer_national_id'])
+                ask = [sales_flow.CONTRACT_DETAIL_LABELS[m] for m in missing
+                       if m in ('customer_name', 'customer_national_id')]
+                if ask and invoice is not None:
+                    lines.append('العقد ناقصه من العميل: ' + '، '.join(ask))
+            elif contract.sent_at:
+                lines.append('العقد اتبعت للعميل (%s).' % contract.get_state_display())
+    except Exception:
+        return 'مفيش.'
+    return '\n'.join(lines) if lines else 'مفيش عرض سعر ولا فاتورة لسه.'
+
+
+def turn_warnings(message, deal):
+    """What this particular message calls for. Short, and only when it applies:
+    a warning raised on every turn gets read as standing orders."""
+    from car_import.services import policy
+
+    text = str(message or '').lower()
+    ai_first = policy.ai_first()
+    warnings = []
+
+    if deal is not None and deal.program == 'initiative' and deal.customer_is_initiative_holder:
+        warnings.append('العميل صاحب المبادرة: التقسيط مش متاح ليه.')
+
+    clearance = ['جمارك', 'جمركي', 'تخليص', 'إفراج', 'افراج', 'سداد', 'المتبقي', 'الباقي']
+    if deal is not None and deal.payment_state != 'fully_paid' and any(m in text for m in clearance):
+        warnings.append('الصفقة مش مدفوعة بالكامل والعميل بيسأل عن التخليص: التخليص مبيبدأش قبل '
+                        'سداد المتبقي. قول كده بوضوح، والمتبقي من «حالة البيع» تحت.')
+
+    if 'كوريا' in text or 'korea' in text:
+        warnings.append('العميل ذكر كوريا: الشركة أوروبا بس — اعتذر بذوق واقترح بديل أوروبي.')
+
+    if ai_first:
+        if any(m in text for m in ['خصم', 'تخفيض', 'آخر سعر', 'اخر سعر', 'نزّل', 'نزل السعر']):
+            warnings.append('العميل بيطلب خصم: الخصم قرار الإدارة. استخدم ka_request_discount وكمّل '
+                            'معاه — متوعدش بأي خصم ومتحوّلش المحادثة.')
+        if any(m in text for m in ['استرداد', 'ارجاع فلوس', 'إلغاء', 'الغاء', 'ألغي', 'الغي']):
+            warnings.append('استرداد أو إلغاء: ده قرار بني آدم — حوّل لزميل.')
+        if any(m in text for m in ['رقم الحساب', 'رقم حساب', 'iban', 'أحوّل', 'احول', 'التحويل على']):
+            warnings.append('العميل عايز بيانات التحويل: بتتبعت مع الفاتورة المبدئية '
+                            '(ka_issue_proforma_invoice). متكتبش رقم حساب من عندك أبداً.')
+        if any(m in text for m in ['حولت', 'حوّلت', 'دفعت', 'التحويل تم', 'بعت الفلوس']):
+            warnings.append('العميل بيقول إنه حوّل: اطلب صورة التحويل لو مبعتهاش، وسجّلها بـ '
+                            'ka_record_payment_receipt. تأكيد وصول الفلوس للمحاسب بس.')
+    else:
+        money = ['رقم الحساب', 'رقم حساب', 'iban', 'لينك الدفع', 'حولت', 'حوّلت', 'استرداد',
+                 'ارجاع فلوس', 'خصم', 'قسط', 'تقسيط', 'مصاريف', 'رسوم', 'بكام', 'سعر']
+        if any(m in text for m in money):
+            warnings.append('المساعد مش مفعّل للبيع دلوقتي: أي سؤال فلوس → حوّل لزميل من غير أي رقم.')
+
+    if not any('حوّل لزميل' in w for w in warnings):
+        warnings.append('الرسالة دي مفيهاش حاجة تستدعي زميل: جاوب بنفسك من الأدوات.')
+    return warnings
+
+
+def build(partner, conversation, message):
+    """Everything `prepare_turn` hands the model, in one call."""
+    deal = None
+    partner_id = getattr(partner, 'pk', None)
+    try:
+        from car_import.models import CarDeal
+        if partner_id:
+            deal = (CarDeal.all_objects.select_related('vehicle', 'import_stage')
+                    .filter(partner_id=partner_id).exclude(state='cancelled').order_by('-id').first())
+    except Exception:
+        deal = None
+
+    facts = []
+    if deal is not None:
+        facts.append('رقم الصفقة: %s' % (deal.name or '-'))
+        if deal.vehicle_id:
+            facts.append('العربية: %s' % deal.vehicle)
+        if deal.import_stage_id:
+            facts.append('المرحلة: %s' % (deal.import_stage.name or deal.import_stage.name_en))
+        if deal.eta:
+            facts.append('الوصول المتوقع: %s' % deal.eta)
+        if deal.arrival_port:
+            facts.append('الميناء: %s' % deal.arrival_port)
+        facts.append('حالة الدفع المسجّلة: %s' % deal.get_payment_state_display())
+
+    warnings = turn_warnings(message, deal)
+    return {
+        'deal_reference': deal.name if deal is not None else '',
+        'channel_label': channel_label(conversation),
+        'partner_facts': partner_facts(partner),
+        'recent_messages': recent_messages(conversation, partner),
+        'deal_facts': '\n'.join(facts) if facts else 'مفيش صفقة مفتوحة للعميل ده.',
+        'sales_facts': sales_facts(partner, deal),
+        'warnings': '\n'.join('- ' + w for w in warnings),
+    }

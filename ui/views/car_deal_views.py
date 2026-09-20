@@ -114,6 +114,12 @@ _SMART_ACTIONS = [
     {"string": _("Quotations"), "icon": "Calculator", "model": "car_import.quote",
      "menu_item_key": "car_import_menu_quotes", "relation_field": "deal", "color": "primary",
      "context": {"default_fields": {"deal": "active_id"}}},
+    {"string": _("Payments to confirm"), "icon": "BadgeCheck", "model": "car_import.paymentreceipt",
+     "menu_item_key": "car_import_menu_receipts", "relation_field": "deal", "color": "warning",
+     "domain": {"filters": {"operator": "and", "filters": [
+         {"field": "state", "operator": "eq", "value": "pending"}]}}},
+    {"string": _("Proforma invoices"), "icon": "Receipt", "model": "car_import.proformainvoice",
+     "menu_item_key": "car_import_menu_proformas", "relation_field": "deal"},
     {"string": _("Contracts"), "icon": "FileText", "model": "car_import.contract",
      "menu_item_key": "car_import_menu_contracts", "relation_field": "deal",
      "context": {"default_fields": {"deal": "active_id"}}},

@@ -92,6 +92,8 @@ car_quote_list_view = {
                  "string": _("Customer"), "width": "190"},
                 {"name": "vehicle", "widget": "relation", "displayField": "name",
                  "string": _("Car"), "width": "200"},
+                {"name": "car_label", "widget": "text", "string": _("Car (as quoted)"), "width": "200"},
+                {"name": "issued_by_ai", "widget": "checkbox", "string": _("By the assistant"), "width": "130"},
                 # `number`, not `money`: the money widget renders a dollar sign
                 # regardless of the figure's actual currency, and a euro price
                 # shown as $64,500.00 is a price the customer will argue about.
@@ -153,6 +155,12 @@ car_quote_form_view = {
                             {"name": "vehicle", "string": _("Car"), "widget": "relation",
                              "displayField": "name", "multiSelect": False,
                              "help": _("Optional on a multi-car offer — the chosen candidate's car is copied here")},
+                            {"name": "car_label", "string": _("Car (as quoted)"), "widget": "text",
+                             "help": _("The car in words — what the offer prints when no car record exists yet, which is every quotation the assistant makes from an advert")},
+                            {"name": "listing", "string": _("Advert it was priced from"), "widget": "relation",
+                             "displayField": "ad_id", "multiSelect": False},
+                            {"name": "issued_by_ai", "string": _("Made by the assistant"), "widget": "switch",
+                             "readonly": True},
                             {"name": "assigned_to", "string": _("Sales agent"), "widget": "relation",
                              "displayField": "name", "multiSelect": False,
                              "help": _("Defaults to whoever writes it. An agent only sees their own quotations")},

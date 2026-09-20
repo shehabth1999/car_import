@@ -91,6 +91,22 @@ MODEL_PERMISSIONS = [
     # ── contracts ───────────────────────────────────────────────────────────
     # An agent fills and generates one; nobody deletes one, because a generated
     # contract is evidence of what was agreed.
+    # ── the money a person confirms ─────────────────────────────────────────
+    # An agent SEES their customer's receipt and cannot change it: confirming
+    # your own customer's payment is the control this whole flow keeps.
+    {'model': 'car_import.paymentreceipt', 'group': 'car_import.accountant', 'permissions': MANAGE},
+    {'model': 'car_import.paymentreceipt', 'group': 'car_import.sales_agent', 'permissions': VIEW_ONLY},
+    {'model': 'car_import.paymentreceipt', 'group': 'car_import.sales_manager', 'permissions': VIEW_ONLY},
+    {'model': 'car_import.paymentreceipt', 'group': 'car_import.management', 'permissions': FULL},
+    {'model': 'car_import.proformainvoice', 'group': 'car_import.accountant', 'permissions': MANAGE},
+    {'model': 'car_import.proformainvoice', 'group': 'car_import.sales_agent', 'permissions': VIEW_ONLY},
+    {'model': 'car_import.proformainvoice', 'group': 'car_import.sales_manager', 'permissions': MANAGE},
+    {'model': 'car_import.proformainvoice', 'group': 'car_import.management', 'permissions': FULL},
+    # What the accountant has to be able to open from a receipt.
+    {'model': 'car_import.cardeal', 'group': 'car_import.accountant', 'permissions': VIEW_ONLY},
+    {'model': 'car_import.quote', 'group': 'car_import.accountant', 'permissions': VIEW_ONLY},
+    {'model': 'car_import.contract', 'group': 'car_import.accountant', 'permissions': VIEW_ONLY},
+
     {'model': 'car_import.contract', 'group': 'car_import.sales_agent', 'permissions': MANAGE},
     {'model': 'car_import.contract', 'group': 'car_import.sales_manager', 'permissions': MANAGE},
     {'model': 'car_import.contract', 'group': 'car_import.operations', 'permissions': MANAGE},

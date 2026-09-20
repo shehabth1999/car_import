@@ -152,6 +152,9 @@ FEE_DISCLOSURE_KEY = 'car_import.ai_may_quote_published_fees'
 
 
 def _may_quote_published_fees() -> bool:
+    from car_import.services import policy
+    if policy.ai_first():
+        return True          # the assistant sells; published fees are the least of it
     try:
         from modules.base.models import ConfigParameter
         row = ConfigParameter.objects.filter(key=FEE_DISCLOSURE_KEY).values('value').first()

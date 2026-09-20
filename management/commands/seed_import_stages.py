@@ -167,6 +167,14 @@ class Command(BaseCommand):
                 'implementation': 'standard',
             },
         )
+        for code, label, prefix in (('car_import.proforma', 'Proforma invoice', 'PI/%(year)s/'),
+                                    ('car_import.receipt', 'Payment receipt', 'RC/%(year)s/')):
+            _row, made = Sequence.objects.get_or_create(
+                code=code,
+                defaults={'name': label, 'prefix': prefix, 'padding': 4, 'number_next': 1,
+                          'number_increment': 1, 'implementation': 'standard'})
+            self.stdout.write(f"car_import: {label.lower()} sequence "
+                              f"{'created' if made else 'already present'}.")
         mandate_seq, mandate_created = Sequence.objects.get_or_create(
             code='car_import.consignment',
             defaults={

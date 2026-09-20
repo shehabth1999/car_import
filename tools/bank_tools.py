@@ -69,9 +69,14 @@ def ka_share_bank_details(context, reason: str) -> Dict[str, Any]:
                     "say_to_customer_ar": "بيانات الحساب زميلي هو اللي هيبعتها لحضرتك — ثانية واحدة وهوصّلك بيه."}
 
         try:
-            require('bank_details', None, deal=deal, partner=partner,
-                    reason=reason or 'سؤال عن بيانات الحساب',
-                    user=getattr(context, 'user', None))
+            from car_import.services import policy
+            # The client's decision of 2026-09-20: the assistant sends the
+            # accountant's approved template itself. The text is still the
+            # accountant's, verbatim — what went away is the per-customer ask.
+            if not policy.ai_first():
+                require('bank_details', None, deal=deal, partner=partner,
+                        reason=reason or 'سؤال عن بيانات الحساب',
+                        user=getattr(context, 'user', None))
         except ValidationError as exc:
             # Asked, not answered yet. The request is in the queue with the
             # customer's name on it; the assistant says a person will send it.

@@ -18,7 +18,8 @@ carries its own gate.
 from django.utils.translation import gettext as _
 
 _EVERYONE = ["car_import.sales_agent", "car_import.sales_manager", "car_import.operations",
-             "car_import.germany_team", "car_import.showroom", "car_import.management"]
+             "car_import.germany_team", "car_import.showroom", "car_import.management",
+             "car_import.accountant"]
 
 menu_dict = {
     "car_import_main_menu": {
@@ -36,7 +37,7 @@ menu_dict = {
                 "sequence": 10,
                 "allowed_groups": ["car_import.sales_agent", "car_import.sales_manager",
                                    "car_import.operations", "car_import.showroom",
-                                   "car_import.management"],
+                                   "car_import.management", "car_import.accountant"],
                 "children": {
                     "car_import_menu_deals": {
                         "name": _("Deals"),
@@ -68,6 +69,28 @@ menu_dict = {
                         "sequence": 15,
                         "allowed_groups": ["car_import.sales_agent", "car_import.sales_manager",
                                            "car_import.management"],
+                    },
+                    # The accountant's queue. It opens on what is waiting, because
+                    # that is the only reason anyone opens it.
+                    "car_import_menu_receipts": {
+                        "name": _("Payments to confirm"),
+                        "icon": "BadgeCheck",
+                        "module": "car_import",
+                        "model": "car_import.paymentreceipt",
+                        "view_types": "list,form",
+                        "sequence": 16,
+                        "allowed_groups": ["car_import.accountant", "car_import.sales_agent",
+                                           "car_import.sales_manager", "car_import.management"],
+                    },
+                    "car_import_menu_proformas": {
+                        "name": _("Proforma invoices"),
+                        "icon": "Receipt",
+                        "module": "car_import",
+                        "model": "car_import.proformainvoice",
+                        "view_types": "list,form",
+                        "sequence": 17,
+                        "allowed_groups": ["car_import.accountant", "car_import.sales_agent",
+                                           "car_import.sales_manager", "car_import.management"],
                     },
                     "car_import_menu_contracts": {
                         "name": _("Contracts"),

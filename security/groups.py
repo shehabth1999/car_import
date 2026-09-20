@@ -41,11 +41,19 @@ GROUPS = [
         'description': 'Showroom cars, deliveries and appointments',
     },
     {
+        'name': 'Car Import / Accountant',
+        'technical_name': 'car_import.accountant',
+        'category': 'Car Import',
+        'description': 'Confirms that money arrived — the one step of a sale a person does. '
+                       'Payment receipts, proforma invoices, and the deals and quotations they belong to',
+    },
+    {
         'name': 'Car Import / Management',
         'technical_name': 'car_import.management',
         'category': 'Car Import',
         'implied_groups': ['car_import.sales_manager', 'car_import.operations',
-                           'car_import.germany_team', 'car_import.showroom'],
+                           'car_import.germany_team', 'car_import.showroom',
+                           'car_import.accountant'],
         'description': 'Everything, including configuration and the stage messages',
     },
 ]

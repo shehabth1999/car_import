@@ -35,3 +35,13 @@ __all__ = [
 ]
 from .bank_tools import ka_share_bank_details  # noqa: F401
 from .document_tools import ka_file_customer_document  # noqa: F401
+from .sales_tools import (  # noqa: F401
+    ka_search_showroom_cars,
+    ka_send_car_photos,
+    ka_price_car,
+    ka_send_quotation,
+    ka_issue_proforma_invoice,
+    ka_record_payment_receipt,
+    ka_save_contract_details,
+    ka_request_discount,
+)

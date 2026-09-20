@@ -80,6 +80,14 @@ class Quote(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
                                     verbose_name=_("Sales agent"))
     quote_date = models.DateField(default=timezone.localdate, verbose_name=_("Date"))
     valid_until = models.DateField(null=True, blank=True, verbose_name=_("Valid until"))
+    #: The car in words, for a quotation made before any Vehicle row exists —
+    #: which is every quotation the assistant makes from an advert.
+    car_label = models.CharField(max_length=190, blank=True, verbose_name=_("Car (as quoted)"))
+    listing = models.ForeignKey('car_import.SupplierListing', null=True, blank=True,
+                                on_delete=models.SET_NULL, related_name='quotes',
+                                verbose_name=_("Advert it was priced from"))
+    issued_by_ai = models.BooleanField(default=False, verbose_name=_("Made by the assistant"),
+                                       editable=False)
 
     # ── what the salesman types ─────────────────────────────────────────────
     gross_price_eur = models.DecimalField(

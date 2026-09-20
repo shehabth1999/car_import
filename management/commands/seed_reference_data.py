@@ -300,6 +300,27 @@ class Command(BaseCommand):
                     key=key, defaults={'value': value, 'description': note})
             counts['quiet hours'] = '09:00 – 21:00 (client, 2026-09-16)'
 
+            # The selling policy (services/policy.py). `get_or_create`, not
+            # update: once management has flipped one of these, a re-seed must
+            # not flip it back.
+            for key, value, note in (
+                ('car_import.ai_handles_sales', '1',
+                 'المساعد هو اللي بيبيع (قرار العميل 2026-09-20): بيسعّر، يبعت عرض السعر والفاتورة المبدئية '
+                 'وبيانات التحويل، ويسجّل صورة التحويل. المحاسب بيأكد وصول الفلوس بزرار واحد والعقد بيتبعت '
+                 'لوحده. 0 = يرجع النظام القديم: أي كلام فلوس يتحوّل لموظف.'),
+                ('car_import.ai_may_quote_simulated_cars', '0',
+                 'للتجربة بس: 1 يسمح للمساعد يسعّر العربيات الوهمية بتاعة المحاكي لحد ما بيانات mobile.de '
+                 'توصل. على النظام الحقيقي لازم تفضل 0 — عربية وهمية عمرها ما تتعرض على عميل.'),
+                ('car_import.bank_details_text', '',
+                 'بيانات التحويل البنكي زي ما المحاسب كاتبها بالظبط (اسم البنك، اسم الحساب، IBAN، SWIFT). '
+                 'المساعد بيبعتها مع الفاتورة المبدئية حرفياً. فاضية = المساعد يقول للعميل إن الحسابات هتبعتها.'),
+            ):
+                row, made = ConfigParameter.objects.get_or_create(
+                    key=key, defaults={'value': value, 'description': note})
+                if not made and row.description != note:
+                    row.description = note
+                    row.save(update_fields=['description'])
+
             from car_import.models import ApprovalPolicy
             for subject, name, threshold, currency in APPROVALS:
                 ApprovalPolicy.objects.update_or_create(

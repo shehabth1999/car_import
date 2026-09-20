@@ -18,11 +18,12 @@ logger = logging.getLogger(__name__)
     name="ka_search_vehicle_listings",
     display_name="Search cars for sale",
     description=(
-        "Use this tool to find cars matching what the customer asked for — make, model, year, "
-        "budget, mileage. Before calling it you MUST have at least a make, or a make and model. "
-        "Returns the cars found with their year, mileage, colour, gearbox and advert reference. "
-        "It does NOT return the purchase price, and you must never state or estimate a price from "
-        "it: a colleague prices the car. Do NOT offer a car marked simulated to a customer."
+        "Use this tool to find cars to import matching what the customer asked for — make, model, "
+        "year, mileage. Before calling it you MUST have at least a make, or a make and model. "
+        "Returns the cars found with their year, mileage, colour, gearbox, the advert price in Germany "
+        "and a `reference`. The advert price is NOT what the customer pays: to tell them the cost, "
+        "call ka_price_car with the reference. Follow the `price_policy` in the result. Do NOT offer "
+        "a car whose `quotable` is false."
     ),
     category="car_import",
     parameters_schema={
@@ -48,8 +49,24 @@ def ka_search_vehicle_listings(context, make: Optional[str] = None, model: Optio
             make=make, model=model, year_min=year_min, mileage_max=max_mileage,
             vatable=True, page_size=max(1, min(int(limit or 5), 20)))
 
+        from car_import.services import policy
+        ai_first = policy.ai_first()
+        # Stored, so the reference the model hands back to the price tool
+        # resolves to a row with a price on it — not to a number it remembered.
+        try:
+            mobile_de.import_listings(listings)
+        except Exception:
+            logger.exception("car_import: could not store the searched adverts")
+
+        def _quotable(row):
+            return not row.get('is_simulated', False) or policy.may_quote_simulated_cars()
+
         cars = [{
             'reference': row.get('ad_id'),
+            'advert_price_with_vat': (f"{row.get('price_gross_eur'):,.0f} €"
+                                      if ai_first and row.get('price_gross_eur') else None),
+            'photos_available': len([i for i in (row.get('images') or []) if i]),
+            'quotable': _quotable(row),
             'make': row.get('make'),
             'model': row.get('model'),
             'version': row.get('version'),
@@ -68,7 +85,10 @@ def ka_search_vehicle_listings(context, make: Optional[str] = None, model: Optio
                 "count": len(cars),
                 "cars": cars,
                 "simulated": meta['simulated'],
-                "price_policy": "Never state or estimate a price from this tool. A colleague prices the car.",
+                "price_policy": ("The advert price is the German price with VAT, not the customer's cost. "
+                                 "Use ka_price_car with the reference for what they will pay."
+                                 if ai_first else
+                                 "Never state or estimate a price from this tool. A colleague prices the car."),
             },
         }
     except Exception as e:

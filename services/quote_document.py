@@ -112,10 +112,17 @@ def _options_html(quote):
             f'{body}</table>{chosen_note}')
 
 
+def car_label(quote):
+    """The car in words: the Vehicle when there is one, else what was quoted."""
+    if quote.vehicle_id:
+        return str(quote.vehicle)
+    return getattr(quote, 'car_label', '') or ''
+
+
 def as_text(quote):
     """The offer as a WhatsApp message, in Arabic."""
     customer = getattr(quote.partner, 'name', '') or ''
-    car = str(quote.vehicle) if quote.vehicle_id else ''
+    car = car_label(quote)
 
     out = ['عرض سعر سيارة']
     if customer:
@@ -207,7 +214,7 @@ def as_html(quote):
 
     notes = ''.join(f'<li>{_escape(note)}</li>' for note in _notes(quote))
     customer = _escape(getattr(quote.partner, 'name', '') or '—')
-    car = _escape(str(quote.vehicle) if quote.vehicle_id else '—')
+    car = _escape(car_label(quote) or '—')
 
     return f"""<!doctype html>
 <html lang="ar" dir="rtl"><head><meta charset="utf-8">

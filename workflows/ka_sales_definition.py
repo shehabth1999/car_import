@@ -72,6 +72,15 @@ TOOL_NAMES = [
     'ka_escalate_conversation_to_staff',
     'ka_share_bank_details',
     'ka_file_customer_document',
+    # The sale itself — the client's decision of 2026-09-20 (services/policy.py).
+    'ka_search_showroom_cars',
+    'ka_send_car_photos',
+    'ka_price_car',
+    'ka_send_quotation',
+    'ka_issue_proforma_invoice',
+    'ka_record_payment_receipt',
+    'ka_save_contract_details',
+    'ka_request_discount',
 ]
 
 #: The approved-answers collection `build_ka_knowledge` indexes. Resolved by
@@ -86,137 +95,35 @@ ERROR_MESSAGE = "بعتذر لحضرتك، هحوّل حضرتك لزميلي ي
 # --------------------------------------------------------------------------- #
 PREPARE_TURN_CODE = '''
 def execute(input_data):
-    """Facts and warnings for this turn. The model never looks anything up itself."""
-    from django.utils import timezone
+    """Facts and warnings for this turn. The model never looks anything up itself.
 
-    # `partner` and `conversation` are INJECTED GLOBALS in a function node's
-    # sandbox (node_executor.py:_create_execution_context) — they are not in
-    # input_data. Reading them from input_data is why every turn used to report
-    # "no open deal" and no warnings, for every customer alike.
+    Everything is built in the package (car_import/services/turn_context.py):
+    this box caps near 10,000 characters, and a function in git is reviewable.
+    `partner` and `conversation` are INJECTED GLOBALS in a function node's
+    sandbox (node_executor.py:_create_execution_context), not input_data keys.
+    """
+    from django.utils import timezone
+    from car_import.services import turn_context
+
     try:
-        who = partner            # injected global, not an argument
+        who = partner
     except NameError:
         who = None
-    ctx = input_data.get('context') or {}
-    partner_id = (getattr(who, 'pk', None)
-                  or ctx.get('partner_id')
-                  or input_data.get('partner_id'))
+    try:
+        convo = conversation
+    except NameError:
+        convo = None
 
     message = (input_data.get('partner_message') or input_data.get('message') or '')
     if isinstance(message, dict):
         message = message.get('text') or ''
     message = str(message)
 
-    facts_lines, warnings, deal = [], [], None
-
-    # Which channel this is — the voice adapts to it (shorter on social, the
-    # one-line "who we are" opener there). `conversation` is an injected global.
-    try:
-        convo = conversation
-    except NameError:
-        convo = None
-    # The customer, the lead, the channel and the last few messages, built in
-    # the package (services/turn_context.py) — the node's code box is capped
-    # near 10,000 characters, and a function in git is reviewable.
-    from car_import.services import turn_context
-    channel_label = turn_context.channel_label(convo)
-    partner_text = turn_context.partner_facts(who)
-    recent_text = turn_context.recent_messages(convo, who)
-
-    try:
-        CarDeal = models['car_import']['CarDeal']
-        if partner_id:
-            deal = (CarDeal.all_objects
-                    .select_related('vehicle', 'import_stage')
-                    .filter(partner_id=partner_id)
-                    .exclude(state='cancelled')
-                    .order_by('-id')
-                    .first())
-    except Exception:
-        deal = None
-
-    if deal is not None:
-        facts_lines.append('رقم الصفقة: %s' % (deal.name or '-'))
-        if deal.vehicle_id:
-            facts_lines.append('العربية: %s' % deal.vehicle)
-        if deal.import_stage_id:
-            facts_lines.append('المرحلة: %s' % (deal.import_stage.name or deal.import_stage.name_en))
-        if deal.eta:
-            facts_lines.append('الوصول المتوقع: %s' % deal.eta)
-        if deal.arrival_port:
-            facts_lines.append('الميناء: %s' % deal.arrival_port)
-        facts_lines.append('حالة الدفع المسجّلة: %s' % deal.payment_state)
-        if deal.program == 'initiative' and deal.customer_is_initiative_holder:
-            warnings.append('العميل صاحب المبادرة: التقسيط مش متاح ليه.')
-
-    text = message.lower()
-
-    # The unpaid-deal warning used to be raised on EVERY turn, and its own text
-    # ended with "فحوّل لزميل". The model read that as standing orders: after a
-    # colleague handed a conversation back, a plain "العربية في الميناء يعني؟"
-    # was escalated too, and the thread died. It is raised now only when the
-    # customer actually asks about the thing it is about.
-    clearance_markers = ['جمارك', 'جمركي', 'تخليص', 'إفراج', 'افراج', 'سداد', 'المتبقي', 'الباقي']
-    if deal is not None and deal.payment_state != 'fully_paid'             and any(marker in text for marker in clearance_markers):
-        warnings.append('الصفقة مش معلّمة مدفوعة بالكامل والعميل بيسأل عن التخليص: التخليص '
-                        'مبيبدأش قبل سداد المتبقي، وفي التقسيط القاعدة مختلفة — حوّل لزميل.')
-    money_markers = ['رقم الحساب', 'رقم حساب', 'iban', 'لينك الدفع', 'لينك دفع', 'حولت', 'حوّلت',
-                     'استرداد', 'ارجاع فلوس', 'خصم']
-    if any(marker in text for marker in money_markers):
-        warnings.append('الرسالة فيها طلب يخص الفلوس: استخدم أداة التحويل لزميل فوراً، '
-                        'ومتبعتش أي بيانات بنكية ومتأكدش وصول أي تحويل.')
-
-    if 'كوريا' in text or 'korea' in text:
-        warnings.append('العميل ذكر كوريا: الشركة أوروبا بس، وفرع كوريا لسه غير مؤكد — حوّل لزميل.')
-
-    # Fees and instalment TERMS are published numbers the owner confirmed on
-    # 2026-09-14; an instalment AMOUNT, an account number or a transfer never
-    # are. Whether the agent may state the published ones is the client's call,
-    # still open on 2026-09-15, so it is a switch and not a prompt rewrite:
-    # set the config parameter to 1 when the owner says yes.
-    may_quote = False
-    try:
-        ConfigParameter = models['base']['ConfigParameter']
-        row = (ConfigParameter.objects
-               .filter(key='car_import.ai_may_quote_published_fees')
-               .values('value').first())
-        may_quote = bool(row) and str(row['value']).strip().lower() in ('1', 'true', 'yes', 'on')
-    except Exception:
-        may_quote = False
-
-    asks_instalments = any(word in text for word in ['قسط', 'تقسيط', 'اقساط'])
-    asks_fees = any(word in text for word in ['مصاريف', 'رسوم', 'الترخيص', 'عمولة', 'تكلفة', 'بكام'])
-
-    if asks_instalments or asks_fees:
-        if may_quote:
-            warnings.append('سؤال عن أرقام منشورة: قول اللي رجع من الأداة بالظبط ومتزوّدش عليه. '
-                            'قيمة قسط معيّنة أو أي حساب أو تحويل → حوّل لزميل.')
-        else:
-            warnings.append('سؤال عن فلوس والإدارة لسه مقالتش إن المساعد يقول الأرقام: '
-                            'حوّل لزميل من غير ما تقول أي رقم.')
-
-    # Nothing in this message asks for money, a car from Korea, or anything the
-    # rules hand to a human — so say so. Without this the agent reads a
-    # money-heavy HISTORY (a colleague discussing customs, say) and escalates
-    # the next harmless "وصلت فين؟" straight back, which is how a thread dies
-    # after a hand-over: nothing un-escalates a conversation by itself.
-    if not any('حوّل لزميل' in w or 'التحويل لزميل' in w for w in warnings):
-        warnings.append('الرسالة دي مفيهاش أي طلب فلوس ولا حاجة تستدعي زميل: جاوب بنفسك '
-                        'من الأدوات، ومتستخدمش أداة التحويل لزميل.')
-
     now = timezone.localtime()
-    in_hours = now.weekday() <= 4 and 9 <= now.hour < 19
-
-    return {
-        'needs_ai': bool(message.strip()),
-        'in_hours': in_hours,
-        'deal_reference': (deal.name if deal is not None else ''),
-        'channel_label': channel_label,
-        'partner_facts': partner_text,
-        'recent_messages': recent_text,
-        'deal_facts': ('\\n'.join(facts_lines) if facts_lines else 'مفيش صفقة مفتوحة للعميل ده.'),
-        'warnings': ('\\n'.join('- ' + w for w in warnings) if warnings else 'مفيش تحذيرات.'),
-    }
+    result = turn_context.build(who, convo, message)
+    result['needs_ai'] = bool(message.strip())
+    result['in_hours'] = now.weekday() <= 4 and 9 <= now.hour < 19
+    return result
 '''.strip()
 
 
@@ -259,6 +166,9 @@ def dynamic_message_text():
         "# الصفقة الحالية\n"
         "{{ prepare_turn.deal_facts }}\n"
         "\n"
+        "# حالة البيع (عرض السعر / الفاتورة المبدئية / التحويلات / العقد)\n"
+        "{{ prepare_turn.sales_facts }}\n"
+        "\n"
         "{% if conversation and conversation.summary %}"
         "# ملخص المحادثة لحد دلوقتي\n"
         "{{ conversation.summary }}\n"
@@ -289,7 +199,8 @@ def workflow_payload():
     return {
         'name': WORKFLOW_NAME,
         'description': ("Customer conversations for Khaled Automobile / K&T. Python prepares the facts, "
-                        "the agent reads meaning, and every money question goes to a human."),
+                        "the agent runs the sale — price, quotation, proforma invoice, transfer screenshot — "
+                        "and a person only confirms that money arrived."),
         'category': 'sales',
         'version': 1,
         'workflow_type': 'partner_flow',
