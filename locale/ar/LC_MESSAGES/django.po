@@ -82,6 +82,10 @@ msgstr "في شرط مانع الانتقال للمرحلة اللي بعدها
 msgid "A group's technical name, e.g. car_import.management"
 msgstr "الاسم التقني للمجموعة، مثال: car_import.management"
 
+msgctxt "ui/views/quote_views.py"
+msgid "A minus: it comes off the port fee. The port fee line itself does not change"
+msgstr "بالسالب: بيتخصم من مصاريف الميناء. سطر مصاريف الميناء نفسه ما بيتغيّرش"
+
 msgid "A payment cannot be negative."
 msgstr "المبلغ المدفوع لا يمكن أن يكون بالسالب."
 
@@ -1893,6 +1897,10 @@ msgstr "المستندات"
 
 msgid "Documents complete"
 msgstr "المستندات مكتملة"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Door delivery is included in the port fee. A customer who collects from the showroom gets the amount on the arrival tab taken OFF what is due on arrival"
+msgstr "التوصيل لحد البيت داخل في مصاريف الميناء. العميل اللي هيستلم من المعرض بيتخصمله المبلغ اللي في تبويب الوصول من المستحق عند الوصول"
 
 msgctxt "ui/views/quote_views.py"
 msgid "Door delivery is included; collection at the showroom carries the EGP fee shown on the arrival tab"
@@ -4701,6 +4709,10 @@ msgstr "الاستلام من المعرض (ج.م)"
 msgctxt "ui/views/quote_views.py"
 msgid "Showroom collection (EGP)"
 msgstr "الاستلام من المعرض (ج.م)"
+
+msgctxt "ui/views/quote_views.py"
+msgid "Showroom collection discount (EGP)"
+msgstr "خصم الاستلام من المعرض (جنيه)"
 
 msgid "Signed"
 msgstr "موقّع"
