@@ -44,6 +44,16 @@ SCHEDULES = [
         'task': 'car_import.tasks.judge_recent_replies',
         'every': 1, 'period': 'days',
     },
+    {
+        'name': 'car_import: website lists and new website cars',
+        'task': 'car_import.tasks.website_nightly',
+        'every': 1, 'period': 'days',
+    },
+    {
+        'name': 'car_import: purge the website API log',
+        'task': 'car_import.tasks.purge_website_logs',
+        'every': 1, 'period': 'days',
+    },
 ]
 
 

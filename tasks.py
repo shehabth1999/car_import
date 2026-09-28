@@ -108,6 +108,51 @@ def rebuild_ka_knowledge():
         logger.exception('car_import: the knowledge base could not be rebuilt')
 
 
+@shared_task(bind=True, max_retries=3, default_retry_delay=120)
+def push_website_car(self, car_id):
+    """Send one website car (fields, then new photos) to the company website."""
+    from car_import.models import WebsiteCar
+    from car_import.services import website_api
+    car = WebsiteCar.objects.filter(pk=car_id).first()
+    if car is None:
+        return {'ok': False, 'error': 'gone'}
+    outcome = website_api.push_car(car)
+    # Network trouble and rate limits are worth another try; a refusal (422) is not.
+    error = str(outcome.get('error') or '')
+    if not outcome.get('ok') and ('could not be reached' in error or 'HTTP 429' in error or 'HTTP 5' in error):
+        raise self.retry()
+    return outcome
+
+
+@shared_task
+def website_mark_sold(car_id):
+    from car_import.models import WebsiteCar
+    from car_import.services import website_api
+    car = WebsiteCar.objects.filter(pk=car_id).first()
+    return website_api.mark_sold(car) if car else {'ok': False, 'error': 'gone'}
+
+
+@shared_task
+def website_nightly():
+    """Refresh the website's lists, and bring in cars created in the website dashboard."""
+    from car_import.models import WebsiteConnection
+    from car_import.services import website_api
+    connection = WebsiteConnection.get()
+    if not (connection.api_email and connection.api_password):
+        return {'skipped': 'no website login'}
+    client = website_api.WebsiteClient(connection)
+    result = {'lists': website_api.sync_lookups(client)}
+    if connection.import_new_cars_nightly:
+        result['cars'] = website_api.import_cars(mode='new', client=client)
+    return result
+
+
+@shared_task
+def purge_website_logs():
+    from car_import.models import WebsiteApiLog
+    return {'deleted': WebsiteApiLog.purge(days=90)}
+
+
 @shared_task
 def chase_abandoned_escalations():
     """Find customers the assistant handed over and nobody answered.

@@ -91,6 +91,24 @@ MODEL_PERMISSIONS = [
     # ── contracts ───────────────────────────────────────────────────────────
     # An agent fills and generates one; nobody deletes one, because a generated
     # contract is evidence of what was agreed.
+    # ── the company website ─────────────────────────────────────────────────
+    # The connection holds the website password: management only.
+    {'model': 'car_import.websiteconnection', 'group': 'car_import.management', 'permissions': MANAGE},
+    {'model': 'car_import.websitecar', 'group': 'car_import.management', 'permissions': FULL},
+    {'model': 'car_import.websitecar', 'group': 'car_import.sales_manager', 'permissions': MANAGE},
+    {'model': 'car_import.websitecar', 'group': 'car_import.showroom', 'permissions': MANAGE},
+    {'model': 'car_import.websitecar', 'group': 'car_import.germany_team', 'permissions': MANAGE},
+    {'model': 'car_import.websitecar', 'group': 'car_import.sales_agent', 'permissions': VIEW_ONLY},
+    {'model': 'car_import.websitelookup', 'group': 'car_import.management', 'permissions': MANAGE},
+    {'model': 'car_import.websitelookup', 'group': 'car_import.sales_manager', 'permissions': MANAGE},
+    {'model': 'car_import.websitelookup', 'group': 'car_import.showroom', 'permissions': VIEW_ONLY},
+    {'model': 'car_import.websitelookup', 'group': 'car_import.germany_team', 'permissions': VIEW_ONLY},
+    {'model': 'car_import.websitelookup', 'group': 'car_import.sales_agent', 'permissions': VIEW_ONLY},
+    {'model': 'car_import.websitesubmission', 'group': 'car_import.management', 'permissions': FULL},
+    {'model': 'car_import.websitesubmission', 'group': 'car_import.sales_manager', 'permissions': VIEW_ONLY},
+    {'model': 'car_import.websitesubmission', 'group': 'car_import.sales_agent', 'permissions': VIEW_ONLY},
+    {'model': 'car_import.websiteapilog', 'group': 'car_import.management', 'permissions': VIEW_ONLY},
+
     # ── the money a person confirms ─────────────────────────────────────────
     # An agent SEES their customer's receipt and cannot change it: confirming
     # your own customer's payment is the control this whole flow keeps.

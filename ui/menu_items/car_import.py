@@ -92,6 +92,16 @@ menu_dict = {
                         "allowed_groups": ["car_import.accountant", "car_import.sales_agent",
                                            "car_import.sales_manager", "car_import.management"],
                     },
+                    "car_import_menu_website_requests": {
+                        "name": _("Website requests"),
+                        "icon": "Globe",
+                        "module": "car_import",
+                        "model": "car_import.websitesubmission",
+                        "view_types": "list,form",
+                        "sequence": 18,
+                        "allowed_groups": ["car_import.sales_agent", "car_import.sales_manager",
+                                           "car_import.management"],
+                    },
                     "car_import_menu_contracts": {
                         "name": _("Contracts"),
                         "icon": "FileText",
@@ -157,6 +167,17 @@ menu_dict = {
                         # Not the sales agents: a listing carries the German purchase
                         # price, which is cost data they must not see.
                         "allowed_groups": ["car_import.sales_manager", "car_import.germany_team",
+                                           "car_import.management"],
+                    },
+                    "car_import_menu_website_cars": {
+                        "name": _("Website cars"),
+                        "icon": "Globe",
+                        "module": "car_import",
+                        "model": "car_import.websitecar",
+                        "view_types": "list,form",
+                        "sequence": 25,
+                        "allowed_groups": ["car_import.sales_agent", "car_import.sales_manager",
+                                           "car_import.showroom", "car_import.germany_team",
                                            "car_import.management"],
                     },
                     "car_import_menu_showroom": {
@@ -360,6 +381,33 @@ menu_dict = {
                         "view_types": "list",
                         "sequence": 80,
                         "allowed_groups": ["car_import.management", "car_import.sales_manager"],
+                    },
+                    "car_import_menu_website_connection": {
+                        "name": _("Website connection"),
+                        "icon": "Globe",
+                        "module": "car_import",
+                        "model": "car_import.websiteconnection",
+                        "view_types": "list,form",
+                        "sequence": 6,
+                        "allowed_groups": ["car_import.management"],
+                    },
+                    "car_import_menu_website_lookups": {
+                        "name": _("Website lists"),
+                        "icon": "ListChecks",
+                        "module": "car_import",
+                        "model": "car_import.websitelookup",
+                        "view_types": "list,form",
+                        "sequence": 7,
+                        "allowed_groups": ["car_import.management", "car_import.sales_manager"],
+                    },
+                    "car_import_menu_website_log": {
+                        "name": _("Website API log"),
+                        "icon": "ScrollText",
+                        "module": "car_import",
+                        "model": "car_import.websiteapilog",
+                        "view_types": "list,form",
+                        "sequence": 8,
+                        "allowed_groups": ["car_import.management"],
                     },
                     "car_import_menu_switches": {
                         "name": _("Operating switches"),

@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 from django.db import models
 
-from modules.base.decorators import onchange
 from django.utils.translation import gettext_lazy as _
 
+from modules.base.decorators import action, onchange
 from modules.base.fields import AttachmentForeignKeyField, AttachmentManyToManyField
 from modules.base.models.base import BaseModel
 
@@ -226,6 +226,15 @@ class Vehicle(BaseModel):
         gross = Decimal(str(self.price_gross_eur))
         net = (gross / Decimal('1.19')).quantize(Decimal('0.01')) if self.vatable else gross
         return {'value': {'price_net_eur': float(net)}}
+
+    @action
+    def action_publish_on_website(queryset):
+        """Prepare this car for the company website (a draft website car, prefilled)."""
+        from car_import.services import website_api
+        made = [website_api.car_from_vehicle(vehicle) for vehicle in queryset]
+        return {'status': True, 'open_mode': 'message', 'data': {}, 'on_success': {'type': 'refresh'},
+                'message': str(_("%(count)d website car(s) prepared. Finish them in Cars and listings → "
+                                 "Website cars, then send.") % {'count': len(made)})}
 
     def pre_save(self):
         super().pre_save()

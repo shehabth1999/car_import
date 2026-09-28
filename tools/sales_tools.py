@@ -149,6 +149,7 @@ def ka_search_showroom_cars(context, query: Optional[str] = None, limit: int = 5
         for word in str(query or '').split():
             rows = rows.filter(Q(title__icontains=word) | Q(vehicle__make__icontains=word)
                                | Q(vehicle__model__icontains=word) | Q(vehicle__trim__icontains=word))
+        cap = max(1, min(int(limit or 5), 15))
         cars = [{
             'reference': f'SR-{row.pk}',
             'title': row.title,
@@ -158,7 +159,26 @@ def ka_search_showroom_cars(context, query: Optional[str] = None, limit: int = 5
             'licensed': row.licensed,
             'location': row.location or 'معرض التجمع الخامس',
             'photos_available': len([p for p in (row.photos or []) if p]),
-        } for row in rows.order_by('-id')[:max(1, min(int(limit or 5), 15))]]
+        } for row in rows.order_by('-id')[:cap]]
+
+        # The company website's cars in Egypt ARE the showroom stock: shown to
+        # visitors, still available, priced in pounds.
+        from car_import.models import WebsiteCar
+        stock = (WebsiteCar.objects.filter(visible=True, location__website_id=1)
+                 .exclude(website_status__in=['sold', 'booked']).select_related('brand', 'model'))
+        for word in str(query or '').split():
+            stock = stock.filter(Q(title_en__icontains=word) | Q(title_ar__icontains=word)
+                                 | Q(brand__name_en__icontains=word) | Q(model__name_en__icontains=word))
+        for car in stock.order_by('-website_id')[:max(0, cap - len(cars))]:
+            cars.append({
+                'reference': f'WC-{car.pk}',
+                'title': car.title_ar or car.title_en,
+                'price': _fmt(car.price, 'ج.م') if car.price else None,
+                'year': car.year,
+                'mileage_km': car.distance,
+                'location': 'معرض التجمع الخامس',
+                'photos_available': int(bool(car.site_image_url)) + len(car.site_gallery_urls or []),
+            })
         return {"success": True, "data": {"count": len(cars), "cars": cars,
                                           "note": "A showroom price is in EGP and is final as listed; "
                                                   "the import calculator does not apply to these cars."}}
@@ -199,7 +219,13 @@ def ka_send_car_photos(context, reference: str, count: int = 3) -> Dict[str, Any
         if partner is None:
             return {"success": False, "error": "No customer in context", "error_type": "no_partner"}
         ref = str(reference or '').strip()
-        if ref.upper().startswith('SR-'):
+        if ref.upper().startswith('WC-'):
+            from car_import.models import WebsiteCar
+            row = WebsiteCar.objects.filter(pk=ref[3:] if ref[3:].isdigit() else 0).first()
+            photos = ([row.site_image_url] if row and row.site_image_url else []) + list(
+                (row.site_gallery_urls if row else None) or [])
+            label = (row.title_ar or row.title_en) if row else ''
+        elif ref.upper().startswith('SR-'):
             row = ShowroomListing.objects.filter(pk=ref[3:] if ref[3:].isdigit() else 0).first()
             photos, label = (row.photos if row else []), (row.title if row else '')
         else:

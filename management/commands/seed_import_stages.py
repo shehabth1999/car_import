@@ -124,7 +124,11 @@ class Command(BaseCommand):
                 'is_final': data.get('is_final', False),
                 'notify_customer': enable,
             }
-            _, was_created = ImportStage.objects.update_or_create(code=data['code'], defaults=defaults)
+            stage, was_created = ImportStage.objects.update_or_create(code=data['code'], defaults=defaults)
+            # The website's tracking page draws this icon. Set once; ops may change it after.
+            from car_import.models.import_stage import DEFAULT_ICONS
+            if not stage.icon_class and DEFAULT_ICONS.get(stage.code):
+                ImportStage.objects.filter(pk=stage.pk).update(icon_class=DEFAULT_ICONS[stage.code])
             created += was_created
             updated += (not was_created)
 

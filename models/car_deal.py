@@ -360,6 +360,12 @@ class CarDeal(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
     def post_save(self):
         """Log every stage move and let the notifier tell the customer."""
         super().post_save()
+        try:
+            from car_import.services import website_api
+            website_api.on_deal_saved(self)
+        except Exception:  # noqa: BLE001 — the website must never block a deal save
+            import logging
+            logging.getLogger(__name__).exception('car_import: website sold-sync failed for deal %s', self.pk)
         if not self._stage_did_change:
             return
 

@@ -40,6 +40,10 @@ vehicle_form_view = {
     "priority": 10,
     "module": "car_import",
     "body": {
+        "header": {"actions_list": [], "actions": [
+            {"name": "action_publish_on_website", "string": _("Publish on the website"), "icon": "Globe",
+             "type": "server", "as": "dropdown", "view_type": ["form", "list"]},
+        ]},
         "sheet": {
             "sections": [
                 {

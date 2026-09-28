@@ -2,7 +2,27 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+from modules.base.fields import AttachmentForeignKeyField
 from modules.base.models.base import BaseModel
+
+#: The icon each seeded stage shows on the website's tracking page — Font Awesome 6
+#: (solid) class names, because the website already loads Font Awesome 6.
+DEFAULT_ICONS = {
+    'contract_reserved': 'fa-solid fa-file-signature',
+    'signed_and_paid': 'fa-solid fa-money-bill-transfer',
+    'purchased': 'fa-solid fa-cart-shopping',
+    'received_inspected': 'fa-solid fa-clipboard-check',
+    'internal_transport': 'fa-solid fa-truck',
+    'at_berlin': 'fa-solid fa-warehouse',
+    'prep_for_shipping': 'fa-solid fa-box',
+    'awaiting_acid': 'fa-solid fa-hourglass-half',
+    'shipped_bl': 'fa-solid fa-ship',
+    'at_egypt_port': 'fa-solid fa-anchor',
+    'customs_release': 'fa-solid fa-stamp',
+    'out_of_port': 'fa-solid fa-truck-fast',
+    'delivered': 'fa-solid fa-key',
+    'licensing': 'fa-solid fa-id-card',
+}
 
 
 class ImportStage(BaseModel):
@@ -30,6 +50,18 @@ class ImportStage(BaseModel):
         default=False, verbose_name=_("Final stage"),
         help_text=_("Reaching it marks the deal done"),
     )
+
+    # ── the website's tracking page ─────────────────────────────────────────
+    show_on_tracking = models.BooleanField(
+        default=True, verbose_name=_("Show on the website tracking page"),
+        help_text=_("Off for internal stages the customer should not see as a step"))
+    icon_class = models.CharField(
+        max_length=64, blank=True, verbose_name=_("Icon (Font Awesome)"),
+        help_text=_("A Font Awesome 6 class the website draws, e.g. fa-solid fa-ship"))
+    icon = AttachmentForeignKeyField(
+        related_name='+', upload_to='car_import/stages/icons', allowed_types=['image'],
+        verbose_name=_("Icon image"),
+        help_text=_("Optional. When set, the website receives this image's link as well"))
 
     # ── the customer message ────────────────────────────────────────────────
     notify_customer = models.BooleanField(

@@ -302,6 +302,12 @@ class Command(BaseCommand):
                     key=key, defaults={'value': value, 'description': note})
             counts['quiet hours'] = '09:00 – 21:00 (client, 2026-09-16)'
 
+            # The website connection row, with a fresh inbound key. Credentials are typed on
+            # the screen by a person; nothing secret is seeded.
+            from car_import.models import WebsiteConnection
+            WebsiteConnection.get()
+            counts['website connection'] = 'ready'
+
             # The selling policy (services/policy.py). `get_or_create`, not
             # update: once management has flipped one of these, a re-seed must
             # not flip it back.
