@@ -37,6 +37,9 @@ msgstr "#"
 msgid "%(car)s is built in %(country)s"
 msgstr "%(car)s مصنّعة في %(country)s"
 
+msgid "%(count)d car(s) queued for the website."
+msgstr "%(count)d عربية في الطابور للإرسال للموقع."
+
 msgid "%(customer)s on %(programme)s"
 msgstr "%(customer)s على برنامج %(programme)s"
 
@@ -62,6 +65,9 @@ msgstr "17 حرف — ما يتقصّرش أبداً. ملف الجمارك وق
 msgid "17 characters, never shortened"
 msgstr "17 حرف، لا يُختصر أبداً"
 
+msgid "A Font Awesome 6 class the website draws, e.g. fa-solid fa-ship"
+msgstr "كلاس Font Awesome 6 الموقع بيرسمه، زي fa-solid fa-ship"
+
 msgctxt "ui/views/consignment_views.py"
 msgid "A buyer we introduced who signs within this many days after the mandate ends still owes commission"
 msgstr "مشتري إحنا اللي قدّمناه ووقّع خلال العدد ده من الأيام بعد انتهاء التوكيل لسه عليه عمولة"
@@ -86,6 +92,13 @@ msgctxt "ui/views/quote_views.py"
 msgid "A minus: it comes off the port fee. The port fee line itself does not change"
 msgstr "بالسالب: بيتخصم من مصاريف الميناء. سطر مصاريف الميناء نفسه ما بيتغيّرش"
 
+msgid "A new key was issued. Give it to the website developer; the old key no longer works."
+msgstr "اتعمل مفتاح جديد. ابعته لمطوّر الموقع؛ المفتاح القديم بطّل يشتغل."
+
+msgctxt "ui/views/website_views.py"
+msgid "A paid deal on this car marks it sold on the website by itself"
+msgstr "لما صفقة على العربية دي تتدفع، العربية بتتعلّم «اتباعت» على الموقع لوحدها"
+
 msgid "A payment cannot be negative."
 msgstr "المبلغ المدفوع لا يمكن أن يكون بالسالب."
 
@@ -94,6 +107,9 @@ msgstr "جدول سداد غير القياسي"
 
 msgid "A percentage of the net price"
 msgstr "نسبة من السعر الصافي"
+
+msgid "A price cannot be negative."
+msgstr "السعر ما ينفعش يبقى بالسالب."
 
 msgctxt "ui/views/vehicle_views.py"
 msgid "A private seller cannot issue a VAT invoice — nothing to reclaim"
@@ -122,9 +138,20 @@ msgctxt "ui/views/car_deal_views.py"
 msgid "AI on / off for this customer"
 msgstr "تشغيل/إيقاف المساعد لهذا العميل"
 
+msgctxt "ui/views/website_views.py"
+msgid "API URL"
+msgstr "رابط الـ API"
+
 msgctxt "ui/views/approval_views.py"
 msgid "Above"
 msgstr "أكثر من"
+
+msgid "Accept leads from the website"
+msgstr "استقبال الطلبات من الموقع"
+
+msgctxt "ui/views/website_views.py"
+msgid "Accept leads from the website"
+msgstr "استقبال الطلبات من الموقع"
 
 msgctxt "ui/views/payment_views.py"
 msgid "Accept — money received"
@@ -320,6 +347,13 @@ msgctxt "ui/views/dashboard_views.py"
 msgid "All time"
 msgstr "كل الفترات"
 
+msgid "Also matches"
+msgstr "بيطابق كمان"
+
+msgctxt "ui/views/website_views.py"
+msgid "Also matches"
+msgstr "بيطابق كمان"
+
 msgid "Amount"
 msgstr "المبلغ"
 
@@ -370,6 +404,13 @@ msgstr "ملحق 2 جاهز."
 msgctxt "ui/views/contract_views.py"
 msgid "Annex 2 — specification"
 msgstr "ملحق 2 — المواصفات"
+
+msgid "Answer tracking requests"
+msgstr "الرد على طلبات التتبع"
+
+msgctxt "ui/views/website_views.py"
+msgid "Answer tracking requests"
+msgstr "الرد على طلبات التتبع"
 
 msgctxt "ui/views/vehicle_views.py"
 msgid "Any 3 of the 6 options make the car كاملة — set this only to disagree"
@@ -566,6 +607,12 @@ msgctxt "ui/views/listing_views.py"
 msgid "Available"
 msgstr "متاح"
 
+msgid "Available for immediate delivery"
+msgstr "متاحة للتسليم الفوري"
+
+msgid "Available for import"
+msgstr "متاحة للاستيراد"
+
 msgid "B/L date"
 msgstr "تاريخ بوليصة الشحن"
 
@@ -673,6 +720,20 @@ msgctxt "ui/views/vehicle_views.py"
 msgid "Body and colours"
 msgstr "الهيكل والألوان"
 
+msgid "Body type"
+msgstr "شكل العربية"
+
+msgctxt "ui/views/website_views.py"
+msgid "Body type"
+msgstr "شكل العربية"
+
+msgctxt "ui/views/website_views.py"
+msgid "Body types"
+msgstr "أشكال العربيات"
+
+msgid "Booked"
+msgstr "محجوزة"
+
 msgid "Booking"
 msgstr "رقم الحجز"
 
@@ -688,8 +749,37 @@ msgctxt "ui/views/car_deal_views.py"
 msgid "Branch"
 msgstr "الفرع"
 
+msgid "Brand"
+msgstr "الماركة"
+
+msgctxt "ui/views/website_views.py"
+msgid "Brand"
+msgstr "الماركة"
+
+msgid "Brand id (models)"
+msgstr "رقم الماركة (للموديلات)"
+
+msgctxt "ui/views/website_views.py"
+msgid "Brand id (models)"
+msgstr "رقم الماركة (للموديلات)"
+
 msgid "Brand new"
 msgstr "زيرو"
+
+msgctxt "ui/views/website_views.py"
+msgid "Brands"
+msgstr "الماركات"
+
+msgctxt "ui/views/website_views.py"
+msgid "Bring every website car into Genie? Genie's copies are replaced by the website's."
+msgstr "تجيب كل عربيات الموقع لـ Genie؟ نسخ Genie هتتبدّل بنسخ الموقع."
+
+msgid "Bring in cars added on the website"
+msgstr "سحب العربيات اللي اتضافت على الموقع"
+
+msgctxt "ui/views/website_views.py"
+msgid "Bring in cars added on the website"
+msgstr "سحب العربيات اللي اتضافت على الموقع"
 
 msgid "Broker"
 msgstr "الوسيط"
@@ -913,6 +1003,13 @@ msgstr "صفقات العربيات"
 msgid "Car Import"
 msgstr "استيراد العربيات"
 
+msgid "Car asked about"
+msgstr "العربية المطلوبة"
+
+msgctxt "ui/views/website_views.py"
+msgid "Car asked about"
+msgstr "العربية المطلوبة"
+
 msgid "Car card"
 msgstr "بطاقة العربية"
 
@@ -942,6 +1039,20 @@ msgstr "لوحة استيراد العربيات"
 msgctxt "ui/views/crm_dashboard_patch.py"
 msgid "Car import — the funnel"
 msgstr "استيراد السيارات — القمع البيعي"
+
+msgid "Car in Genie"
+msgstr "العربية في Genie"
+
+msgctxt "ui/views/website_views.py"
+msgid "Car in Genie"
+msgstr "العربية في Genie"
+
+msgid "Car location"
+msgstr "مكان العربية"
+
+msgctxt "ui/views/website_views.py"
+msgid "Car location"
+msgstr "مكان العربية"
 
 msgid "Car record"
 msgstr "سجل العربية"
@@ -974,6 +1085,13 @@ msgstr "العربيات"
 msgid "Cars and listings"
 msgstr "العربيات والعروض"
 
+msgid "Cars imported at"
+msgstr "آخر سحب للعربيات"
+
+msgctxt "ui/views/website_views.py"
+msgid "Cars imported at"
+msgstr "آخر سحب للعربيات"
+
 msgid "Cash"
 msgstr "كاش"
 
@@ -987,6 +1105,16 @@ msgstr "نقداً عند بوليصة الشحن (يورو)"
 msgctxt "ui/views/contract_views.py"
 msgid "Cash on bill of lading (€)"
 msgstr "نقداً عند بوليصة الشحن (€)"
+
+msgid "Category"
+msgstr "الفئة"
+
+msgctxt "ui/views/website_views.py"
+msgid "Category"
+msgstr "الفئة"
+
+msgid "Category id (models)"
+msgstr "رقم الفئة (للموديلات)"
 
 msgid "Chamber of commerce"
 msgstr "الغرفة التجارية"
@@ -1005,6 +1133,13 @@ msgstr "القناة"
 msgctxt "ui/views/stage_change_log_views.py"
 msgid "Channel"
 msgstr "القناة"
+
+msgid "Chassis number"
+msgstr "رقم الشاسيه"
+
+msgctxt "ui/views/website_views.py"
+msgid "Chassis number"
+msgstr "رقم الشاسيه"
 
 msgid "Checked by"
 msgstr "راجعه"
@@ -1262,6 +1397,9 @@ msgctxt "ui/views/payment_views.py"
 msgid "Confirmed €"
 msgstr "المؤكَّد €"
 
+msgid "Connected to the website as %(name)s (%(email)s)."
+msgstr "متوصّل بالموقع باسم %(name)s (%(email)s)."
+
 msgctxt "ui/views/call_views.py"
 msgid "Consent"
 msgstr "الموافقة"
@@ -1307,6 +1445,9 @@ msgstr "توكيلات الوساطة"
 msgctxt "ui/views/consignment_views.py"
 msgid "Consignment search"
 msgstr "بحث الوساطة"
+
+msgid "Contact form"
+msgstr "فورم التواصل"
 
 msgid "Container"
 msgstr "حاوية"
@@ -1472,9 +1613,16 @@ msgctxt "ui/views/reference_views.py"
 msgid "Currency"
 msgstr "العملة"
 
+msgctxt "ui/views/website_views.py"
+msgid "Currency"
+msgstr "العملة"
+
 msgctxt "ui/views/car_deal_views.py"
 msgid "Current stage"
 msgstr "المرحلة الحالية"
+
+msgid "Current token"
+msgstr "التوكن الحالي"
 
 msgid "Customer"
 msgstr "العميل"
@@ -1508,6 +1656,10 @@ msgid "Customer"
 msgstr "العميل"
 
 msgctxt "ui/views/quote_views.py"
+msgid "Customer"
+msgstr "العميل"
+
+msgctxt "ui/views/website_views.py"
 msgid "Customer"
 msgstr "العميل"
 
@@ -1827,6 +1979,24 @@ msgctxt "ui/views/quote_views.py"
 msgid "Description"
 msgstr "الوصف"
 
+msgctxt "ui/views/website_views.py"
+msgid "Description"
+msgstr "الوصف"
+
+msgid "Description (Arabic)"
+msgstr "الوصف (عربي)"
+
+msgctxt "ui/views/website_views.py"
+msgid "Description (Arabic)"
+msgstr "الوصف (عربي)"
+
+msgid "Description (English)"
+msgstr "الوصف (إنجليزي)"
+
+msgctxt "ui/views/website_views.py"
+msgid "Description (English)"
+msgstr "الوصف (إنجليزي)"
+
 msgctxt "ui/views/dashboard_views.py"
 msgid "Did the customer hear from us?"
 msgstr "هل وصلت رسائلنا للعميل؟"
@@ -1842,6 +2012,10 @@ msgid "Direction"
 msgstr "الاتجاه"
 
 msgctxt "ui/views/call_views.py"
+msgid "Direction"
+msgstr "الاتجاه"
+
+msgctxt "ui/views/website_views.py"
 msgid "Direction"
 msgstr "الاتجاه"
 
@@ -2015,6 +2189,10 @@ msgctxt "ui/views/car_deal_views.py"
 msgid "Egypt's advance cargo ID — the longest wait in the whole journey, and not in our hands"
 msgstr "رقم ACID — أطول انتظار في الرحلة كلها، ومش في إيدنا"
 
+msgctxt "ui/views/website_views.py"
+msgid "Egypt: the price is in Egyptian pounds. Germany or UAE: in euros"
+msgstr "مصر: السعر بالجنيه. ألمانيا أو الإمارات: باليورو"
+
 msgid "Egyptian abroad"
 msgstr "مصري بالخارج"
 
@@ -2046,8 +2224,19 @@ msgctxt "ui/views/contract_views.py"
 msgid "Email"
 msgstr "البريد الإلكتروني"
 
+msgctxt "ui/views/website_views.py"
+msgid "Email"
+msgstr "البريد الإلكتروني"
+
 msgid "Empty means: as soon as the deal exists"
 msgstr "فاضية يعني: أول ما الصفقة تتعمل"
+
+msgid "Engine"
+msgstr "الموتور"
+
+msgctxt "ui/views/website_views.py"
+msgid "Engine"
+msgstr "الموتور"
 
 msgid "Engine (cc)"
 msgstr "المحرك (cc)"
@@ -2077,6 +2266,10 @@ msgctxt "ui/views/vehicle_views.py"
 msgid "Engine size (cc)"
 msgstr "سعة المحرك (cc)"
 
+msgctxt "ui/views/website_views.py"
+msgid "Engines"
+msgstr "الموتورات"
+
 msgid "Enter the amount to credit in EUR before accepting."
 msgstr "اكتب المبلغ اللي هيتسجّل باليورو قبل القبول."
 
@@ -2089,6 +2282,10 @@ msgstr "أدخلها موظف"
 msgid "Entered by hand"
 msgstr "مُدخل يدوياً"
 
+msgctxt "ui/views/website_views.py"
+msgid "Entry"
+msgstr "البند"
+
 msgid "Error"
 msgstr "خطأ"
 
@@ -2097,6 +2294,10 @@ msgid "Error"
 msgstr "خطأ"
 
 msgctxt "ui/views/stage_change_log_views.py"
+msgid "Error"
+msgstr "خطأ"
+
+msgctxt "ui/views/website_views.py"
 msgid "Error"
 msgstr "خطأ"
 
@@ -2182,10 +2383,24 @@ msgstr "ميناء التصدير"
 msgid "Exported from an EU port"
 msgstr "مصدّرة من ميناء أوروبي"
 
+msgid "Extra option"
+msgstr "إضافة"
+
+msgid "Extra options"
+msgstr "الإضافات"
+
+msgctxt "ui/views/website_views.py"
+msgid "Extra options"
+msgstr "الإضافات"
+
 msgid "Failed"
 msgstr "فشل"
 
 msgctxt "ui/views/stage_change_log_views.py"
+msgid "Failed"
+msgstr "فشل"
+
+msgctxt "ui/views/website_views.py"
 msgid "Failed"
 msgstr "فشل"
 
@@ -2318,6 +2533,13 @@ msgstr "بيتبع «المدفوع لحد دلوقتي» في عرض السعر
 msgid "For a range, e.g. protection film"
 msgstr "لنطاق سعر، مثل فيلم الحماية"
 
+msgid "Form"
+msgstr "الفورم"
+
+msgctxt "ui/views/website_views.py"
+msgid "Form"
+msgstr "الفورم"
+
 msgctxt "ui/views/contract_views.py"
 msgid "Formal correspondence goes here as well as by registered post"
 msgstr "المراسلات الرسمية بتتبعت هنا وبالبريد المسجل كمان"
@@ -2407,6 +2629,14 @@ msgctxt "ui/views/vehicle_views.py"
 msgid "Fuel"
 msgstr "الوقود"
 
+msgctxt "ui/views/website_views.py"
+msgid "Fuel"
+msgstr "الوقود"
+
+msgctxt "ui/views/website_views.py"
+msgid "Fuels"
+msgstr "أنواع الوقود"
+
 msgid "Full"
 msgstr "كاملة"
 
@@ -2420,6 +2650,13 @@ msgctxt "ui/views/qualify_views.py"
 msgid "Funds ready on"
 msgstr "الفلوس جاهزة في"
 
+msgctxt "ui/views/website_views.py"
+msgid "GET https://<this Genie address>/api/website/tracking?chassis_number=…"
+msgstr "GET https://<رابط Genie ده>/api/website/tracking?chassis_number=…"
+
+msgid "Gallery on the website"
+msgstr "معرض الصور على الموقع"
+
 msgid "Gearbox"
 msgstr "ناقل الحركة"
 
@@ -2430,6 +2667,14 @@ msgstr "ناقل الحركة"
 msgctxt "ui/views/vehicle_views.py"
 msgid "Gearbox"
 msgstr "ناقل الحركة"
+
+msgctxt "ui/views/website_views.py"
+msgid "Gearbox"
+msgstr "ناقل الحركة"
+
+msgctxt "ui/views/website_views.py"
+msgid "Gearboxes"
+msgstr "أنواع الفتيس"
 
 msgctxt "ui/views/contract_views.py"
 msgid "Generate the contract"
@@ -2468,6 +2713,17 @@ msgstr "العقد المولّد"
 
 msgid "Generated with these fields left blank: %(fields)s"
 msgstr "اتولّد والحقول دي فاضية: %(fields)s"
+
+msgid "Genie → website"
+msgstr "من Genie للموقع"
+
+msgctxt "ui/views/website_views.py"
+msgid "Genie → website"
+msgstr "من Genie للموقع"
+
+msgctxt "ui/views/website_views.py"
+msgid "Genie → website (publishing cars)"
+msgstr "من Genie للموقع (نشر العربيات)"
 
 msgid "German VAT %"
 msgstr "الضريبة الألمانية %"
@@ -2508,6 +2764,13 @@ msgstr "إجمالي — الضريبة ظاهرة وقابلة للاستردا
 msgid "Gulf"
 msgstr "خليجية"
 
+msgid "HTTP status"
+msgstr "كود الرد"
+
+msgctxt "ui/views/website_views.py"
+msgid "HTTP status"
+msgstr "كود الرد"
+
 msgctxt "ui/views/car_deal_views.py"
 msgid "Handover"
 msgstr "التسليم"
@@ -2529,6 +2792,17 @@ msgctxt "ui/views/consignment_views.py"
 msgid "Held for the owner, not the company's money"
 msgstr "محفوظ لصالح المالك، مش فلوس الشركة"
 
+msgctxt "ui/views/website_views.py"
+msgid "Hidden"
+msgstr "مخفية"
+
+msgid "Hidden. The website updates on the next send."
+msgstr "اتخفت. الموقع هيتحدّث في الإرسال الجاي."
+
+msgctxt "ui/views/website_views.py"
+msgid "Hide from the website"
+msgstr "إخفاء من الموقع"
+
 msgid "Hold customer messages"
 msgstr "إيقاف رسائل العميل"
 
@@ -2549,6 +2823,20 @@ msgstr "وضوح الصورة"
 msgctxt "ui/views/payment_views.py"
 msgid "How clear it was"
 msgstr "وضوح الصورة"
+
+msgid "Icon (Font Awesome)"
+msgstr "الأيقونة (Font Awesome)"
+
+msgctxt "ui/views/import_stage_views.py"
+msgid "Icon (Font Awesome)"
+msgstr "الأيقونة (Font Awesome)"
+
+msgid "Icon image"
+msgstr "صورة الأيقونة"
+
+msgctxt "ui/views/import_stage_views.py"
+msgid "Icon image"
+msgstr "صورة الأيقونة"
 
 msgid "Import Stage"
 msgstr "مرحلة استيراد"
@@ -2576,6 +2864,18 @@ msgstr "مرحلة الاستيراد"
 msgctxt "ui/views/import_stage_views.py"
 msgid "Import stages"
 msgstr "مراحل الاستيراد"
+
+msgctxt "ui/views/website_views.py"
+msgid "Import the website cars"
+msgstr "سحب عربيات الموقع"
+
+msgctxt "ui/views/website_views.py"
+msgid "In Egypt"
+msgstr "في مصر"
+
+msgctxt "ui/views/website_views.py"
+msgid "In Germany"
+msgstr "في ألمانيا"
 
 msgctxt "ui/views/quote_views.py"
 msgid "In euros"
@@ -2715,6 +3015,10 @@ msgstr "داخلي. مفيش حاجة هنا بتوصل لمستند العرض"
 msgid "Invoice file"
 msgstr "ملف الفاتورة"
 
+msgctxt "ui/views/website_views.py"
+msgid "Issue a new key for the website"
+msgstr "إصدار مفتاح جديد للموقع"
+
 msgid "Issued"
 msgstr "صادرة"
 
@@ -2750,6 +3054,13 @@ msgctxt "ui/views/contract_views.py"
 msgid "Kept as generated, never rebuilt from today's data — it is what the customer holds"
 msgstr "بيتحفظ زي ما اتولّد، وما يتعملش من جديد ببيانات النهارده — ده اللي في إيد العميل"
 
+msgid "Key the website sends to Genie"
+msgstr "المفتاح اللي الموقع بيبعته لـ Genie"
+
+msgctxt "ui/views/website_views.py"
+msgid "Key the website sends to Genie"
+msgstr "المفتاح اللي الموقع بيبعته لـ Genie"
+
 msgctxt "ui/views/listing_views.py"
 msgid "Km"
 msgstr "كم"
@@ -2776,12 +3087,40 @@ msgctxt "ui/views/dashboard_views.py"
 msgid "Last 90 days"
 msgstr "آخر 90 يوم"
 
+msgid "Last error"
+msgstr "آخر خطأ"
+
+msgctxt "ui/views/website_views.py"
+msgid "Last error"
+msgstr "آخر خطأ"
+
 msgid "Last seen"
 msgstr "آخر ظهور"
 
 msgctxt "ui/views/supplier_listing_views.py"
 msgid "Last seen"
 msgstr "آخر ظهور"
+
+msgid "Last sending error"
+msgstr "آخر خطأ في الإرسال"
+
+msgctxt "ui/views/website_views.py"
+msgid "Last sending error"
+msgstr "آخر خطأ في الإرسال"
+
+msgid "Last successful call"
+msgstr "آخر اتصال ناجح"
+
+msgctxt "ui/views/website_views.py"
+msgid "Last successful call"
+msgstr "آخر اتصال ناجح"
+
+msgid "Last synced"
+msgstr "آخر مزامنة"
+
+msgctxt "ui/views/website_views.py"
+msgid "Last synced"
+msgstr "آخر مزامنة"
 
 msgid "Lead"
 msgstr "العميل المحتمل"
@@ -2791,6 +3130,10 @@ msgid "Lead"
 msgstr "العميل المحتمل"
 
 msgctxt "ui/views/car_deal_views.py"
+msgid "Lead"
+msgstr "العميل المحتمل"
+
+msgctxt "ui/views/website_views.py"
 msgid "Lead"
 msgstr "العميل المحتمل"
 
@@ -2854,6 +3197,20 @@ msgctxt "ui/views/supplier_listing_views.py"
 msgid "Link"
 msgstr "الرابط"
 
+msgctxt "ui/views/website_views.py"
+msgid "Link to a Genie car record"
+msgstr "ربطها بعربية في Genie"
+
+msgid "Linked %(count)d car(s)."
+msgstr "اتربطت %(count)d عربية."
+
+msgid "List"
+msgstr "القايمة"
+
+msgctxt "ui/views/website_views.py"
+msgid "List"
+msgstr "القايمة"
+
 msgctxt "ui/views/vehicle_views.py"
 msgid "Listed (EUR)"
 msgstr "السعر المعلن (يورو)"
@@ -2880,12 +3237,41 @@ msgctxt "ui/views/vehicle_views.py"
 msgid "Listing URL"
 msgstr "رابط الإعلان"
 
+msgid "Lists synced at"
+msgstr "آخر مزامنة للقوايم"
+
+msgctxt "ui/views/website_views.py"
+msgid "Lists synced at"
+msgstr "آخر مزامنة للقوايم"
+
+msgctxt "ui/views/website_views.py"
+msgid "Location"
+msgstr "المكان"
+
+msgctxt "ui/views/website_views.py"
+msgid "Locations"
+msgstr "الأماكن"
+
+msgid "Logged in at"
+msgstr "آخر دخول"
+
+msgctxt "ui/views/website_views.py"
+msgid "Logged in at"
+msgstr "آخر دخول"
+
 msgid "Made by the assistant"
 msgstr "عمله المساعد"
 
 msgctxt "ui/views/quote_views.py"
 msgid "Made by the assistant"
 msgstr "عمله المساعد"
+
+msgid "Main photo on the website"
+msgstr "الصورة الرئيسية على الموقع"
+
+msgctxt "ui/views/website_views.py"
+msgid "Main photo on the website"
+msgstr "الصورة الرئيسية على الموقع"
 
 msgid "Make"
 msgstr "الماركة"
@@ -2924,6 +3310,13 @@ msgstr "تسجيل استلام مقدم التعاقد"
 msgctxt "ui/views/car_deal_views.py"
 msgid "Mark fully paid"
 msgstr "تسجيل السداد الكامل"
+
+msgctxt "ui/views/website_views.py"
+msgid "Mark sold on the website"
+msgstr "علّمها «اتباعت» على الموقع"
+
+msgid "Marked %(count)d car(s) sold on the website."
+msgstr "اتعلّمت %(count)d عربية «اتباعت» على الموقع."
 
 msgid "Marked %(count)d contract(s) as signed"
 msgstr "تم تعليم %(count)d عقد كموقّع"
@@ -3044,6 +3437,10 @@ msgctxt "ui/views/stage_change_log_views.py"
 msgid "Message"
 msgstr "الرسالة"
 
+msgctxt "ui/views/website_views.py"
+msgid "Message"
+msgstr "الرسالة"
+
 msgid "Message id"
 msgstr "معرّف الرسالة"
 
@@ -3091,6 +3488,20 @@ msgctxt "ui/views/import_stage_views.py"
 msgid "Messages the customer"
 msgstr "بترسل للعميل"
 
+msgid "Method"
+msgstr "الطريقة"
+
+msgctxt "ui/views/website_views.py"
+msgid "Method"
+msgstr "الطريقة"
+
+msgid "Mileage (km)"
+msgstr "العداد (كم)"
+
+msgctxt "ui/views/website_views.py"
+msgid "Mileage (km)"
+msgstr "العداد (كم)"
+
 msgid "Model"
 msgstr "الموديل"
 
@@ -3115,6 +3526,10 @@ msgid "Model"
 msgstr "الموديل"
 
 msgctxt "ui/views/vehicle_views.py"
+msgid "Model"
+msgstr "الموديل"
+
+msgctxt "ui/views/website_views.py"
 msgid "Model"
 msgstr "الموديل"
 
@@ -3146,12 +3561,20 @@ msgctxt "ui/views/vehicle_views.py"
 msgid "Model year"
 msgstr "سنة الموديل"
 
+msgctxt "ui/views/website_views.py"
+msgid "Model year"
+msgstr "سنة الموديل"
+
 msgid "Model year wanted"
 msgstr "سنة الموديل المطلوبة"
 
 msgctxt "ui/views/qualify_views.py"
 msgid "Model year wanted"
 msgstr "سنة الموديل المطلوبة"
+
+msgctxt "ui/views/website_views.py"
+msgid "Models"
+msgstr "الموديلات"
 
 msgid "Modifications used"
 msgstr "التعديلات المستخدمة"
@@ -3170,6 +3593,10 @@ msgstr "الأموال"
 msgctxt "ui/views/qualify_views.py"
 msgid "Money and place"
 msgstr "الفلوس والمكان"
+
+msgctxt "ui/views/website_views.py"
+msgid "Most expensive"
+msgstr "الأغلى"
 
 msgctxt "ui/views/car_deal_views.py"
 msgid "Move to next stage"
@@ -3209,6 +3636,10 @@ msgctxt "ui/views/reference_views.py"
 msgid "Must be this year's model"
 msgstr "لازم تكون موديل السنة الحالية"
 
+msgctxt "ui/views/website_views.py"
+msgid "Must belong to the brand — the website refuses anything else"
+msgstr "لازم يكون من نفس الماركة — الموقع بيرفض غير كده"
+
 msgid "MwSt. ausweisbar — these listings rank first in a search"
 msgstr "MwSt. ausweisbar — الإعلانات دي بتيجي الأول في البحث"
 
@@ -3235,6 +3666,17 @@ msgctxt "ui/views/reference_views.py"
 msgid "Name"
 msgstr "الاسم"
 
+msgctxt "ui/views/website_views.py"
+msgid "Name"
+msgstr "الاسم"
+
+msgid "Name (Arabic)"
+msgstr "الاسم (عربي)"
+
+msgctxt "ui/views/website_views.py"
+msgid "Name (Arabic)"
+msgstr "الاسم (عربي)"
+
 msgid "Name (English)"
 msgstr "الاسم (بالإنجليزية)"
 
@@ -3243,6 +3685,10 @@ msgid "Name (English)"
 msgstr "الاسم (بالإنجليزية)"
 
 msgctxt "ui/views/reference_views.py"
+msgid "Name (English)"
+msgstr "الاسم (بالإنجليزية)"
+
+msgctxt "ui/views/website_views.py"
 msgid "Name (English)"
 msgstr "الاسم (بالإنجليزية)"
 
@@ -3284,7 +3730,14 @@ msgctxt "ui/views/reference_views.py"
 msgid "Needs management approval"
 msgstr "محتاج موافقة الإدارة"
 
+msgid "Needs review"
+msgstr "محتاج مراجعة"
+
 msgctxt "ui/views/call_views.py"
+msgid "Needs review"
+msgstr "محتاج مراجعة"
+
+msgctxt "ui/views/website_views.py"
 msgid "Needs review"
 msgstr "محتاج مراجعة"
 
@@ -3335,6 +3788,20 @@ msgstr "عمره ما يزيد عن المصاريف نفسها"
 msgid "New deal for %(name)s"
 msgstr "صفقة جديدة لـ %(name)s"
 
+msgid "New gallery photos"
+msgstr "صور جديدة للمعرض"
+
+msgctxt "ui/views/website_views.py"
+msgid "New gallery photos"
+msgstr "صور جديدة للمعرض"
+
+msgid "New main photo"
+msgstr "صورة رئيسية جديدة"
+
+msgctxt "ui/views/website_views.py"
+msgid "New main photo"
+msgstr "صورة رئيسية جديدة"
+
 msgid "New quotation"
 msgstr "عرض سعر جديد"
 
@@ -3361,6 +3828,10 @@ msgstr "الأحدث"
 msgctxt "ui/views/stage_change_log_views.py"
 msgid "Newest"
 msgstr "الأحدث"
+
+msgctxt "ui/views/website_views.py"
+msgid "Newest on the website"
+msgstr "الأحدث على الموقع"
 
 msgid "No automatic updates"
 msgstr "بدون تحديثات تلقائية"
@@ -3395,6 +3866,9 @@ msgstr "غير شامل في السعر — مندوب ترخيص متاح بت�
 
 msgid "Not known yet"
 msgstr "غير معروف بعد"
+
+msgid "Not on the website yet"
+msgstr "لسه مش على الموقع"
 
 msgid "Not paid"
 msgstr "غير مدفوع"
@@ -3537,6 +4011,9 @@ msgstr "من السعر النهائي. فاضية في نموذج الشركة 
 msgid "Of the final price. Blank in the client's template — ask before quoting"
 msgstr "من السعر النهائي. فاضية في قالب العميل — اسأل قبل ما تقول رقم"
 
+msgid "Off for internal stages the customer should not see as a step"
+msgstr "اقفله للمراحل الداخلية اللي العميل مش لازم يشوفها كخطوة"
+
 msgid "Off for internal stages. Cancellation never sends automatically"
 msgstr "مقفول للمراحل الداخلية. الإلغاء عمره ما يبعت تلقائياً"
 
@@ -3550,6 +4027,13 @@ msgstr "معروضة للبيع"
 msgctxt "ui/views/document_views.py"
 msgid "Offered for sale"
 msgstr "معروضة للبيع"
+
+msgid "Old Odoo id"
+msgstr "رقم Odoo القديم"
+
+msgctxt "ui/views/website_views.py"
+msgid "Old Odoo id"
+msgstr "رقم Odoo القديم"
 
 msgctxt "ui/views/reference_views.py"
 msgid "Oldest model year"
@@ -3664,6 +4148,9 @@ msgctxt "ui/views/quote_views.py"
 msgid "Optional on a multi-car offer — the chosen candidate's car is copied here"
 msgstr "اختياري في عرض متعدد العربيات — عربية المرشح المختار بتتنسخ هنا"
 
+msgid "Optional. When set, the website receives this image's link as well"
+msgstr "اختياري. لو اتحطت، الموقع بياخد لينك الصورة دي كمان"
+
 msgid "Options"
 msgstr "المواصفات"
 
@@ -3685,6 +4172,13 @@ msgstr "الترتيب"
 msgctxt "ui/views/pricing_views.py"
 msgid "Order"
 msgstr "الترتيب"
+
+msgid "Origin"
+msgstr "المنشأ"
+
+msgctxt "ui/views/website_views.py"
+msgid "Origin"
+msgstr "المنشأ"
 
 msgctxt "ui/views/vehicle_views.py"
 msgid "Origin and price"
@@ -3743,6 +4237,10 @@ msgstr "المالك"
 msgctxt "ui/views/consignment_views.py"
 msgid "Owner"
 msgstr "المالك"
+
+msgctxt "ui/views/website_views.py"
+msgid "POST https://<this Genie address>/api/website/leads"
+msgstr "POST https://<رابط Genie ده>/api/website/leads"
 
 msgid "Paid"
 msgstr "مدفوعة"
@@ -3809,6 +4307,10 @@ msgstr "مدفوع جزئياً"
 msgid "Passport number"
 msgstr "رقم الباسبور"
 
+msgid "Path"
+msgstr "المسار"
+
+msgctxt "ui/views/website_views.py"
 msgid "Path"
 msgstr "المسار"
 
@@ -3907,6 +4409,13 @@ msgstr "قيد الانتظار"
 msgid "Personal import"
 msgstr "استيراد شخصي"
 
+msgid "Phone"
+msgstr "التليفون"
+
+msgctxt "ui/views/website_views.py"
+msgid "Phone"
+msgstr "التليفون"
+
 msgid "Photos"
 msgstr "الصور"
 
@@ -3915,6 +4424,10 @@ msgid "Photos"
 msgstr "الصور"
 
 msgctxt "ui/views/vehicle_views.py"
+msgid "Photos"
+msgstr "الصور"
+
+msgctxt "ui/views/website_views.py"
 msgid "Photos"
 msgstr "الصور"
 
@@ -4009,6 +4522,13 @@ msgstr "المرحلة السابقة"
 msgctxt "ui/views/car_deal_views.py"
 msgid "Previous stage"
 msgstr "المرحلة السابقة"
+
+msgid "Price"
+msgstr "السعر"
+
+msgctxt "ui/views/website_views.py"
+msgid "Price"
+msgstr "السعر"
 
 msgid "Price (EGP)"
 msgstr "السعر (ج.م)"
@@ -4146,6 +4666,10 @@ msgstr "تم تركيب فيلم الحماية"
 msgid "Publish %(pair)s at %(rate)s"
 msgstr "نشر سعر %(pair)s عند %(rate)s"
 
+msgctxt "ui/views/vehicle_views.py"
+msgid "Publish on the website"
+msgstr "انشرها على الموقع"
+
 msgid "Published"
 msgstr "منشورة"
 
@@ -4171,6 +4695,9 @@ msgstr "تأهيل %(name)s"
 
 msgid "Qualify customer"
 msgstr "تأهيل العميل"
+
+msgid "Question about a car"
+msgstr "سؤال عن عربية"
 
 msgid "Queued"
 msgstr "في الانتظار"
@@ -4267,6 +4794,10 @@ msgctxt "ui/views/car_deal_views.py"
 msgid "Read from the lead: paid or organic, campaign, first click"
 msgstr "من العميل المحتمل: من إعلان أم طبيعي، الحملة، أول نقرة"
 
+msgctxt "ui/views/website_views.py"
+msgid "Read the website lists"
+msgstr "اقرا قوايم الموقع"
+
 msgid "Readable, check it"
 msgstr "مقروءة، راجعها"
 
@@ -4310,6 +4841,10 @@ msgctxt "ui/views/document_views.py"
 msgid "Received"
 msgstr "مستلم"
 
+msgctxt "ui/views/website_views.py"
+msgid "Received"
+msgstr "مستلم"
+
 msgid "Received at signing (EUR)"
 msgstr "المستلم عند التوقيع (يورو)"
 
@@ -4327,6 +4862,13 @@ msgstr "مستلم، لم يُراجع"
 msgctxt "ui/views/quote_views.py"
 msgid "Reclaimed on export when the seller's invoice shows VAT"
 msgstr "بتتسترد عند التصدير لما فاتورة البائع فيها ضريبة"
+
+msgid "Record"
+msgstr "السجل"
+
+msgctxt "ui/views/website_views.py"
+msgid "Record"
+msgstr "السجل"
 
 msgid "Recorded at"
 msgstr "وقت التسجيل"
@@ -4440,12 +4982,33 @@ msgstr "إعادة فتح"
 msgid "Reopened %(count)d deal(s)"
 msgstr "تمت إعادة فتح %(count)d صفقة"
 
+msgctxt "ui/views/website_views.py"
+msgid "Repeat"
+msgstr "مكرر"
+
+msgid "Repeat of an earlier request"
+msgstr "تكرار لطلب قبله"
+
+msgctxt "ui/views/website_views.py"
+msgid "Repeat of an earlier request"
+msgstr "تكرار لطلب قبله"
+
 msgctxt "ui/views/contract_views.py"
 msgid "Replaces the literal year the lawyer typed in the template"
 msgstr "بتحل محل السنة اللي المحامي كتبها في النموذج"
 
+msgid "Replaces the website's main photo on the next send"
+msgstr "بتبدّل الصورة الرئيسية على الموقع في الإرسال الجاي"
+
 msgid "Repriced %(count)d quotation(s)"
 msgstr "تمت إعادة تسعير %(count)d عرض"
+
+msgid "Request"
+msgstr "الطلب"
+
+msgctxt "ui/views/website_views.py"
+msgid "Request"
+msgstr "الطلب"
 
 msgid "Requirement"
 msgstr "المستند المطلوب"
@@ -4466,6 +5029,13 @@ msgstr "محجوزة لـ"
 
 msgid "Residencies that qualify"
 msgstr "الإقامات المؤهلة"
+
+msgid "Response"
+msgstr "الرد"
+
+msgctxt "ui/views/website_views.py"
+msgid "Response"
+msgstr "الرد"
 
 msgctxt "ui/views/crm_dashboard_patch.py"
 msgid "Revenue"
@@ -4512,6 +5082,13 @@ msgstr "مندوب المبيعات"
 msgid "Saloon"
 msgstr "سيدان"
 
+msgid "Seats"
+msgstr "عدد الكراسي"
+
+msgctxt "ui/views/website_views.py"
+msgid "Seats"
+msgstr "عدد الكراسي"
+
 msgid "Select a contract first."
 msgstr "اختار عقد الأول."
 
@@ -4546,6 +5123,13 @@ msgctxt "ui/views/document_views.py"
 msgid "Selling the right"
 msgstr "بيع الحق"
 
+msgid "Send changes to the website"
+msgstr "إرسال التعديلات للموقع"
+
+msgctxt "ui/views/website_views.py"
+msgid "Send changes to the website"
+msgstr "إرسال التعديلات للموقع"
+
 msgctxt "ui/views/payment_views.py"
 msgid "Send it to the customer again"
 msgstr "إعادة إرسالها للعميل"
@@ -4558,9 +5142,24 @@ msgctxt "ui/views/contract_views.py"
 msgid "Send to the customer"
 msgstr "إرسال للعميل"
 
+msgctxt "ui/views/website_views.py"
+msgid "Send to the website"
+msgstr "ابعتها للموقع"
+
 msgctxt "ui/views/car_deal_views.py"
 msgid "Send update to customer"
 msgstr "إرسال تحديث للعميل"
+
+msgctxt "ui/views/website_views.py"
+msgid "Send waiting changes to the website"
+msgstr "ابعت التعديلات المستنية للموقع"
+
+msgid "Sending failed"
+msgstr "الإرسال فشل"
+
+msgctxt "ui/views/website_views.py"
+msgid "Sends to the website"
+msgstr "بيبعت للموقع"
 
 msgid "Sent"
 msgstr "مُرسل"
@@ -4572,6 +5171,9 @@ msgstr "مُرسل"
 msgctxt "ui/views/stage_change_log_views.py"
 msgid "Sent"
 msgstr "مُرسل"
+
+msgid "Sent %(count)d car(s) to the website."
+msgstr "اتبعتت %(count)d عربية للموقع."
 
 msgid "Sent %(count)d contract(s)"
 msgstr "تم إرسال %(count)d عقد"
@@ -4604,6 +5206,9 @@ msgctxt "ui/views/payment_views.py"
 msgid "Sent by"
 msgstr "المحوِّل"
 
+msgid "Sent from"
+msgstr "اتبعت من"
+
 msgid "Sent the current stage update to %(count)d customer(s)"
 msgstr "تم إرسال تحديث المرحلة الحالية لـ %(count)d عميل"
 
@@ -4635,6 +5240,9 @@ msgstr "بيتحدد بزر «العميل وافق» في عرض السعر. ف
 msgctxt "ui/views/quote_views.py"
 msgid "Set by the band, never typed"
 msgstr "من الفئة، ما تتكتبش يدوي"
+
+msgid "Set by the location: Egypt is Egyptian pounds, anywhere else euros"
+msgstr "بيتحدد من المكان: مصر بالجنيه، وأي مكان تاني باليورو"
 
 msgid "Set only when the deposit sheet disagrees with the option count"
 msgstr "حدده بس لو شيت الودائع مختلف عن عدد المواصفات"
@@ -4693,6 +5301,31 @@ msgstr "تُشحن باسم"
 msgctxt "ui/views/payment_views.py"
 msgid "Short on purpose: the German seller can sell the car meanwhile"
 msgstr "قصيرة عن قصد: البائع الألماني ممكن يبيع العربية في الوقت ده"
+
+msgctxt "ui/views/website_views.py"
+msgid "Show on the website"
+msgstr "إظهار على الموقع"
+
+msgid "Show on the website tracking page"
+msgstr "تظهر في صفحة التتبع على الموقع"
+
+msgctxt "ui/views/import_stage_views.py"
+msgid "Show on the website tracking page"
+msgstr "تظهر في صفحة التتبع على الموقع"
+
+msgctxt "ui/views/website_views.py"
+msgid "Shown"
+msgstr "ظاهرة"
+
+msgid "Shown on the website"
+msgstr "ظاهرة على الموقع"
+
+msgctxt "ui/views/website_views.py"
+msgid "Shown on the website"
+msgstr "ظاهرة على الموقع"
+
+msgid "Shown. The website updates on the next send."
+msgstr "اتظهرت. الموقع هيتحدّث في الإرسال الجاي."
 
 msgid "Showroom car"
 msgstr "عربية معرض"
@@ -4786,6 +5419,10 @@ msgctxt "ui/views/consignment_views.py"
 msgid "Sold"
 msgstr "مُباعة"
 
+msgctxt "ui/views/website_views.py"
+msgid "Sold"
+msgstr "مُباعة"
+
 msgid "Sold by a dealer"
 msgstr "بائعها تاجر"
 
@@ -4849,6 +5486,10 @@ msgid "Sourcing outside Germany or the EU"
 msgstr "الشراء من خارج ألمانيا أو الاتحاد الأوروبي"
 
 msgctxt "ui/views/vehicle_views.py"
+msgid "Specification"
+msgstr "المواصفات"
+
+msgctxt "ui/views/website_views.py"
 msgid "Specification"
 msgstr "المواصفات"
 
@@ -4961,6 +5602,17 @@ msgctxt "ui/views/quote_views.py"
 msgid "Status"
 msgstr "الحالة"
 
+msgctxt "ui/views/website_views.py"
+msgid "Status"
+msgstr "الحالة"
+
+msgid "Status on the website"
+msgstr "الحالة على الموقع"
+
+msgctxt "ui/views/website_views.py"
+msgid "Status on the website"
+msgstr "الحالة على الموقع"
+
 msgctxt "ui/views/car_deal_views.py"
 msgid "Still due €"
 msgstr "المتبقي €"
@@ -4975,6 +5627,13 @@ msgstr "لسه معروضة"
 msgctxt "ui/views/document_views.py"
 msgid "Still missing"
 msgstr "لسه ناقص"
+
+msgid "Still on the website"
+msgstr "لسه على الموقع"
+
+msgctxt "ui/views/website_views.py"
+msgid "Still on the website"
+msgstr "لسه على الموقع"
 
 msgid "Still outstanding: %(names)s"
 msgstr "لسه ناقص: %(names)s"
@@ -5000,6 +5659,13 @@ msgstr "الموضوع"
 msgctxt "ui/views/approval_views.py"
 msgid "Subject"
 msgstr "الموضوع"
+
+msgid "Succeeded"
+msgstr "نجح"
+
+msgctxt "ui/views/website_views.py"
+msgid "Succeeded"
+msgstr "نجح"
 
 msgid "Summarised"
 msgstr "تم التلخيص"
@@ -5051,6 +5717,9 @@ msgstr "المفتاح"
 
 msgid "Switched the AI on or off for %(count)d conversation(s)"
 msgstr "تم تشغيل/إيقاف المساعد لـ %(count)d محادثة"
+
+msgid "Synced at"
+msgstr "اتزامن في"
 
 msgid "Tail (days)"
 msgstr "الذيل (أيام)"
@@ -5110,6 +5779,10 @@ msgstr "الشروط"
 msgid "Terms (months)"
 msgstr "المدد (شهور)"
 
+msgctxt "ui/views/website_views.py"
+msgid "Test the connection"
+msgstr "اختبار الاتصال"
+
 msgctxt "ui/views/car_deal_views.py"
 msgid "The CRM lead this deal grew out of — it carries the ad and campaign the customer came from"
 msgstr "العميل المحتمل اللي الصفقة طلعت منه — فيه الإعلان والحملة اللي العميل جه منها"
@@ -5149,6 +5822,10 @@ msgctxt "ui/views/call_views.py"
 msgid "The call"
 msgstr "المكالمة"
 
+msgctxt "ui/views/website_views.py"
+msgid "The call"
+msgstr "المكالمة"
+
 msgctxt "ui/views/contract_views.py"
 msgid "The car"
 msgstr "العربية"
@@ -5165,9 +5842,16 @@ msgctxt "ui/views/vehicle_views.py"
 msgid "The car"
 msgstr "العربية"
 
+msgctxt "ui/views/website_views.py"
+msgid "The car"
+msgstr "العربية"
+
 msgctxt "ui/views/quote_views.py"
 msgid "The car in words — what the offer prints when no car record exists yet, which is every quotation the assistant makes from an advert"
 msgstr "العربية بالكلام — ده اللي بيتطبع في العرض لما مفيش سجل عربية لسه، وده حال كل عرض بيعمله المساعد من إعلان"
+
+msgid "The cars could not be read: %(error)s"
+msgstr "العربيات ما اتقرتش: %(error)s"
 
 msgctxt "ui/views/car_deal_views.py"
 msgid "The cash-on-B/L instalment in the contract falls due when this exists"
@@ -5300,6 +5984,9 @@ msgctxt "ui/views/car_deal_views.py"
 msgid "The line the customer reads on the tracking page and in the AI's answer"
 msgstr "السطر اللي العميل بيقراه في صفحة التتبع وفي رد المساعد"
 
+msgid "The lists could not be read: %(error)s"
+msgstr "القوايم ما اتقرتش: %(error)s"
+
 msgctxt "ui/views/consignment_views.py"
 msgid "The mandate"
 msgstr "التوكيل"
@@ -5417,6 +6104,10 @@ msgctxt "ui/views/quote_views.py"
 msgid "The real amount received, as the accountant confirmed it. The deal's payment mark follows this once the quotation is accepted"
 msgstr "المبلغ الفعلي المستلم زي ما المحاسب أكده. علامة الدفع في الصفقة بتتبع ده بمجرد قبول عرض السعر"
 
+msgctxt "ui/views/website_views.py"
+msgid "The request"
+msgstr "الطلب"
+
 msgctxt "ui/views/reference_views.py"
 msgid "The route"
 msgstr "البرنامج"
@@ -5481,6 +6172,19 @@ msgstr "سعر التحويل وعمولته"
 msgid "The value the rate applies to"
 msgstr "القيمة اللي النسبة بتتحسب عليها"
 
+msgid "The website API root, ending in /api — no trailing slash"
+msgstr "رابط الـ API بتاع الموقع، بينتهي بـ /api — من غير / في الآخر"
+
+msgid "The website account Genie logs in with. Kept on this screen only — never in code"
+msgstr "حساب الموقع اللي Genie بيدخل بيه. متسجّل في الشاشة دي بس — عمره ما يتحط في الكود"
+
+msgctxt "ui/views/website_views.py"
+msgid "The website cannot undo «sold». Continue?"
+msgstr "الموقع مش بيقدر يرجّع «اتباعت». تكمّل؟"
+
+msgid "The website refused: %(error)s"
+msgstr "الموقع رفض: %(error)s"
+
 msgid "Their national ID"
 msgstr "رقمه القومي"
 
@@ -5514,6 +6218,9 @@ msgstr "الصفقة دي ملغية. افتحها تاني قبل ما تنقل
 
 msgid "This invoice has no file yet."
 msgstr "الفاتورة دي لسه مالهاش ملف."
+
+msgid "This model belongs to another brand on the website."
+msgstr "الموديل ده تبع ماركة تانية على الموقع."
 
 msgid "This number is"
 msgstr "الرقم ده هو"
@@ -5557,6 +6264,24 @@ msgstr "العنوان"
 msgctxt "ui/views/listing_views.py"
 msgid "Title"
 msgstr "العنوان"
+
+msgctxt "ui/views/website_views.py"
+msgid "Title"
+msgstr "العنوان"
+
+msgid "Title (Arabic)"
+msgstr "العنوان (عربي)"
+
+msgctxt "ui/views/website_views.py"
+msgid "Title (Arabic)"
+msgstr "العنوان (عربي)"
+
+msgid "Title (English)"
+msgstr "العنوان (إنجليزي)"
+
+msgctxt "ui/views/website_views.py"
+msgid "Title (English)"
+msgstr "العنوان (إنجليزي)"
 
 msgid "To"
 msgstr "إلى"
@@ -5604,6 +6329,13 @@ msgstr "هيتسجّل €"
 
 msgid "To stage"
 msgstr "إلى مرحلة"
+
+msgid "Took (ms)"
+msgstr "استغرق (مللي ثانية)"
+
+msgctxt "ui/views/website_views.py"
+msgid "Took (ms)"
+msgstr "استغرق (مللي ثانية)"
 
 msgid "Total (EUR)"
 msgstr "الإجمالي (يورو)"
@@ -5752,6 +6484,9 @@ msgctxt "ui/views/reference_views.py"
 msgid "Up to (for a range)"
 msgstr "حتى (لنطاق)"
 
+msgid "Up to date"
+msgstr "متحدّثة"
+
 msgid "Upholstery"
 msgstr "الفرش"
 
@@ -5888,6 +6623,12 @@ msgstr "فان"
 msgid "Vehicle"
 msgstr "العربية"
 
+msgid "Vehicle option"
+msgstr "أوبشن العربية"
+
+msgid "Vehicle request"
+msgstr "طلب عربية"
+
 msgid "Vehicles"
 msgstr "العربيات"
 
@@ -5907,6 +6648,13 @@ msgstr "الباخرة"
 msgctxt "ui/views/car_deal_views.py"
 msgid "Vessel"
 msgstr "الباخرة"
+
+msgid "Video link"
+msgstr "لينك الفيديو"
+
+msgctxt "ui/views/website_views.py"
+msgid "Video link"
+msgstr "لينك الفيديو"
 
 msgctxt "ui/views/contract_views.py"
 msgid "Void"
@@ -5948,6 +6696,13 @@ msgctxt "ui/views/document_views.py"
 msgid "Waiting to be checked"
 msgstr "في انتظار المراجعة"
 
+msgid "Waiting to be sent"
+msgstr "مستنية الإرسال"
+
+msgctxt "ui/views/website_views.py"
+msgid "Waiting to be sent"
+msgstr "مستنية الإرسال"
+
 msgid "Walk-around video"
 msgstr "فيديو العربية"
 
@@ -5961,6 +6716,141 @@ msgstr "الضمان مفعّل"
 msgctxt "ui/views/car_deal_views.py"
 msgid "Warranty activated"
 msgstr "الضمان مفعّل"
+
+msgctxt "ui/views/website_views.py"
+msgid "Website"
+msgstr "الموقع"
+
+msgid "Website API URL"
+msgstr "رابط API الموقع"
+
+msgctxt "ui/views/website_views.py"
+msgid "Website API URL"
+msgstr "رابط API الموقع"
+
+msgctxt "ui/views/website_views.py"
+msgid "Website API call"
+msgstr "اتصال بـ API الموقع"
+
+msgid "Website API log"
+msgstr "سجل اتصالات الموقع"
+
+msgctxt "ui/views/website_views.py"
+msgid "Website API log"
+msgstr "سجل اتصالات الموقع"
+
+msgctxt "ui/views/website_views.py"
+msgid "Website API log search"
+msgstr "بحث سجل اتصالات الموقع"
+
+msgid "Website API login (email)"
+msgstr "دخول API الموقع (الإيميل)"
+
+msgctxt "ui/views/website_views.py"
+msgid "Website API login (email)"
+msgstr "دخول API الموقع (الإيميل)"
+
+msgid "Website API password"
+msgstr "باسورد API الموقع"
+
+msgctxt "ui/views/website_views.py"
+msgid "Website API password"
+msgstr "باسورد API الموقع"
+
+msgid "Website car"
+msgstr "عربية على الموقع"
+
+msgctxt "ui/views/website_views.py"
+msgid "Website car"
+msgstr "عربية على الموقع"
+
+msgid "Website cars"
+msgstr "عربيات الموقع"
+
+msgctxt "ui/views/website_views.py"
+msgid "Website cars"
+msgstr "عربيات الموقع"
+
+msgctxt "ui/views/website_views.py"
+msgid "Website cars search"
+msgstr "بحث عربيات الموقع"
+
+msgid "Website cars: %(created)d added, %(updated)d updated, %(review)d need review."
+msgstr "عربيات الموقع: %(created)d اتضافت، %(updated)d اتحدّثت، %(review)d محتاجة مراجعة."
+
+msgid "Website connection"
+msgstr "ربط الموقع"
+
+msgctxt "ui/views/website_views.py"
+msgid "Website connection"
+msgstr "ربط الموقع"
+
+msgid "Website id"
+msgstr "رقم الموقع"
+
+msgctxt "ui/views/website_views.py"
+msgid "Website id"
+msgstr "رقم الموقع"
+
+msgid "Website list entry"
+msgstr "بند من قوايم الموقع"
+
+msgctxt "ui/views/website_views.py"
+msgid "Website list entry"
+msgstr "بند من قوايم الموقع"
+
+msgid "Website lists"
+msgstr "قوايم الموقع"
+
+msgctxt "ui/views/website_views.py"
+msgid "Website lists"
+msgstr "قوايم الموقع"
+
+msgctxt "ui/views/website_views.py"
+msgid "Website lists search"
+msgstr "بحث قوايم الموقع"
+
+msgid "Website lists updated: %(counts)s"
+msgstr "قوايم الموقع اتحدّثت: %(counts)s"
+
+msgid "Website reference"
+msgstr "رقم الطلب على الموقع"
+
+msgctxt "ui/views/website_views.py"
+msgid "Website reference"
+msgstr "رقم الطلب على الموقع"
+
+msgid "Website request"
+msgstr "طلب من الموقع"
+
+msgctxt "ui/views/website_views.py"
+msgid "Website request"
+msgstr "طلب من الموقع"
+
+msgid "Website requests"
+msgstr "طلبات الموقع"
+
+msgctxt "ui/views/website_views.py"
+msgid "Website requests"
+msgstr "طلبات الموقع"
+
+msgid "Website sync"
+msgstr "مزامنة الموقع"
+
+msgctxt "ui/views/website_views.py"
+msgid "Website sync"
+msgstr "مزامنة الموقع"
+
+msgid "Website → Genie"
+msgstr "من الموقع لـ Genie"
+
+msgctxt "ui/views/website_views.py"
+msgid "Website → Genie"
+msgstr "من الموقع لـ Genie"
+
+msgctxt "ui/views/website_views.py"
+msgid "Website → Genie (leads and tracking)"
+msgstr "من الموقع لـ Genie (الطلبات والتتبع)"
 
 msgctxt "ui/views/consignment_views.py"
 msgid "What decides the commission"
@@ -6040,6 +6930,9 @@ msgctxt "ui/views/quote_views.py"
 msgid "What the salesman enters"
 msgstr "اللي المندوب بيدخله"
 
+msgid "What the website sent"
+msgstr "اللي الموقع بعته"
+
 msgctxt "ui/views/qualify_views.py"
 msgid "What they want"
 msgstr "اللي هو عايزه"
@@ -6070,6 +6963,10 @@ msgid "When"
 msgstr "متى"
 
 msgctxt "ui/views/stage_change_log_views.py"
+msgid "When"
+msgstr "متى"
+
+msgctxt "ui/views/website_views.py"
 msgid "When"
 msgstr "متى"
 
@@ -6183,6 +7080,10 @@ msgctxt "ui/views/approval_views.py"
 msgid "Why"
 msgstr "السبب"
 
+msgctxt "ui/views/website_views.py"
+msgid "Why"
+msgstr "السبب"
+
 msgid "Why it is blocked"
 msgstr "سبب التوقف"
 
@@ -6272,6 +7173,10 @@ msgctxt "ui/views/vehicle_views.py"
 msgid "Year"
 msgstr "السنة"
 
+msgctxt "ui/views/website_views.py"
+msgid "Year"
+msgstr "السنة"
+
 msgid "Years owned"
 msgstr "سنوات الملكية"
 
@@ -6315,6 +7220,10 @@ msgstr "ولّده الأول"
 msgctxt "ui/views/reference_views.py"
 msgid "hp"
 msgstr "حصان"
+
+msgctxt "ui/views/website_views.py"
+msgid "https://khaledautomobilegmbh.de/api"
+msgstr "https://khaledautomobilegmbh.de/api"
 
 msgid "initiative / personal / commercial / first_owner / showroom / shipping_only"
 msgstr "initiative / personal / commercial / first_owner / showroom / shipping_only"

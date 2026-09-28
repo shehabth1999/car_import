@@ -283,8 +283,11 @@ def _create_lead(submission, partner, data, clean, website_car):
     if lead is None:
         return None
     extra = {}
-    if submission.car_wanted:
-        extra['ka_model_wanted'] = submission.car_wanted[:128]
+    wanted = submission.car_wanted
+    if clean['year'] and wanted.endswith(str(clean['year'])):
+        wanted = wanted[:-len(str(clean['year']))].strip()    # the year has its own field
+    if wanted:
+        extra['ka_model_wanted'] = wanted[:128]
     if clean['year']:
         extra['ka_model_year_wanted'] = clean['year']
     if extra:
