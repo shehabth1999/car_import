@@ -120,7 +120,7 @@ def execute(input_data):
               for item in (part.get('content') or []) if isinstance(item, dict)]
     texts = [str(item.get('text') or '') for item in blocks if item.get('type') == 'text']
     if len([t for t in texts if t.strip()]) > 1:
-        message = '\n'.join(t for t in texts if t.strip())
+        message = chr(10).join(t for t in texts if t.strip())   # not a backslash: this is a string
     has_media = any(item.get('type') not in (None, 'text') for item in blocks)
 
     now = timezone.localtime()
