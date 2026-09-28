@@ -97,10 +97,20 @@ class CarModel(BaseModel):
         self.name_ar = (self.name_ar or '').strip()
         if not self.name:
             raise ValidationError({'name': _("A model needs a name.")})
+        if self.pk:
+            stored_brand = type(self)._base_manager.filter(pk=self.pk).values_list('brand_id', flat=True).first()
+            if stored_brand and stored_brand != self.brand_id and self._in_use():
+                raise ValidationError({'brand': _(
+                    "Cars, adverts or prices already use this model under its brand. Add the model under "
+                    "the right brand instead of moving this one.")})
         self.display_name = f'{self.brand.name} {self.name}'.strip() if self.brand_id else self.name
         stored = (type(self)._base_manager.filter(pk=self.pk).values_list('display_name', flat=True).first()
                   if self.pk else None)
         self._renamed = bool(self.pk) and stored != self.display_name
+
+    def _in_use(self):
+        return any(rel.related_model._base_manager.filter(**{rel.field.name: self}).exists()
+                   for rel in self._meta.related_objects if rel.one_to_many or rel.one_to_one)
 
     def post_save(self):
         super().post_save()

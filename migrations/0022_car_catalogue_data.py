@@ -128,6 +128,17 @@ def forwards(apps, schema_editor):
     for Table in tables:
         for row in Table.objects.all():
             Table.objects.filter(pk=row.pk).update(car_model=ensure_model(ensure_brand(row.make), row.model))
+        # "Mercedes / C 200" and "Mercedes-Benz / C200" were two rows under the
+        # old text key and are one model now; 0023's unique constraint would
+        # refuse the pair. Keep the newest (latest in force, then highest id).
+        key = ['car_model_id', 'model_year'] + (['tier', 'region'] if Table.__name__ == 'DepositTier' else [])
+        seen = set()
+        for row in Table.objects.order_by('-effective_from', '-id').values('id', *key):
+            ident = tuple(row[k] for k in key)
+            if ident in seen:
+                Table.objects.filter(pk=row['id']).delete()
+            else:
+                seen.add(ident)
 
     # ── 4. the brand and model lists now live in the catalogue ──────────────
     WebsiteCar.objects.update(brand=None, model=None)

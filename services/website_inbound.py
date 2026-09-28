@@ -57,8 +57,12 @@ def key_ok(request, connection):
 
 
 def client_ip(request):
-    forwarded = request.META.get('HTTP_X_FORWARDED_FOR', '')
-    return (forwarded.split(',')[0].strip() if forwarded else request.META.get('REMOTE_ADDR', ''))[:64]
+    """The address our own proxy saw. nginx APPENDS the connecting address to
+    X-Forwarded-For, so the last entry is ours; the first is whatever the caller
+    wrote, and trusting it let anyone rotate past the rate limit."""
+    real = request.META.get('HTTP_X_REAL_IP', '').strip()
+    forwarded = [p.strip() for p in request.META.get('HTTP_X_FORWARDED_FOR', '').split(',') if p.strip()]
+    return (real or (forwarded[-1] if forwarded else '') or request.META.get('REMOTE_ADDR', ''))[:64]
 
 
 def rate_ok(request, bucket, limit=120, window=60):
@@ -72,7 +76,12 @@ def rate_ok(request, bucket, limit=120, window=60):
         return True
 
 
+SECRET_KEYS = ('api_key', 'password', 'token', 'key')
+
+
 def log_in(request, path, status, request_body, response_body, started, ref=''):
+    if isinstance(request_body, dict):
+        request_body = {k: ('***' if k.lower() in SECRET_KEYS else v) for k, v in request_body.items()}
     try:
         from car_import.models import WebsiteApiLog
         from car_import.services.website_api import _short
@@ -241,7 +250,7 @@ def receive_lead(data, ip=''):
     submission = WebsiteSubmission(
         form=form, submission_id=clean['submission_id'], name=clean['name'], phone=clean['phone'],
         email=clean['email'], car_wanted=car_wanted, message=message, website_car=website_car,
-        payload={k: v for k, v in data.items() if k not in ('api_key', 'password')}, remote_ip=ip)
+        payload={k: v for k, v in data.items() if k.lower() not in SECRET_KEYS}, remote_ip=ip)
 
     if recent is not None:
         submission.is_duplicate = True
@@ -249,10 +258,21 @@ def receive_lead(data, ip=''):
         submission.save()
         return 200, {'data': _lead_reply(submission, duplicate=True)}
 
-    partner, _created = find_or_create_partner(clean['name'], clean['phone'], clean['email'])
-    lead = _create_lead(submission, partner, data, clean, website_car)
-    submission.partner, submission.lead = partner, lead
-    submission.save()
+    from django.db import IntegrityError, transaction
+    try:
+        with transaction.atomic():
+            partner, _created = find_or_create_partner(clean['name'], clean['phone'], clean['email'])
+            lead = _create_lead(submission, partner, data, clean, website_car)
+            submission.partner, submission.lead = partner, lead
+            submission.save()
+    except IntegrityError:
+        # The website retried while the first request was still running: the
+        # first one won, this one rolled back its partner and lead.
+        earlier = (WebsiteSubmission.objects.filter(submission_id=clean['submission_id']).first()
+                   if clean['submission_id'] else None)
+        if earlier is None:
+            raise
+        return 200, {'data': _lead_reply(earlier, duplicate=True)}
     _tell_sales(submission, lead, partner)
     return 201, {'data': _lead_reply(submission, duplicate=False)}
 

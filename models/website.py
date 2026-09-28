@@ -98,6 +98,8 @@ class WebsiteConnection(BaseModel):
         super().pre_save()
         if self.base_url:
             self.base_url = self.base_url.strip().rstrip('/')
+            if not self.base_url.startswith('https://'):
+                raise ValidationError({'base_url': _("The website API address must start with https://")})
         if not self.inbound_api_key:
             self.inbound_api_key = new_inbound_key()
         if self.pk:
@@ -495,3 +497,26 @@ class WebsiteApiLog(BaseModel):
         from datetime import timedelta
         deleted, _counts = cls.objects.filter(created_at__lt=timezone.now() - timedelta(days=days)).delete()
         return deleted
+
+
+# ── a change to the car's options or its new gallery photos is a change too ───
+from django.db.models.signals import m2m_changed  # noqa: E402
+
+
+def _website_car_m2m_changed(sender, instance, action, **kwargs):
+    """Many-to-many fields never pass through pre_save, so without this an added
+    option or photo left the car "up to date" and was never sent."""
+    if action not in ('post_add', 'post_remove', 'post_clear') or not isinstance(instance, WebsiteCar):
+        return
+    if getattr(instance, '_from_site', False) or not instance.pk or instance.sync_state == 'draft':
+        return
+    WebsiteCar._base_manager.filter(pk=instance.pk).update(sync_state='pending')
+    instance.sync_state = 'pending'
+    from car_import.services import website_api
+    website_api.schedule_push(instance.pk)
+
+
+m2m_changed.connect(_website_car_m2m_changed, sender=WebsiteCar.extra_options.through,
+                    dispatch_uid='car_import_websitecar_extra_options')
+m2m_changed.connect(_website_car_m2m_changed, sender=WebsiteCar.gallery.through,
+                    dispatch_uid='car_import_websitecar_gallery')

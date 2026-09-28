@@ -65,6 +65,15 @@ class QualifyCustomer(TransientModel):
             ('ka_condition_wanted', form.condition_wanted), ('ka_budget_eur', form.budget_eur),
             ('ka_funds_ready_on', form.funds_ready_on),
         ]
+        if lead is not None and (form.brand_wanted or form.car_model_wanted):
+            brand = form.brand_wanted or form.car_model_wanted.brand
+            car_model = form.car_model_wanted if (form.car_model_wanted
+                                                  and form.car_model_wanted.brand_id == brand.pk) else None
+            for field, value in (('ka_brand_wanted', brand), ('ka_car_model_wanted', car_model)):
+                if getattr(lead, field, None) != value:
+                    setattr(lead, field, value)
+                    written.append(field)
+            pairs = [p for p in pairs if p[0] not in ('ka_brand_wanted', 'ka_car_model_wanted')]
         if lead is not None:
             for field, value in pairs:
                 if value not in (None, '') and getattr(lead, field, None) != value:

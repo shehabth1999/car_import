@@ -78,14 +78,35 @@ def _short(body, limit=20000):
 def _log(method, path, status, ok, started, request_body=None, response_body=None, error='', ref=''):
     try:
         from car_import.models import WebsiteApiLog
-        if isinstance(request_body, dict) and 'password' in request_body:
-            request_body = dict(request_body, password='***')
+        if isinstance(request_body, dict):
+            request_body = {k: ('***' if k in ('password', 'api_password', 'token') else v)
+                            for k, v in request_body.items()}
         WebsiteApiLog.objects.create(
             direction='out', method=method, path=path[:255], status_code=status, ok=ok,
             duration_ms=int((time.time() - started) * 1000), request_body=_short(request_body),
             response_body=_short(response_body), error=(error or '')[:4000], object_ref=ref[:64])
     except Exception:
         logger.exception('car_import: could not write the website API log')
+
+
+def check_address(url):
+    """The website API must be a public HTTPS address. Raised before every call,
+    so the connection screen cannot turn the server into a proxy for addresses
+    only it can reach (the cloud metadata service, the database, localhost)."""
+    import ipaddress
+    import socket
+    from urllib.parse import urlparse
+    parts = urlparse(str(url or ''))
+    if parts.scheme != 'https' or not parts.hostname:
+        raise WebsiteApiError('The website API address must start with https://')
+    try:
+        infos = socket.getaddrinfo(parts.hostname, parts.port or 443, proto=socket.IPPROTO_TCP)
+    except OSError as exc:
+        raise WebsiteApiError(f'The website address could not be resolved: {exc}') from exc
+    for info in infos:
+        ip = ipaddress.ip_address(info[4][0])
+        if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved or ip.is_multicast:
+            raise WebsiteApiError('The website API address points at a private network — refused.')
 
 
 class WebsiteClient:
@@ -120,7 +141,8 @@ class WebsiteClient:
         started = time.time()
         self._space()
         try:
-            resp = self.session.post(self._url('login'), json=body, timeout=TIMEOUT)
+            check_address(self.conn.base_url)
+            resp = self.session.post(self._url('login'), json=body, timeout=TIMEOUT, allow_redirects=False)
         except requests.RequestException as exc:
             _log('POST', 'login', None, False, started, body, error=str(exc))
             self._save_conn(last_error=f'login: {exc}'[:2000])
@@ -143,7 +165,10 @@ class WebsiteClient:
         try:
             return resp.json()
         except ValueError:
-            return {'message': (resp.text or '')[:300]} if resp.text else None
+            # Not the website's JSON: say so, and never echo someone else's page
+            # back to the screen or into the log.
+            return {'message': f'The address answered {resp.status_code} with something that is not the '
+                               f'website API.'} if resp.text else None
 
     def request(self, method, path, json=None, params=None, files=None, ref='', _retry=True):
         import requests
@@ -153,8 +178,9 @@ class WebsiteClient:
         started = time.time()
         self._space()
         try:
+            check_address(self.conn.base_url)
             resp = self.session.request(method, self._url(path), json=json, params=params, files=files,
-                                        headers=headers, timeout=TIMEOUT)
+                                        headers=headers, timeout=TIMEOUT, allow_redirects=False)
         except requests.RequestException as exc:
             _log(method, path, None, False, started, json, error=str(exc), ref=ref)
             self._save_conn(last_error=f'{method} {path}: {exc}'[:2000])
@@ -472,6 +498,9 @@ def push_car(car, client=None):
         return {'ok': False, 'error': error}
     client = client or WebsiteClient(conn)
     ref = f'website_car:{car.pk}'
+    # What the website is about to receive is the row as it stands NOW. An edit
+    # saved while this call is in flight must not be stamped "up to date".
+    seen = type(car)._base_manager.filter(pk=car.pk).values_list('updated_at', flat=True).first()
     try:
         if car.website_id:
             body = client.request('PATCH', f'vehicles/{car.website_id}', json=payload, ref=ref) or {}
@@ -485,8 +514,15 @@ def push_car(car, client=None):
             updates['website_status'] = data['vehicle_status']
         if data.get('image_for_web'):
             updates['site_image_url'] = str(data['image_for_web'])[:500]
+        edited_meanwhile = type(car)._base_manager.filter(pk=car.pk).exclude(updated_at=seen).exists()
+        if edited_meanwhile:
+            updates['sync_state'] = 'pending'
         _set_state(car, **updates)
         _push_photos(car, client, ref)
+        if edited_meanwhile:
+            from django.core.cache import cache
+            cache.delete(f'car_import:website_push:{car.pk}')
+            schedule_push(car.pk)
         return {'ok': True, 'website_id': car.website_id}
     except WebsiteApiError as exc:
         _set_state(car, sync_state='error', last_error=str(exc)[:2000])
@@ -579,19 +615,31 @@ def schedule_push(pk):
 
 
 def on_deal_saved(deal):
-    """A deal on a website car is paid (or delivered): the car is sold on the website."""
-    if not deal.vehicle_id:
+    """A deal on a website car moved the car off the market.
+
+    «sold» cannot be undone on the website, so it follows only a sale that is
+    finished — fully paid, or delivered. A paid deposit HIDES the car instead:
+    the deal can still be cancelled, and a hidden car is shown again with one
+    click. A cancelled or paused deal changes nothing."""
+    if not deal.vehicle_id or deal.state in ('cancelled', 'on_hold'):
         return
-    if deal.state != 'done' and deal.payment_state not in ('deposit_paid', 'fully_paid'):
+    sold = deal.state == 'done' or deal.payment_state == 'fully_paid'
+    booked = deal.payment_state in ('deposit_paid', 'partially_paid')
+    if not (sold or booked):
         return
     from car_import.models import WebsiteCar
-    ids = list(WebsiteCar.objects.filter(vehicle_id=deal.vehicle_id, website_id__isnull=False)
-               .exclude(website_status='sold').values_list('id', flat=True))
-    if not ids or not _conn().push_enabled:
+    cars = WebsiteCar.objects.filter(vehicle_id=deal.vehicle_id).exclude(website_status='sold')
+    if sold:
+        ids = list(cars.filter(website_id__isnull=False).values_list('id', flat=True))
+        if not ids or not _conn().push_enabled:
+            return
+        from car_import.tasks import website_mark_sold
+        for pk in ids:
+            transaction.on_commit(lambda pk=pk: website_mark_sold.delay(pk))
         return
-    from car_import.tasks import website_mark_sold
-    for pk in ids:
-        transaction.on_commit(lambda pk=pk: website_mark_sold.delay(pk))
+    for car in cars.filter(visible=True):
+        car.visible = False            # the save marks it pending and pushes when pushing is on
+        car.save()
 
 
 def _norm(text):

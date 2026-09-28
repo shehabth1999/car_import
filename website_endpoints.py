@@ -45,15 +45,17 @@ def _guard(request, path, started, switch):
     """None when the call may proceed, else the error response."""
     from car_import.models import WebsiteConnection
     from car_import.services import website_inbound
+    # The rate limit comes FIRST: a caller hammering with wrong keys is limited
+    # too, and pays no database query or log row per attempt past the limit.
+    if not website_inbound.rate_ok(request, path):
+        response = JsonResponse({'message': 'Too Many Attempts.'}, status=429)
+        response['Retry-After'] = '60'
+        return response
     connection = WebsiteConnection.get()
     if not website_inbound.key_ok(request, connection):
         return _reply(request, path, 401, {'message': 'Unauthenticated.'}, None, started)
     if switch and not getattr(connection, switch):
         return _reply(request, path, 503, {'message': 'This service is switched off in Genie.'}, None, started)
-    if not website_inbound.rate_ok(request, path):
-        response = _reply(request, path, 429, {'message': 'Too Many Attempts.'}, None, started)
-        response['Retry-After'] = '60'
-        return response
     return None
 
 

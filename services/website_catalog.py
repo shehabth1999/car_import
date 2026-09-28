@@ -62,8 +62,12 @@ def car_link(car):
 # ── the stock ────────────────────────────────────────────────────────────────
 def offerable():
     from car_import.models import WebsiteCar
+    # A placeholder priced 22 € or a euro car priced like pounds (1,450,000 €)
+    # is a typing slip on the website, not an offer — never read one to a customer.
     return (WebsiteCar.objects.filter(active=True, visible=True)
             .exclude(website_status__in=['sold', 'booked'])
+            .exclude(price__lt=1000)
+            .exclude(Q(price__gt=1_000_000) & ~Q(location__website_id=EGYPT))
             .select_related('location', 'brand', 'car_model', 'currency'))
 
 
