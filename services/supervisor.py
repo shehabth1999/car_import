@@ -38,6 +38,9 @@ ALLOWED_LATIN = {
     'elegance', 'luxury', 'business', 'comfort', 'panorama', 'led', 'kit',
 }
 MONEY_WORDS = ('جنيه', 'يورو', 'دولار', 'ألف', 'الف', '٪', '%')
+#: Hosts a reply may link to: the company website, Genie itself, the adverts
+#: the tools return. A live run invented "khaled-automobile.com".
+LINK_HOSTS = ('khaledautomobilegmbh.de', 'genie-erp.com', 'mobile.de', 'autoscout24.de', 'wise.com')
 
 # Sentences that promise something the company will not honour.
 PROMISE_PATTERNS = [
@@ -86,6 +89,12 @@ def check_reply(text, allowed_figures=None, expect_arabic=True, allowed_text='')
         if stray:
             problems.append({'rule': 'language', 'severity': 'warn',
                              'why': f'English inside an Arabic reply: {", ".join(stray[:5])}'})
+
+    foreign = [host for host in re.findall(r'https?://([^/\s?#]+)', text)
+               if not host.lower().split(':')[0].endswith(LINK_HOSTS)]
+    if foreign:
+        problems.append({'rule': 'foreign_link', 'severity': 'warn',
+                         'why': f'a link that is not the company\'s: {", ".join(foreign[:3])}'})
 
     untraceable = _untraceable_figures(text, allowed_figures or [])
     if untraceable:

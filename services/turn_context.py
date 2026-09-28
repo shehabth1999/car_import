@@ -306,6 +306,14 @@ def _build(partner, conversation, message):
         facts.append('حالة الدفع المسجّلة: %s' % deal.get_payment_state_display())
 
     warnings = turn_warnings(message, deal, conversation)
+    # The one link the model may write without a tool: the website's car list.
+    # A live run sent "khaled-automobile.com" from memory — a site that is not ours.
+    try:
+        from car_import.services import website_catalog
+        warnings.append(f'لينك عربيات الشركة على الموقع: {website_catalog.cars_link()} — أي لينك تبعته لازم '
+                        f'يكون ده أو راجع من أداة بالظبط. عمرك ما تكتب لينك من دماغك.')
+    except Exception:
+        pass
     return {
         'deal_reference': deal.name if deal is not None else '',
         'channel_label': channel_label(conversation),
