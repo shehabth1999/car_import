@@ -63,7 +63,8 @@ def ka_search_vehicle_listings(context, make: Optional[str] = None, model: Optio
 
         cars = [{
             'reference': row.get('ad_id'),
-            'advert_price_with_vat': (f"{row.get('price_gross_eur'):,.0f} €"
+            # Named for what it is: the model once listed these as the car's price.
+            'german_advert_price_NOT_customer_cost': (f"{row.get('price_gross_eur'):,.0f} €"
                                       if ai_first and row.get('price_gross_eur') else None),
             'photos_available': len([i for i in (row.get('images') or []) if i]),
             'quotable': _quotable(row),
