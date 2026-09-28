@@ -43,6 +43,9 @@ msgstr "%(count)d عربية في الطابور للإرسال للموقع."
 msgid "%(customer)s on %(programme)s"
 msgstr "%(customer)s على برنامج %(programme)s"
 
+msgid "%(model)s is not a %(brand)s model."
+msgstr "%(model)s مش موديل تبع %(brand)s."
+
 msgid "%(name)s has no open deal to move."
 msgstr "%(name)s معندوش صفقة مفتوحة تتنقل."
 
@@ -91,6 +94,9 @@ msgstr "الاسم التقني للمجموعة، مثال: car_import.manageme
 msgctxt "ui/views/quote_views.py"
 msgid "A minus: it comes off the port fee. The port fee line itself does not change"
 msgstr "بالسالب: بيتخصم من مصاريف الميناء. سطر مصاريف الميناء نفسه ما بيتغيّرش"
+
+msgid "A model needs a name."
+msgstr "الموديل لازم يكون ليه اسم."
 
 msgid "A new key was issued. Give it to the website developer; the old key no longer works."
 msgstr "اتعمل مفتاح جديد. ابعته لمطوّر الموقع؛ المفتاح القديم بطّل يشتغل."
@@ -350,6 +356,10 @@ msgstr "كل الفترات"
 msgid "Also matches"
 msgstr "بيطابق كمان"
 
+msgctxt "ui/views/catalogue_views.py"
+msgid "Also matches"
+msgstr "بيطابق كمان"
+
 msgctxt "ui/views/website_views.py"
 msgid "Also matches"
 msgstr "بيطابق كمان"
@@ -520,6 +530,10 @@ msgctxt "ui/views/contract_views.py"
 msgid "Article 4 — the price and how it is paid"
 msgstr "البند الرابع — السعر وطريقة السداد"
 
+msgctxt "ui/views/catalogue_views.py"
+msgid "As it prints on a contract, e.g. Mercedes-Benz"
+msgstr "زي ما بتتكتب في العقد، مثلاً Mercedes-Benz"
+
 msgctxt "ui/views/contract_views.py"
 msgid "As on the ID — clause 10 sends formal notices there"
 msgstr "زي ما هو في البطاقة — البند العاشر بيبعت الإخطارات الرسمية عليه"
@@ -535,6 +549,10 @@ msgstr "زي ما بيتطبع في الملحق"
 msgctxt "ui/views/payment_views.py"
 msgid "As the assistant read it. Correct it if the picture says otherwise"
 msgstr "زي ما المساعد قراه. صحّحه لو الصورة بتقول غير كده"
+
+msgctxt "ui/views/catalogue_views.py"
+msgid "As the company writes it, e.g. C200 or GLA 180"
+msgstr "زي ما الشركة بتكتبه، مثلاً C200 أو GLA 180"
 
 msgctxt "ui/views/contract_views.py"
 msgid "As the contract prints it"
@@ -752,9 +770,32 @@ msgstr "الفرع"
 msgid "Brand"
 msgstr "الماركة"
 
+msgctxt "ui/views/catalogue_views.py"
+msgid "Brand"
+msgstr "الماركة"
+
+msgctxt "ui/views/supplier_listing_views.py"
+msgid "Brand"
+msgstr "الماركة"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Brand"
+msgstr "الماركة"
+
 msgctxt "ui/views/website_views.py"
 msgid "Brand"
 msgstr "الماركة"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Brand (Arabic)"
+msgstr "الماركة (عربي)"
+
+msgid "Brand and model"
+msgstr "الماركة والموديل"
+
+msgctxt "ui/views/catalogue_views.py"
+msgid "Brand and model"
+msgstr "الماركة والموديل"
 
 msgid "Brand id (models)"
 msgstr "رقم الماركة (للموديلات)"
@@ -765,6 +806,13 @@ msgstr "رقم الماركة (للموديلات)"
 
 msgid "Brand new"
 msgstr "زيرو"
+
+msgid "Brand wanted"
+msgstr "الماركة المطلوبة"
+
+msgctxt "ui/views/qualify_views.py"
+msgid "Brand wanted"
+msgstr "الماركة المطلوبة"
 
 msgctxt "ui/views/website_views.py"
 msgid "Brands"
@@ -1010,6 +1058,24 @@ msgctxt "ui/views/website_views.py"
 msgid "Car asked about"
 msgstr "العربية المطلوبة"
 
+msgid "Car brand"
+msgstr "ماركة"
+
+msgctxt "ui/views/catalogue_views.py"
+msgid "Car brand"
+msgstr "ماركة"
+
+msgid "Car brands"
+msgstr "الماركات"
+
+msgctxt "ui/views/catalogue_views.py"
+msgid "Car brands"
+msgstr "الماركات"
+
+msgctxt "ui/views/catalogue_views.py"
+msgid "Car brands search"
+msgstr "بحث الماركات"
+
 msgid "Car card"
 msgstr "بطاقة العربية"
 
@@ -1054,6 +1120,24 @@ msgctxt "ui/views/website_views.py"
 msgid "Car location"
 msgstr "مكان العربية"
 
+msgid "Car model"
+msgstr "موديل"
+
+msgctxt "ui/views/catalogue_views.py"
+msgid "Car model"
+msgstr "موديل"
+
+msgid "Car models"
+msgstr "الموديلات"
+
+msgctxt "ui/views/catalogue_views.py"
+msgid "Car models"
+msgstr "الموديلات"
+
+msgctxt "ui/views/catalogue_views.py"
+msgid "Car models search"
+msgstr "بحث الموديلات"
+
 msgid "Car record"
 msgstr "سجل العربية"
 
@@ -1091,6 +1175,10 @@ msgstr "آخر سحب للعربيات"
 msgctxt "ui/views/website_views.py"
 msgid "Cars imported at"
 msgstr "آخر سحب للعربيات"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Cars search"
+msgstr "بحث العربيات"
 
 msgid "Cash"
 msgstr "كاش"
@@ -1168,6 +1256,10 @@ msgstr "مطلوب شيكات"
 
 msgid "Choose a stage."
 msgstr "اختار مرحلة."
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Choose the brand first. A missing model is added under Car models"
+msgstr "اختار الماركة الأول. لو الموديل مش موجود ضيفه من شاشة الموديلات"
 
 msgctxt "ui/views/quote_views.py"
 msgid "Chosen"
@@ -2447,6 +2539,10 @@ msgctxt "ui/views/payment_views.py"
 msgid "Fill this before rejecting — the agent reads it in the chat"
 msgstr "اكتبه قبل الرفض — موظف المبيعات بيقراه في الشات"
 
+msgctxt "ui/views/catalogue_views.py"
+msgid "Filled when the website lists are read. Empty: the website does not carry this model"
+msgstr "بيتملى لما قوايم الموقع تتقري. لو فاضي: الموقع مش عارض الموديل ده"
+
 msgctxt "ui/views/listing_views.py"
 msgid "Film"
 msgstr "فيلم الحماية"
@@ -2930,6 +3026,13 @@ msgctxt "ui/views/car_deal_views.py"
 msgid "In stage since"
 msgstr "في المرحلة منذ"
 
+msgid "In the customer's words"
+msgstr "بكلام العميل"
+
+msgctxt "ui/views/qualify_views.py"
+msgid "In the customer's words"
+msgstr "بكلام العميل"
+
 msgid "In this stage since"
 msgstr "في هذه المرحلة منذ"
 
@@ -3259,6 +3362,13 @@ msgctxt "ui/views/website_views.py"
 msgid "Logged in at"
 msgstr "آخر دخول"
 
+msgid "Logo"
+msgstr "اللوجو"
+
+msgctxt "ui/views/catalogue_views.py"
+msgid "Logo"
+msgstr "اللوجو"
+
 msgid "Made by the assistant"
 msgstr "عمله المساعد"
 
@@ -3509,6 +3619,10 @@ msgctxt "ui/views/car_deal_views.py"
 msgid "Model"
 msgstr "الموديل"
 
+msgctxt "ui/views/catalogue_views.py"
+msgid "Model"
+msgstr "الموديل"
+
 msgctxt "ui/views/contract_views.py"
 msgid "Model"
 msgstr "الموديل"
@@ -3670,6 +3784,10 @@ msgctxt "ui/views/website_views.py"
 msgid "Name"
 msgstr "الاسم"
 
+msgid "Name (Arabic)"
+msgstr "الاسم (عربي)"
+
+msgctxt "ui/views/catalogue_views.py"
 msgid "Name (Arabic)"
 msgstr "الاسم (عربي)"
 
@@ -3866,6 +3984,10 @@ msgstr "غير شامل في السعر — مندوب ترخيص متاح بت�
 
 msgid "Not known yet"
 msgstr "غير معروف بعد"
+
+msgctxt "ui/views/catalogue_views.py"
+msgid "Not on the website"
+msgstr "مش موجودة على الموقع"
 
 msgid "Not on the website yet"
 msgstr "لسه مش على الموقع"
@@ -4083,6 +4205,10 @@ msgstr "في الصورة"
 msgid "On the website"
 msgstr "على الموقع"
 
+msgctxt "ui/views/catalogue_views.py"
+msgid "On the website"
+msgstr "على الموقع"
+
 msgctxt "ui/views/listing_views.py"
 msgid "On the website"
 msgstr "على الموقع"
@@ -4092,6 +4218,10 @@ msgstr "شغّله أثناء الترحيل أو التحميل الجماعي�
 
 msgid "One is the maximum. The second request is refused."
 msgstr "الحد الأقصى واحد. الطلب الثاني مرفوض."
+
+msgctxt "ui/views/website_views.py"
+msgid "Only brands the website carries"
+msgstr "الماركات اللي على الموقع بس"
 
 msgctxt "ui/views/quote_views.py"
 msgid "Only for the indicative EGP total. The company promises no rate"
@@ -4105,6 +4235,10 @@ msgstr "تأكيد وصول الفلوس للمحاسب أو الإدارة بس
 
 msgid "Only when asked for"
 msgstr "عند الطلب فقط"
+
+msgctxt "ui/views/qualify_views.py"
+msgid "Only when the model is not in the list, e.g. any SUV"
+msgstr "بس لو الموديل مش في القايمة، زي «أي SUV»"
 
 msgid "Only with EUR 1"
 msgstr "مع شهادة يورو 1 فقط"
@@ -4165,6 +4299,10 @@ msgstr "المواصفات اللي بتحدد فئة الوديعة"
 msgid "Order"
 msgstr "الترتيب"
 
+msgctxt "ui/views/catalogue_views.py"
+msgid "Order"
+msgstr "الترتيب"
+
 msgctxt "ui/views/import_stage_views.py"
 msgid "Order"
 msgstr "الترتيب"
@@ -4197,6 +4335,17 @@ msgstr "طلاء أصلي، بدون إصلاحات. ده اللي الشركة 
 
 msgid "Other"
 msgstr "أخرى"
+
+msgctxt "ui/views/catalogue_views.py"
+msgid "Other spellings customers and adverts use, comma separated — they all find this brand"
+msgstr "طرق الكتابة التانية اللي العملاء والإعلانات بيستخدموها، بينهم فاصلة — كلها بتوصل للماركة دي"
+
+msgid "Other spellings that mean this one, comma separated — e.g. Mercedes-Benz, مرسيدس بنز"
+msgstr "طرق كتابة تانية لنفس الاسم، بينهم فاصلة — زي Mercedes-Benz، مرسيدس بنز"
+
+msgctxt "ui/views/catalogue_views.py"
+msgid "Other spellings, comma separated — e.g. C 200, C-200"
+msgstr "طرق كتابة تانية، بينهم فاصلة — زي C 200، C-200"
 
 msgid "Outgoing"
 msgstr "صادر"
@@ -5814,6 +5963,13 @@ msgctxt "ui/views/quote_views.py"
 msgid "The band's fee, before any discount"
 msgstr "مصاريف الفئة قبل أي خصم"
 
+msgctxt "ui/views/website_views.py"
+msgid "The brand's models the website carries — choose the brand first"
+msgstr "موديلات الماركة اللي على الموقع — اختار الماركة الأول"
+
+msgid "The brand's number on the company website. Empty when the website does not carry it"
+msgstr "رقم الماركة على موقع الشركة. فاضي لو الموقع مش عارضها"
+
 msgctxt "ui/views/consignment_views.py"
 msgid "The buyer"
 msgstr "المشتري"
@@ -6022,6 +6178,9 @@ msgctxt "ui/views/vehicle_views.py"
 msgid "The model year, not the registration year — the initiative rules read this one"
 msgstr "سنة الموديل مش سنة الترخيص — قواعد المبادرة بتقرا دي"
 
+msgid "The model's number on the company website. Empty when the website does not carry it"
+msgstr "رقم الموديل على موقع الشركة. فاضي لو الموقع مش عارضه"
+
 msgctxt "ui/views/contract_views.py"
 msgid "The money"
 msgstr "الفلوس"
@@ -6221,6 +6380,9 @@ msgstr "الفاتورة دي لسه مالهاش ملف."
 
 msgid "This model belongs to another brand on the website."
 msgstr "الموديل ده تبع ماركة تانية على الموقع."
+
+msgid "This model belongs to another brand."
+msgstr "الموديل ده تبع ماركة تانية."
 
 msgid "This number is"
 msgstr "الرقم ده هو"
@@ -6788,6 +6950,10 @@ msgstr "ربط الموقع"
 msgid "Website id"
 msgstr "رقم الموقع"
 
+msgctxt "ui/views/catalogue_views.py"
+msgid "Website id"
+msgstr "رقم الموقع"
+
 msgctxt "ui/views/website_views.py"
 msgid "Website id"
 msgstr "رقم الموقع"
@@ -7180,6 +7346,10 @@ msgstr "السنة"
 msgid "Years owned"
 msgstr "سنوات الملكية"
 
+msgid "Zero"
+msgstr "زيرو"
+
+msgctxt "ui/views/vehicle_views.py"
 msgid "Zero"
 msgstr "زيرو"
 
