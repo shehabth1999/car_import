@@ -163,9 +163,8 @@ def ka_search_showroom_cars(context, query: Optional[str] = None, limit: int = 5
 
         # The company website's cars in Egypt ARE the showroom stock: shown to
         # visitors, still available, priced in pounds.
-        from car_import.models import WebsiteCar
-        stock = (WebsiteCar.objects.filter(visible=True, location__website_id=1)
-                 .exclude(website_status__in=['sold', 'booked']).select_related('brand', 'model'))
+        from car_import.services import website_catalog
+        stock = website_catalog.offerable().filter(location__website_id=1)
         for word in str(query or '').split():
             stock = stock.filter(Q(title_en__icontains=word) | Q(title_ar__icontains=word)
                                  | Q(brand__name_en__icontains=word) | Q(model__name_en__icontains=word))

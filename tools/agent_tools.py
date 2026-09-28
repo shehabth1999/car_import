@@ -41,22 +41,27 @@ def _failed(name, exc):
 # ── find a car ───────────────────────────────────────────────────────────────
 @tool(
     name="ka_search_cars",
-    display_name="Find cars (import and showroom)",
+    display_name="Find cars (ours, and to import)",
     description=(
-        "Use this tool whenever the customer wants a car, asks what is available, or asks whether a car "
-        "is in the showroom. Before calling it you SHOULD have a make, or a make and model. Set `source` to "
-        "`import` for cars to import from Europe, `showroom` for cars ready now in the Egypt showroom, or "
-        "`both` when the customer did not choose or said 'check both'. Returns each car with a `reference`, "
-        "year, mileage, colour and gearbox; import cars carry the German advert price (NOT the customer's "
-        "cost — price it with ka_quote_car), showroom cars carry their final price in EGP. Do NOT offer a "
-        "car whose `quotable` is false. If nothing matches, say so and offer the other source."
+        "Use this tool whenever the customer wants a car, asks what cars you have, what is available, or "
+        "whether a car is in the showroom. It is the ONLY source of the company's current cars — never "
+        "list or promise a car you did not get from it. Set `source` to `our_cars` for the cars the company "
+        "has NOW (in the Egypt showroom, ready for immediate delivery, and in Germany), `import` to search "
+        "cars to import from Europe, or `both` when the customer did not choose. Leave make and model empty "
+        "to get everything we have. Returns each car with a `reference` (use it for photos), year, mileage, "
+        "specs, where it is and its price as listed on our website; `totals` says how many cars we have in "
+        "each place. Import cars carry the German advert price, NOT the customer's cost — price those with "
+        "ka_quote_car. Do NOT offer a car whose `quotable` is false. If nothing matches, say so and offer "
+        "the other source."
     ),
     category="car_import",
     parameters_schema={
         "type": "object",
         "properties": {
-            "source": {"type": "string", "enum": ["import", "showroom", "both"],
-                       "description": "Where to look. Use both when the customer did not choose"},
+            "source": {"type": "string", "enum": ["our_cars", "import", "both"],
+                       "description": "our_cars = the company's cars now; import = cars to import; both"},
+            "where": {"type": "string", "enum": ["any", "egypt", "germany"],
+                      "description": "our_cars only: egypt = ready in the showroom now; default any"},
             "make": {"type": "string", "description": "e.g. Mercedes-Benz, BMW, Audi"},
             "model": {"type": "string", "description": "e.g. C200, GLA 180, X1"},
             "year_min": {"type": "integer", "description": "Oldest acceptable model year (import only)"},
@@ -68,16 +73,31 @@ def _failed(name, exc):
 )
 def ka_search_cars(context, source: str = 'both', make: Optional[str] = None,
                    model: Optional[str] = None, year_min: Optional[int] = None,
-                   max_mileage: Optional[int] = None, limit: int = 5) -> Dict[str, Any]:
-    """One search, two stocks."""
+                   max_mileage: Optional[int] = None, limit: int = 5,
+                   where: str = 'any') -> Dict[str, Any]:
+    """The company's own cars, and the market to import from."""
     try:
+        from car_import.services import website_catalog
+
         from .market_tools import ka_search_vehicle_listings
-        from .sales_tools import ka_search_showroom_cars
 
         source = (source or 'both').strip().lower()
-        if source not in ('import', 'showroom', 'both'):
+        if source == 'showroom':                 # the old name, from older conversations
+            source, where = 'our_cars', 'egypt'
+        if source not in ('import', 'our_cars', 'both'):
             source = 'both'
         data, errors = {}, []
+        if source in ('our_cars', 'both'):
+            query = ' '.join(x for x in [make, model] if x)
+            place = where if where in ('egypt', 'germany') else None
+            cars, totals = website_catalog.our_cars(query, location=place, limit=max(int(limit or 5), 8))
+            data['our_cars'] = {
+                'count': len(cars), 'cars': cars,
+                'totals': {'in_egypt_showroom': totals['egypt'], 'in_germany': totals['germany']},
+                'note': ('These are the cars the company has now, as listed on our website. '
+                         'Egypt cars: final EGP price, immediate delivery. Germany cars: EUR price as listed, '
+                         'shipping to Egypt still to come.'),
+            }
         if source in ('import', 'both'):
             found = ka_search_vehicle_listings(context, make=make, model=model, year_min=year_min,
                                                max_mileage=max_mileage, limit=limit)
@@ -85,13 +105,6 @@ def ka_search_cars(context, source: str = 'both', make: Optional[str] = None,
                 data['import'] = found['data']
             else:
                 errors.append(f"import: {found.get('error')}")
-        if source in ('showroom', 'both'):
-            query = ' '.join(x for x in [make, model] if x)
-            found = ka_search_showroom_cars(context, query=query, limit=limit)
-            if found.get('success'):
-                data['showroom'] = found['data']
-            else:
-                errors.append(f"showroom: {found.get('error')}")
         if not data:
             return {"success": False, "error": '; '.join(errors) or 'search failed',
                     "error_type": "search_failed"}
