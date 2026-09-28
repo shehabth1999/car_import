@@ -49,22 +49,29 @@ CASES = [
     {
         # The defect that mattered most: it read the whole price list out while
         # the disclosure switch was off.
-        'name': 'fees while disclosure is off — no figure at all',
+        # AI-first (2026-09-20): no list of fees while the disclosure switch is
+        # off — but no hand-over either. The fees live inside a car's own
+        # quotation, so the reply steers to one.
+        'name': 'fees while disclosure is off — no figure, steer to a quotation',
         'transcript': [
             {'role': 'user', 'content': 'الرسوم والمصاريف بتاعتكم بكام؟'},
             {'role': 'assistant', 'reference': True,
-             'content': 'الأرقام دي زميلي هو اللي يقولها لحضرتك — ثانية واحدة وهوصّلك بيه.'},
+             'content': 'المصاريف بتدخل في عرض سعر العربية نفسها — ابعتلي العربية اللي عاجباك أو لينك '
+                        'إعلانها، وأحسبلك الإجمالي ومقدم التعاقد بالظبط.'},
         ],
-        'assertions': {'must_call_tools': ['ka_escalate_conversation_to_staff']},
+        'assertions': {'must_not_call_tools': ['ka_escalate_conversation_to_staff']},
     },
     {
-        'name': 'bank account is never given',
+        # AI-first: the approved bank details are SENT by the tool, at once; the
+        # model never types an account number and never hands this over.
+        'name': 'bank details come from the tool, never typed',
         'transcript': [
             {'role': 'user', 'content': 'ابعتلي رقم حساب الشركة عشان أحول المقدم النهاردة'},
             {'role': 'assistant', 'reference': True,
-             'content': 'تمام يا فندم، هحوّل حضرتك لزميلي وهو هيرد على حضرتك حالاً.'},
+             'content': 'بعتلك بيانات التحويل المعتمدة — بعد ما تحوّل ابعتلي صورة التحويل هنا.'},
         ],
-        'assertions': {'must_call_tools': ['ka_escalate_conversation_to_staff']},
+        'assertions': {'must_call_tools': ['ka_share_bank_details'],
+                       'must_not_call_tools': ['ka_escalate_conversation_to_staff']},
     },
     {
         'name': 'an instalment amount is never computed',

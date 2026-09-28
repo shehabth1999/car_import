@@ -511,17 +511,49 @@ def _file_discount_request(partner, context, reason):
         return None
 
 
+#: The topics a hand-over may carry. Resume decides from these whether the AI
+#: may take the customer back, so a free-text topic ("استرداد", "refund_request")
+#: must never slip past it.
+ESCALATION_TOPICS = ('refund', 'cancellation', 'complaint', 'legal', 'instalment_amount',
+                     'commercial_import', 'showroom_purchase', 'tool_refused', 'discount', 'money', 'other')
+_TOPIC_WORDS = (
+    ('refund', ('refund', 'استرد', 'ترجيع الفلوس', 'رجوع الفلوس', 'فلوسي')),
+    ('cancellation', ('cancel', 'إلغاء', 'الغاء', 'ألغي', 'الغي')),
+    ('complaint', ('complain', 'شكوى', 'شكوي', 'مشكلة في العربية', 'عيب')),
+    ('legal', ('legal', 'قانون', 'محامي', 'قضية', 'محضر')),
+    ('instalment_amount', ('instalment', 'installment', 'قسط', 'أقساط', 'اقساط')),
+    ('commercial_import', ('commercial', 'تجاري', 'سجل تجاري')),
+    ('showroom_purchase', ('showroom', 'wc-', 'المعرض', 'عربياتنا')),
+)
+
+
+def _escalation_topic(topic, reason=''):
+    """One of ESCALATION_TOPICS. A known topic is kept; anything else is read
+    from the words of the topic and the reason, so a refund worded freely is
+    still a refund when resume decides whether the AI may take over again."""
+    value = str(topic or '').strip().lower()
+    if value in ESCALATION_TOPICS and value != 'other':
+        return value
+    text = f'{value} {reason or ""}'.lower()
+    for name, words in _TOPIC_WORDS:
+        if any(w in text for w in words):
+            return name
+    return value if value in ESCALATION_TOPICS else 'other'
+
+
 @tool(
     name="ka_escalate_conversation_to_staff",
     display_name="Hand the customer to a colleague",
     description=(
-        "Use this tool the moment a conversation touches money, a discount, a refund or cancellation, the exact "
-        "instalment amount, a complaint about the car's condition, anything legal or about the contract, or any "
-        "request you are not certain about. It hands the conversation to a human, sends the customer a short "
-        "holding message and notifies the team. Before calling it you MUST have a one-line reason. After it "
-        "succeeds, reply with an EMPTY message: the platform sends the customer the holding line itself, and "
-        "anything you write would reach them as a second message. Never send an account number or confirm "
-        "that a transfer arrived — use this tool instead."
+        "Use this tool ONLY for what a colleague must handle: a refund or cancellation, a complaint, anything "
+        "legal or a change to a signed contract, the exact amount of an instalment, a commercial-import "
+        "request, a customer who wants to BUY one of our own cars (a `WC-` reference from ka_search_cars), "
+        "or when another tool returned `must_escalate`. Do NOT use it for prices, quotations, the proforma "
+        "invoice, bank details (ka_share_bank_details sends them), transfer screenshots "
+        "(ka_customer_sent_image) or discounts (ka_request_discount) — you handle those yourself. It hands "
+        "the conversation to a human, sends the customer a short holding message and notifies the team. "
+        "Before calling it you MUST have a one-line reason and the topic. After it succeeds, reply with an "
+        "EMPTY message: the platform sends the customer the holding line itself."
     ),
     category="car_import",
     side_effect=True,
@@ -534,7 +566,9 @@ def _file_discount_request(partner, context, reason):
             },
             "topic": {
                 "type": "string",
-                "description": "money, discount, refund, cancellation, instalment_amount, complaint, legal or other",
+                "enum": ["refund", "cancellation", "complaint", "legal", "instalment_amount",
+                         "commercial_import", "showroom_purchase", "tool_refused", "other"],
+                "description": "Why a person is needed. showroom_purchase = buying one of our own (WC-) cars",
             },
         },
         "required": ["reason"],
@@ -547,6 +581,7 @@ def ka_escalate_conversation_to_staff(context, reason: str, topic: Optional[str]
         conversation = getattr(context, 'conversation', None)
         if partner is None:
             return {"success": False, "error": "No customer in context", "error_type": "no_partner"}
+        topic = _escalation_topic(topic, reason)
 
         if conversation is not None:
             conversation.handled_by_ai = False

@@ -168,7 +168,7 @@ def sales_facts(partner, deal):
 
 
 #: Every way a customer asks where to send the money.
-BANK_WORDS = ['رقم الحساب', 'رقم حساب', 'الحسابات', 'حساباتك', 'حسابتك', 'حسابكم', 'حسابكو',
+BANK_WORDS = ['رقم الحساب', 'رقم حساب', 'حساباتك', 'حسابتك', 'حسابكم', 'حسابكو',
               'الحساب البنكي', 'بيانات التحويل', 'iban', 'ايبان', 'أحوّل', 'احول', 'احوّل',
               'التحويل على', 'انستاباي', 'إنستاباي', 'instapay', 'wise']
 
@@ -250,9 +250,26 @@ def turn_warnings(message, deal, conversation=None):
         if any(m in text for m in money):
             warnings.append('المساعد مش مفعّل للبيع دلوقتي: أي سؤال فلوس → حوّل لزميل من غير أي رقم.')
 
-    if not any('حوّل لزميل' in w for w in warnings):
+    # What only a person handles. «الحسابات» is not here on purpose: it is also
+    # the accounts TEAM ("الحسابات أكدت؟"), not a request for bank details.
+    for topic, words in HUMAN_TOPIC_WORDS:
+        if any(w in text for w in words):
+            warnings.append(f'ده موضوع لزميل ({topic}): حوّل لزميل بـ ka_escalate_conversation_to_staff '
+                            f'و topic={topic}، ومتكتبش رد بعدها.')
+            break
+    if not any('لزميل' in w for w in warnings):
         warnings.append('الرسالة دي مفيهاش حاجة تستدعي زميل: جاوب بنفسك من الأدوات.')
     return warnings
+
+
+#: The topics a person owns (tools/deal_tools.ESCALATION_TOPICS), and how customers word them.
+HUMAN_TOPIC_WORDS = (
+    ('refund', ('استرداد', 'ارجاع فلوس', 'إرجاع فلوس', 'ترجيع الفلوس', 'رجعولي فلوسي', 'عايز فلوسي')),
+    ('cancellation', ('إلغاء', 'الغاء', 'ألغي', 'الغي')),
+    ('complaint', ('شكوى', 'شكوي', 'مش راضي', 'زعلان من', 'عيب في العربية', 'اتخدعت')),
+    ('legal', ('محامي', 'قضية', 'محضر', 'قانوني')),
+    ('instalment_amount', ('القسط كام', 'قيمة القسط', 'القسط هيبقى', 'هدفع كام في الشهر')),
+)
 
 
 def build(partner, conversation, message):

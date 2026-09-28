@@ -124,8 +124,16 @@ def ka_search_cars(context, source: str = 'both', brand: Optional[str] = None,
                              'these few and share `see_all_on_website` for the rest.')
             data['our_cars'] = found
         if source in ('import', 'both'):
-            found = ka_search_vehicle_listings(context, make=brand, model=model, year_min=year_min,
-                                               max_mileage=max_mileage, limit=max(1, min(int(limit or 3), 5)))
+            # The marketplace wants its own spelling ("Mercedes-Benz"), not the
+            # customer's ("مرسيدس"): the catalogue translates, once.
+            from car_import.services import catalogue
+            brand_row, model_row = catalogue.resolve(brand, model) if brand else (None, None)
+            if brand_row is None and (brand or model):
+                brand_row, model_row = catalogue.parse(' '.join(x for x in [brand, model] if x))
+            found = ka_search_vehicle_listings(
+                context, make=brand_row.name if brand_row else brand,
+                model=model_row.name if model_row else model, year_min=year_min,
+                max_mileage=max_mileage, limit=max(1, min(int(limit or 3), 5)))
             if found.get('success'):
                 data['import'] = found['data']
             else:
@@ -186,6 +194,14 @@ def ka_quote_car(context, send_offer: bool = False, listing_reference: Optional[
     try:
         from .sales_tools import ka_price_car, ka_send_quotation
 
+        if str(listing_reference or '').strip().upper().startswith('WC-'):
+            return {"success": False, "error_type": "our_own_car",
+                    "error": "This is one of the company's own cars, not an import advert.",
+                    "do_now": ("Do not price it here. Its price from ka_search_cars is the price: final in EGP "
+                               "for the Egypt showroom, as listed in EUR for Germany. If the customer wants "
+                               "to buy it, call ka_escalate_conversation_to_staff with topic=showroom_purchase "
+                               "and the reference in the reason.")}
+
         options = dict(with_eur1=with_eur1, shipping_type=shipping_type, port=port,
                        collect_from_showroom=collect_from_showroom)
         if send_offer:
@@ -236,7 +252,7 @@ def ka_quote_car(context, send_offer: bool = False, listing_reference: Optional[
     },
 )
 def ka_customer_sent_image(context, kind: str, requirement_code: str = '', note: str = '',
-                           amount: Optional[float] = None, currency: str = 'EUR',
+                           amount: Optional[float] = None, currency: str = '',
                            transfer_date: Optional[str] = None, sender_name: str = '',
                            bank_name: str = '', reference: str = '', confidence: str = '',
                            remarks: str = '') -> Dict[str, Any]:
@@ -247,7 +263,7 @@ def ka_customer_sent_image(context, kind: str, requirement_code: str = '', note:
 
         if (kind or '').strip().lower() == 'payment':
             return ka_record_payment_receipt(
-                context, amount=amount, currency=currency or 'EUR', transfer_date=transfer_date,
+                context, amount=amount, currency=currency or '', transfer_date=transfer_date,
                 sender_name=sender_name, bank_name=bank_name, reference=reference,
                 confidence=confidence, remarks=remarks)
         if not (requirement_code or '').strip():

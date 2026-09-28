@@ -67,14 +67,23 @@ def ka_schedule_followup(context, reason: str, in_days: int = DEFAULT_NUDGE_DAYS
                 .order_by('-id').first())
         due = timezone.localdate() + timedelta(days=max(1, min(int(in_days or 3), 60)))
 
-        if deal is None:
-            # No deal yet is the normal case for a follow-up — the reminder
-            # belongs to the lead or simply to the note on the contact.
-            logger.info('car_import: follow-up for partner %s on %s: %s', partner.pk, due, reason)
-            return {"success": True, "data": {"scheduled": True, "due": str(due),
-                                              "attached_to": "contact", "reason": reason}}
-
         note = f'متابعة يوم {due}: {reason}'
+        if deal is None:
+            # No deal yet is the normal case for a follow-up under AI-first
+            # selling: the reminder goes on the customer's lead, in front of
+            # whoever owns it. It used to be a log line that reported success.
+            from car_import.services import chat_actions, reminders
+            lead = chat_actions.lead_for(partner, create=True)
+            lead_note = note + (f' — ابدأ بـ: {what_to_say}' if what_to_say else '')
+            activity = (reminders.remind(lead, summary='متابعة مع العميل', note=lead_note, due=due)
+                        if lead is not None else None)
+            if activity is None and lead is not None and hasattr(lead, 'message_post'):
+                lead.message_post(body=lead_note)
+            return {"success": True, "data": {"scheduled": activity is not None, "due": str(due),
+                                              "attached_to": f'lead {lead.pk}' if lead else 'nothing',
+                                              "reason": reason,
+                                              "reminder": "activity" if activity else "note only"}}
+
         if what_to_say:
             note += f'\nابدأ بـ: {what_to_say}'
         # `reminders.remind` calls the API that exists. This used to call

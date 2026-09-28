@@ -389,8 +389,11 @@ def ka_send_quotation(context, listing_reference: Optional[str] = None,
             "total_selling_price": _fmt(quote.total_eur),
             "deposit_now": _fmt(quote.deposit_eur),
             "valid_until": str(quote.valid_until) if quote.valid_until else None,
-            "next_step": ("The offer is already in the chat. Write ONE short line asking if they want to "
-                          "go ahead. When they say yes, call ka_issue_proforma_invoice."),
+            "next_step": (("The offer is already in the chat. Write ONE short line asking if they want to "
+                           "go ahead. When they say yes, call ka_issue_proforma_invoice.")
+                          if sent.get('sent') else
+                          ("The offer could NOT be sent to the chat. Give the customer the total and "
+                           "the deposit_now above in one short message, then ask if they want to go ahead.")),
         }}
     except Exception as e:
         logger.exception("ka_send_quotation failed")
@@ -526,7 +529,7 @@ def ka_issue_proforma_invoice(context, quotation_reference: Optional[str] = None
         "required": [],
     },
 )
-def ka_record_payment_receipt(context, amount: Optional[float] = None, currency: str = 'EUR',
+def ka_record_payment_receipt(context, amount: Optional[float] = None, currency: str = '',
                               transfer_date: Optional[str] = None, sender_name: str = '',
                               bank_name: str = '', reference: str = '', confidence: str = '',
                               remarks: str = '') -> Dict[str, Any]:

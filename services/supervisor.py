@@ -47,7 +47,14 @@ PROMISE_PATTERNS = [
     # "لما التحويل يوصل" or "استلمنا صورة التحويل", which it now says all day.
     (re.compile(r'(?<![يتهن])(وصل|وصلنا|وصلتنا|وصلت)\s+(التحويل|الفلوس|المبلغ)'), 'confirming money arrived'),
     (re.compile(r'(التحويل|الفلوس|المبلغ)\s+(وصل|وصلت|وصلنا|اتأكد|اتأكدت)(?!\w)'), 'confirming money arrived'),
-    (re.compile(r'(تم|اتأكدنا\s+من)\s+(تأكيد\s+)?(استلام|وصول)\s+(ال)?(تحويل|فلوس|مبلغ)'), 'confirming money arrived'),
+    (re.compile(r'(تم|اتأكدنا\s+من)\s+(تأكيد\s+)?(استلام|وصول)\s+(ال)?(تحويل|فلوس|مبلغ|مقدم)'), 'confirming money arrived'),
+    # The mandated name of the booking payment is «مقدم التعاقد», so the
+    # affirmations use it too: "وصل مقدم التعاقد", "مقدم التعاقد وصل".
+    (re.compile(r'(?<![يتهن])(وصل|وصلنا|وصلتنا|وصلت|اتسجل|اتسجّل)\s+(ال)?مقدم'), 'confirming money arrived'),
+    (re.compile(r'مقدم\s+(ال)?تعاقد\s+(وصل|وصلنا|اتأكد|اتسجل|اتسجّل|اتقبل)(?!\w)'), 'confirming money arrived'),
+    # "استلمنا التحويل/المبلغ" affirms the money; "استلمنا صورة التحويل" does not,
+    # so the noun must follow the verb directly.
+    (re.compile(r'(استلمنا|استلمت|اتسجّل|اتسجل)\s+(ال)?(تحويل|فلوس|مبلغ|مقدم)'), 'confirming money arrived'),
     (re.compile(r'(خصم|تخفيض)\s*\d'), 'offering a discount'),
 ]
 
@@ -74,7 +81,8 @@ def check_reply(text, allowed_figures=None, expect_arabic=True, allowed_text='')
             problems.append({'rule': 'promise', 'severity': 'block', 'why': why})
 
     if expect_arabic and _has_arabic(text):
-        stray = sorted({w.lower() for w in LATIN_RUN.findall(text)} - ALLOWED_LATIN)
+        words = LATIN_RUN.findall(re.sub(r'https?://\S+', ' ', text))     # a link is not English prose
+        stray = sorted({w.lower() for w in words} - ALLOWED_LATIN)
         if stray:
             problems.append({'rule': 'language', 'severity': 'warn',
                              'why': f'English inside an Arabic reply: {", ".join(stray[:5])}'})
@@ -91,14 +99,26 @@ def _has_arabic(text):
     return any('؀' <= ch <= 'ۿ' for ch in text)
 
 
+#: An Egyptian national ID: 14 digits, the first 2 (born 1900s) or 3 (2000s).
+NATIONAL_ID = re.compile(r'^[23]\d{13}$')
+
+
 def _unapproved_account(text, allowed_text):
     """An account-shaped string the tools did not hand over this conversation.
-    The approved bank template arrives through a tool; relaying it is the job."""
+    The approved bank template arrives through a tool; relaying it is the job.
+
+    Two long numbers are not accounts: a national ID (the assistant reads it
+    back when it saves the contract details) and a phone number written with
+    its + — both used to block a correct reply and hand the customer over."""
     approved = _normalise_number(allowed_text)
-    hits = [m.group(0) for m in ACCOUNT_LIKE.finditer(text.replace('،', ''))]
+    clean = text.replace('،', '')
+    hits = [m.group(0) for m in ACCOUNT_LIKE.finditer(clean)
+            if not clean[max(0, m.start() - 1):m.start()] == '+']
     hits += [m.group(0) for m in IBAN_LIKE.finditer(text)]
     for hit in hits:
         digits = _normalise_number(hit)
+        if NATIONAL_ID.match(digits or ''):
+            continue
         if not digits or digits not in approved:
             return True
     return False

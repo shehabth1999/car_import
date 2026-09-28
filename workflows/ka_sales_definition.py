@@ -113,9 +113,19 @@ def execute(input_data):
         message = message.get('text') or ''
     message = str(message)
 
+    # A batch arrives as `content` blocks: every text in it counts for the
+    # warnings, and a file or a photo with no words (a PDF bank receipt) is
+    # still a turn the agent must answer — `message` alone is only the first text.
+    blocks = [item for part in (input_data.get('content') or []) if isinstance(part, dict)
+              for item in (part.get('content') or []) if isinstance(item, dict)]
+    texts = [str(item.get('text') or '') for item in blocks if item.get('type') == 'text']
+    if len([t for t in texts if t.strip()]) > 1:
+        message = '\n'.join(t for t in texts if t.strip())
+    has_media = any(item.get('type') not in (None, 'text') for item in blocks)
+
     now = timezone.localtime()
     result = turn_context.build(who, convo, message)
-    result['needs_ai'] = bool(message.strip())
+    result['needs_ai'] = bool(message.strip()) or has_media
     result['in_hours'] = now.weekday() <= 4 and 9 <= now.hour < 19
     return result
 '''.strip()
