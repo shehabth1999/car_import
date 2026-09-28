@@ -107,6 +107,17 @@ def resolve(make, model=None, create=False):
     return brand, find_model(brand, model) if (brand is not None and model) else None
 
 
+def _model_in(brand, words):
+    """The brand's model named anywhere in these words — "عايز C200 AMG" → C200.
+    Longest run of words first, so "GLC 43 AMG" beats "GLC 43"."""
+    for size in range(len(words), 0, -1):
+        for start in range(0, len(words) - size + 1):
+            car_model = find_model(brand, ' '.join(words[start:start + size]))
+            if car_model is not None:
+                return car_model
+    return None
+
+
 def parse(text):
     """(brand, car_model) from one phrase — "مرسيدس C200 2025", "BMW X1".
     Never creates. The brand may be absent from the phrase when the model is
@@ -122,7 +133,7 @@ def parse(text):
             if brand is not None:
                 rest = words[:start] + words[start + size:]
                 rest = [w for w in rest if not re.fullmatch(r'(19|20)\d\d', w.translate(_ARABIC_DIGITS))]
-                return brand, find_model(brand, ' '.join(rest)) if rest else None
+                return brand, _model_in(brand, rest)
     # No brand named: a model name that exists under exactly one brand.
     phrase = norm(' '.join(w for w in words if not re.fullmatch(r'(19|20)\d\d', w.translate(_ARABIC_DIGITS))))
     if len(phrase) < 2:

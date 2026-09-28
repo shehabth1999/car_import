@@ -17,9 +17,13 @@ from django.db import migrations
 
 _KEEP = re.compile(r'[^a-z0-9؀-ۿ]')
 
+#: The name a contract prints, where the website's short name is not it. The
+#: website's name stays an alias, and the link to the website is by id.
+PREFERRED_NAMES = {'mercedes': 'Mercedes-Benz'}
+
 #: Spellings the website lists do not carry but the company's data does.
 BRAND_ALIASES = {
-    'mercedes': 'Mercedes-Benz, Mercedes Benz, Benz, مرسيدس بنز',
+    'mercedes': 'Mercedes, Mercedes Benz, Benz, مرسيدس بنز',
     'volkswagen': 'VW, فولكس',
     'landrover': 'Range Rover, رينج روفر, رنج روفر',
 }
@@ -55,9 +59,11 @@ def forwards(apps, schema_editor):
     brand_by_site, model_by_site = {}, {}
     for row in Lookup.objects.filter(kind='brand').order_by('website_id'):
         name = (row.name_en or row.name_ar or f'#{row.website_id}').strip()[:64]
+        key = _norm(name)
+        name = PREFERRED_NAMES.get(key, name)
         if Brand.objects.filter(name=name).exists():
             name = f'{name} #{row.website_id}'[:64]
-        aliases = ', '.join(a for a in [row.aliases, BRAND_ALIASES.get(_norm(name), '')] if a)[:255]
+        aliases = ', '.join(a for a in [row.aliases, BRAND_ALIASES.get(key, '')] if a)[:255]
         brand_by_site[row.website_id] = Brand.objects.create(
             name=name, name_ar=(row.name_ar or '')[:64], aliases=aliases, website_id=row.website_id)
     for row in Lookup.objects.filter(kind='model').order_by('website_id'):
