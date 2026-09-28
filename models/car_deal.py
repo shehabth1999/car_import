@@ -339,8 +339,25 @@ class CarDeal(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
             from car_import.services import currencies
             self.currency = currencies.egp() if self.program == 'showroom' else currencies.eur()
 
+    #: Fields that record money received. Set only by someone who may confirm
+    #: money, or by a path that already checked it (the receipt's Accept button,
+    #: the accepted quotation following it) — which sets `_money_confirmed`.
+    MONEY_FIELDS = ('payment_state', 'amount_paid_marked')
+
+    def _check_money_authority(self):
+        if not self.pk or getattr(self, '_money_confirmed', False):
+            return
+        stored = type(self)._base_manager.filter(pk=self.pk).values(*self.MONEY_FIELDS).first() or {}
+        if all(stored.get(f) == getattr(self, f) for f in self.MONEY_FIELDS):
+            return
+        from car_import.services.sales_flow import may_confirm_money
+        if not may_confirm_money(getattr(getattr(self, 'env', None), 'user', None)):
+            raise ValidationError({'payment_state': _(
+                "Only the accountant or management records that money arrived.")})
+
     def pre_save(self):
         super().pre_save()
+        self._check_money_authority()
         self._check_instalments_allowed()
         self._check_approvals()
         if self.amount_agreed is not None and self.amount_paid_marked is not None:
@@ -418,6 +435,11 @@ class CarDeal(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
 
     @staticmethod
     def _mark_payment(queryset, state, message):
+        from car_import.services.sales_flow import may_confirm_money
+        first = queryset.first() if hasattr(queryset, 'first') else None
+        if first is not None and not may_confirm_money(getattr(first.env, 'user', None)):
+            return {'status': False, 'open_mode': 'message', 'data': {},
+                    'message': str(_("Only the accountant or management records that money arrived."))}
         count = 0
         for deal in queryset:
             deal.payment_state = state

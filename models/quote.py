@@ -315,6 +315,13 @@ class Quote(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
                 "A discount is a positive number. To charge more, change the band.")})
         if self.paid_eur and self.paid_eur < 0:
             raise ValidationError({'paid_eur': _("A payment cannot be negative.")})
+        if self.pk and not getattr(self, '_money_confirmed', False):
+            stored = type(self)._base_manager.filter(pk=self.pk).values_list('paid_eur', flat=True).first()
+            if (stored or 0) != (self.paid_eur or 0):
+                from car_import.services.sales_flow import may_confirm_money
+                if not may_confirm_money(getattr(getattr(self, 'env', None), 'user', None)):
+                    raise ValidationError({'paid_eur': _(
+                        "Only the accountant or management records that money arrived.")})
 
         # Candidates first: if this quotation carries several cars, its own
         # figures are the chosen car's — INCLUDING the discount typed on the
@@ -390,6 +397,7 @@ class Quote(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
                 deal.payment_marked_at = timezone.now()
                 deal.payment_marked_by = getattr(getattr(self, 'env', None), 'user', None)
                 changed += ['payment_marked_at', 'payment_marked_by']
+            deal._money_confirmed = True       # this quotation's own save already passed the check
             deal.save(update_fields=changed)
 
     def _write_lines(self):

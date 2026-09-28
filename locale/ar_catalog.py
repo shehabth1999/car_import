@@ -1424,4 +1424,8 @@ CATALOG = {
     'Other spellings, comma separated — e.g. C 200, C-200': 'طرق كتابة تانية، بينهم فاصلة — زي C 200، C-200',
     'Filled when the website lists are read. Empty: the website does not carry this model': 'بيتملى لما قوايم الموقع تتقري. لو فاضي: الموقع مش عارض الموديل ده',
     'Only when the model is not in the list, e.g. any SUV': 'بس لو الموديل مش في القايمة، زي «أي SUV»',
+    # review fixes (2026-09-29)
+    'Only the accountant or management records that money arrived.': 'المحاسب أو الإدارة بس هما اللي بيسجّلوا إن الفلوس وصلت.',
+    'The website API address must start with https://': 'رابط API الموقع لازم يبدأ بـ https://',
+    'Cars, adverts or prices already use this model under its brand. Add the model under the right brand instead of moving this one.': 'فيه عربيات أو إعلانات أو أسعار مستخدمة الموديل ده تحت ماركته. ضيف الموديل تحت الماركة الصح بدل ما تنقل ده.',
 }

@@ -227,7 +227,10 @@ def make_quote(partner, gross_price_eur, car_label='', listing=None, conversatio
         collect_from_showroom=bool(collect_from_showroom),
         admin_fee_discount_eur=admin_fee_discount_eur or 0,
         valid_until=timezone.localdate() + timedelta(days=7),
-        notes=price_source or '', state='sent', sent_at=timezone.now())
+        # `price_source` is a note to STAFF ("the customer typed this price —
+        # check it"). It goes to the staff note, never into `notes`, which the
+        # customer's offer prints.
+        notes='', state='sent', sent_at=timezone.now())
     quote.save()
     if quote.pricing_error or not quote.total_eur:
         raise ValidationError(quote.pricing_error or _("There is no price for this car."))
@@ -320,7 +323,7 @@ def send_proforma(invoice):
 
 
 # ── the screenshot ───────────────────────────────────────────────────────────
-def record_receipt(partner, conversation, screenshot, amount=None, currency_code='EUR',
+def record_receipt(partner, conversation, screenshot, amount=None, currency_code='',
                    transfer_date=None, sender_name='', bank_name='', reference='',
                    confidence='', remarks=''):
     """A pending receipt, checked against what we asked for. Never credited here."""
@@ -334,14 +337,22 @@ def record_receipt(partner, conversation, screenshot, amount=None, currency_code
     quote = getattr(invoice, 'quote', None) or getattr(deal, 'accepted_quote', None) \
         or latest_open_quote(partner)
 
-    code = (currency_code or 'EUR').strip().upper()
-    currency = currencies.by_code(code) or currencies.eur()
+    # No currency read from the screenshot is NOT euros: an InstaPay transfer in
+    # pounds credited as euros would be one click away from a wrong contract.
+    code = (currency_code or '').strip().upper()
+    if not code:
+        hint = f'{bank_name} {remarks}'.lower()
+        if any(w in hint for w in ('instapay', 'انستا', 'إنستا', 'vodafone', 'فودافون')):
+            code = 'EGP'
+    currency = (currencies.by_code(code) if code else None) or currencies.eur()
     amount = to_decimal(amount)
     checks = [remarks.strip()] if (remarks or '').strip() else []
 
     credited = amount if (amount is not None and code == 'EUR') else None
     if amount is None:
         checks.append('المبلغ مش واضح في الصورة — اكتبه من كشف الحساب.')
+    elif not code:
+        checks.append('العملة مش واضحة في الصورة — اتأكد منها واكتب المعادل باليورو قبل القبول.')
     elif code != 'EUR':
         checks.append(f'التحويل بعملة {code}: اكتب المعادل باليورو قبل القبول.')
     if invoice is not None and credited is not None:
@@ -407,7 +418,7 @@ def accept_receipt(receipt, user=None):
     if receipt.state != 'pending':
         raise ValidationError(_("This receipt was already %(state)s.")
                               % {'state': receipt.get_state_display()})
-    if user is not None and not may_confirm_money(user):
+    if not may_confirm_money(user):         # no user is not a pass: someone must own this
         raise ValidationError(_("Only the accountant or management confirms that money arrived."))
     credited = receipt.amount_credited
     if not credited or credited <= 0:
@@ -421,10 +432,12 @@ def accept_receipt(receipt, user=None):
         if deal is not None and deal.accepted_quote_id != quote.pk:
             accept_quote(quote, deal)
         quote.paid_eur = (quote.paid_eur or Decimal(0)) + credited
+        quote._money_confirmed = True
         quote.save()                       # re-runs the plan and syncs the deal's marks
     elif deal is not None:
         deal.amount_paid_marked = (deal.amount_paid_marked or Decimal(0)) + credited
         deal.payment_state = 'partially_paid'
+        deal._money_confirmed = True
         deal.save()
 
     receipt.state = 'accepted'

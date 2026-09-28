@@ -354,14 +354,19 @@ class Command(BaseCommand):
                     'tax_card': '368-740-761',
                     'represents': 'مجموعة شركات خالد أوتوموبيل المحدودة',
                     'legal_rep_name': 'خالد صابر عبد الرحمن عبد الله',
-                    'legal_rep_national_id': '27912030100833',
                     'email': 'Info@khaledautomobile.de',
                     'is_default': True,
                 })
+            # National ID numbers are NOT in this file: the repository is not a place
+            # for a person's ID. They are typed once on the Contract issuer screen, and
+            # update_or_create below never touches a field it is not given.
             ContractSignatory.objects.update_or_create(
                 issuer=issuer, name='احمد فايز جميل نايف',
-                defaults={'national_id': '29008138800679',
-                          'title': 'المفوض بالتوقيع', 'is_default': True})
+                defaults={'title': 'المفوض بالتوقيع', 'is_default': True})
+            if not (issuer.legal_rep_national_id or '').strip():
+                self.stdout.write(self.style.WARNING(
+                    "  contract issuer: type the legal representative's and the signatory's "
+                    "national ID on the Contract issuer screen before the first contract."))
             counts['contract issuer'] = 'K&T + 1 signatory'
 
         for label, value in counts.items():

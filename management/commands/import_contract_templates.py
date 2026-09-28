@@ -98,6 +98,12 @@ RULE_GROUPS = [
     ]),
 ]
 
+#: The two national ID numbers printed in the lawyer's clause. They are
+#: searched for in the .docx, so the importer needs them — but a person's ID
+#: does not belong in a repository. They are read from the Contract issuer and
+#: signatory rows at run time (`_literals`); these markers stand in for them.
+ISSUER_ID, SIGNATORY_ID = '{{issuer legal rep ID from the database}}', '{{signatory ID from the database}}'
+
 #: Fixed text the contract hard-codes, swapped inside anchored paragraphs only.
 #: The year is hard-coded twice and the two halves of the same document
 #: disagree — the Arabic says 2026 and the English says 2025. Tokenising both
@@ -109,13 +115,13 @@ LITERALS = [
     # into data without touching a word of the lawyer's wording.
     ('بصفتها الوكيل التسويقي الوحيد', [
         ('خالد صابر عبد الرحمن عبد الله', 'issuer_legal_rep'),
-        ('27912030100833', 'issuer_legal_rep_id'),
+        (ISSUER_ID, 'issuer_legal_rep_id'),
         ('احمد فايز جميل نايف', 'signatory_name'),
-        ('29008138800679', 'signatory_national_id'),
+        (SIGNATORY_ID, 'signatory_national_id'),
     ]),
     ('sole marketing agent', [
-        ('27912030100833', 'issuer_legal_rep_id'),
-        ('29008138800679', 'signatory_national_id'),
+        (ISSUER_ID, 'issuer_legal_rep_id'),
+        (SIGNATORY_ID, 'signatory_national_id'),
     ]),
     ('أنه في يوم', [('2026', 'contract_year')]),
     ('On this day', [('2026', 'contract_year'), ('2025', 'contract_year')]),
@@ -127,6 +133,26 @@ LITERALS = [
 #: Annex 1's payment schedule: three identical date paragraphs, told apart only
 #: by their order — which is exactly what a payment schedule means.
 ANNEX_DATE_TEXT = '…… / …….. / 2026'
+
+
+def _literals():
+    """LITERALS with the two ID markers replaced by the IDs stored in the
+    database; a marker whose ID is not stored yet is dropped, so the number
+    simply stays as printed in the .docx instead of becoming a token."""
+    from car_import.models import ContractIssuer, ContractSignatory
+    issuer = ContractIssuer.objects.filter(is_default=True).first()
+    signatory = ContractSignatory.objects.filter(is_default=True).first()
+    real = {ISSUER_ID: (getattr(issuer, 'legal_rep_national_id', '') or '').strip(),
+            SIGNATORY_ID: (getattr(signatory, 'national_id', '') or '').strip()}
+    out = []
+    for anchor, pairs in LITERALS:
+        kept = []
+        for text, token in pairs:
+            text = real.get(text, text)
+            if text:
+                kept.append((text, token))
+        out.append((anchor, kept))
+    return out
 ANNEX_DATE_TOKENS = ['instalment_1_date', 'instalment_2_date', 'instalment_3_date']
 ANNEX_AMOUNT_TOKENS = ['instalment_1_amount', 'instalment_2_amount', 'instalment_3_amount']
 
@@ -172,7 +198,7 @@ class Command(BaseCommand):
             is_master = 'configuration' in filename.lower()
 
             tokenised, applied, absent = _tokenise_groups(contract_docx, data)
-            tokenised = contract_docx.replace_literals(tokenised, LITERALS)
+            tokenised = contract_docx.replace_literals(tokenised, _literals())
             tokenised = contract_docx.repeat_rule(tokenised, ANNEX_DATE_TEXT,
                                                   ANNEX_DATE_TOKENS)
             tokenised = contract_docx.fill_table_row(tokenised, 'Amount',
