@@ -147,8 +147,9 @@ def ka_search_showroom_cars(context, query: Optional[str] = None, limit: int = 5
 
         rows = ShowroomListing.objects.filter(state='available').select_related('vehicle')
         for word in str(query or '').split():
-            rows = rows.filter(Q(title__icontains=word) | Q(vehicle__make__icontains=word)
-                               | Q(vehicle__model__icontains=word) | Q(vehicle__trim__icontains=word))
+            rows = rows.filter(Q(title__icontains=word) | Q(vehicle__brand__name__icontains=word)
+                               | Q(vehicle__brand__name_ar__icontains=word)
+                               | Q(vehicle__car_model__name__icontains=word) | Q(vehicle__trim__icontains=word))
         cap = max(1, min(int(limit or 5), 15))
         cars = [{
             'reference': f'SR-{row.pk}',
@@ -167,7 +168,8 @@ def ka_search_showroom_cars(context, query: Optional[str] = None, limit: int = 5
         stock = website_catalog.offerable().filter(location__website_id=1)
         for word in str(query or '').split():
             stock = stock.filter(Q(title_en__icontains=word) | Q(title_ar__icontains=word)
-                                 | Q(brand__name_en__icontains=word) | Q(model__name_en__icontains=word))
+                                 | Q(brand__name__icontains=word) | Q(brand__name_ar__icontains=word)
+                                 | Q(car_model__name__icontains=word))
         for car in stock.order_by('-website_id')[:max(0, cap - len(cars))]:
             cars.append({
                 'reference': f'WC-{car.pk}',

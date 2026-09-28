@@ -356,6 +356,7 @@ def search(**kwargs):
 def import_listings(listings, deal=None):
     """Write what a search returned into SupplierListing rows."""
     from car_import.models import SupplierListing
+    from car_import.services import catalogue
 
     now = timezone.now()
     created, updated = [], []
@@ -363,7 +364,10 @@ def import_listings(listings, deal=None):
         ad_id = data.get('ad_id')
         if not ad_id:
             continue
-        values = {k: v for k, v in data.items() if k != 'ad_id'}
+        values = {k: v for k, v in data.items() if k not in ('ad_id', 'make', 'model')}
+        # The advert's words become catalogue rows here, once; an unknown make
+        # or model is added — a marketplace name is authoritative, not a typo.
+        values['brand'], values['car_model'] = catalogue.resolve(data.get('make'), data.get('model'), create=True)
         values.update({'last_seen_at': now, 'still_available': True, 'gone_at': None})
         if deal is not None:
             values['deal'] = deal
@@ -399,7 +403,10 @@ def refresh_availability(queryset=None):
     # current result set is what tells us the advert is still up.
     by_group = {}
     for row in rows:
-        by_group.setdefault((row.make, row.model), []).append(row)
+        raw = row.raw if isinstance(row.raw, dict) else {}
+        make = raw.get('make') or (row.brand.name if row.brand_id else '')
+        model = raw.get('model') or (row.car_model.name if row.car_model_id else '')
+        by_group.setdefault((make, model), []).append(row)
 
     for (make, model), group in by_group.items():
         try:

@@ -128,8 +128,8 @@ class DepositTier(BaseModel, EffectiveMixin):
     TIER = [('medium', _("Medium")), ('full', _("Full"))]
     REGION = [('europe', _("Inside Europe")), ('outside', _("Outside Europe"))]
 
-    make = models.CharField(max_length=64, verbose_name=_("Make"))
-    model = models.CharField(max_length=128, verbose_name=_("Model"))
+    car_model = models.ForeignKey('car_import.CarModel', null=True, on_delete=models.PROTECT,
+                                  related_name='deposit_values', verbose_name=_("Model"))
     model_year = models.PositiveIntegerField(verbose_name=_("Model year"))
     tier = models.CharField(max_length=16, choices=TIER, verbose_name=_("Tier"))
     region = models.CharField(max_length=16, choices=REGION, verbose_name=_("Region"))
@@ -138,14 +138,14 @@ class DepositTier(BaseModel, EffectiveMixin):
     class Meta:
         verbose_name = _("Deposit value")
         verbose_name_plural = _("Deposit values")
-        ordering = ['make', 'model', 'model_year', 'tier', 'region']
+        ordering = ['car_model__display_name', 'model_year', 'tier', 'region']
         constraints = [
-            models.UniqueConstraint(fields=['make', 'model', 'model_year', 'tier', 'region'],
+            models.UniqueConstraint(fields=['car_model', 'model_year', 'tier', 'region'],
                                     name='uniq_deposit_tier'),
         ]
 
     def __str__(self):
-        return f'{self.make} {self.model} {self.model_year} {self.get_tier_display()} {self.get_region_display()}: ${self.deposit_usd}'
+        return f'{self.car_model} {self.model_year} {self.get_tier_display()} {self.get_region_display()}: ${self.deposit_usd}'
 
 
 class CustomsValuation(BaseModel, EffectiveMixin):
@@ -170,8 +170,8 @@ class CustomsValuation(BaseModel, EffectiveMixin):
         ('unknown', _("Not yet confirmed")),
     ]
 
-    make = models.CharField(max_length=64, verbose_name=_("Make"))
-    model = models.CharField(max_length=128, verbose_name=_("Model"))
+    car_model = models.ForeignKey('car_import.CarModel', null=True, on_delete=models.PROTECT,
+                                  related_name='customs_values', verbose_name=_("Model"))
     model_year = models.PositiveIntegerField(verbose_name=_("Model year"))
     value_eur = models.DecimalField(max_digits=12, decimal_places=2, verbose_name=_("Value (EUR)"))
     basis = models.CharField(max_length=16, choices=BASIS, default='payable',
@@ -183,20 +183,20 @@ class CustomsValuation(BaseModel, EffectiveMixin):
     class Meta:
         verbose_name = _("Customs value")
         verbose_name_plural = _("Customs values")
-        ordering = ['make', 'model', 'model_year']
+        ordering = ['car_model__display_name', 'model_year']
         constraints = [
-            models.UniqueConstraint(fields=['make', 'model', 'model_year'], name='uniq_customs_value'),
+            models.UniqueConstraint(fields=['car_model', 'model_year'], name='uniq_customs_value'),
         ]
 
     def __str__(self):
-        return f'{self.make} {self.model} {self.model_year}: {self.value_eur} €'
+        return f'{self.car_model} {self.model_year}: {self.value_eur} €'
 
 
 class ModelPriceRange(BaseModel, EffectiveMixin):
     """Typical market range per model and year — for "from about …" answers."""
 
-    make = models.CharField(max_length=64, verbose_name=_("Make"))
-    model = models.CharField(max_length=128, verbose_name=_("Model"))
+    car_model = models.ForeignKey('car_import.CarModel', null=True, on_delete=models.PROTECT,
+                                  related_name='price_ranges', verbose_name=_("Model"))
     model_year = models.PositiveIntegerField(verbose_name=_("Model year"))
     price_from_eur = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True,
                                          verbose_name=_("From (EUR)"))
@@ -213,13 +213,13 @@ class ModelPriceRange(BaseModel, EffectiveMixin):
     class Meta:
         verbose_name = _("Model price range")
         verbose_name_plural = _("Model price ranges")
-        ordering = ['make', 'model', 'model_year']
+        ordering = ['car_model__display_name', 'model_year']
         constraints = [
-            models.UniqueConstraint(fields=['make', 'model', 'model_year'], name='uniq_model_price_range'),
+            models.UniqueConstraint(fields=['car_model', 'model_year'], name='uniq_model_price_range'),
         ]
 
     def __str__(self):
-        return f'{self.make} {self.model} {self.model_year}'
+        return f'{self.car_model} {self.model_year}'
 
 
 # ═══════════════════════════════════════════════════════════════════════════

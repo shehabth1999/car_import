@@ -8,10 +8,18 @@ the moment a car is sold, and the prompt is cached for everyone.
 
 Offered: shown on the website, not sold or booked, not archived (test entries
 are archived, not deleted, so the nightly import does not bring them back).
+
+A search is always NARROW. The customer names a brand, a budget or a year
+first, and the answer is a handful of cars plus a link to see the rest on the
+website — never the whole stock read out in a chat. A customer who does not
+know what they want gets the website to browse and comes back with a car.
 """
+import re
+
 from django.db.models import Q
 
 EGYPT, GERMANY = 1, 2
+DEFAULT_LIMIT, MAX_LIMIT = 3, 5
 
 
 def _fmt(value, symbol):
@@ -21,48 +29,135 @@ def _fmt(value, symbol):
     return f'{text[:-3] if text.endswith(".00") else text} {symbol}'
 
 
+# ── the website's public pages ───────────────────────────────────────────────
+def site_url():
+    """https://khaledautomobilegmbh.de — the API address without its /api."""
+    from car_import.models import WebsiteConnection
+    base = (WebsiteConnection.get().base_url or '').rstrip('/')
+    return re.sub(r'/api$', '', base) or 'https://khaledautomobilegmbh.de'
+
+
+def cars_link(brand=None, car_model=None, price_min=None, price_max=None):
+    """The website's car list, already filtered the way the customer asked."""
+    params = []
+    if brand is not None and brand.website_id:
+        params.append(f'brand_id={brand.website_id}')
+    if car_model is not None and car_model.website_id:
+        params.append(f'model_id={car_model.website_id}')
+    if price_min:
+        params.append(f'price_from={int(price_min)}')
+    if price_max:
+        params.append(f'price_to={int(price_max)}')
+    return f'{site_url()}/cars' + ('?' + '&'.join(params) if params else '')
+
+
+def car_link(car):
+    """One car's page. The website reads the number; the words are for people."""
+    if not car.website_id:
+        return None
+    slug = re.sub(r'[^a-z0-9]+', '-', (car.title_en or '').lower()).strip('-') or 'car'
+    return f'{site_url()}/cars-details/{car.website_id}/{slug}'
+
+
+# ── the stock ────────────────────────────────────────────────────────────────
 def offerable():
     from car_import.models import WebsiteCar
     return (WebsiteCar.objects.filter(active=True, visible=True)
             .exclude(website_status__in=['sold', 'booked'])
-            .select_related('location', 'brand', 'model', 'fuel', 'gearbox', 'engine', 'bodytype', 'currency'))
+            .select_related('location', 'brand', 'car_model', 'currency'))
 
 
-def our_cars(query='', location=None, limit=8):
-    """(cars, totals) — cars matching the words, newest first; totals per location."""
+def totals(rows=None):
+    rows = offerable() if rows is None else rows
+    return {'in_egypt_showroom': rows.filter(location__website_id=EGYPT).count(),
+            'in_germany': rows.filter(location__website_id=GERMANY).count()}
+
+
+def budget_currency(price_min=None, price_max=None, currency=None, location=None):
+    """'EGP' or 'EUR' — which cars a price range can apply to. Said by the
+    customer when possible; else the place; else the size of the number (a
+    six-figure-plus budget is pounds, a car in euros rarely is)."""
+    code = str(currency or '').strip().upper()
+    if code in ('EGP', 'LE', 'جنيه', 'ج.م'):
+        return 'EGP'
+    if code in ('EUR', '€', 'يورو'):
+        return 'EUR'
+    if location == 'egypt':
+        return 'EGP'
+    if location == 'germany':
+        return 'EUR'
+    biggest = max(float(price_min or 0), float(price_max or 0))
+    return 'EGP' if biggest >= 300000 else 'EUR'
+
+
+def our_cars(brand=None, model=None, price_min=None, price_max=None, year_min=None, year_max=None,
+             location=None, limit=DEFAULT_LIMIT, currency=None):
+    """A narrow look at the stock. Returns a dict: `cars` (at most `limit`),
+    `matching` (how many match in all), `see_all_on_website`, `understood`
+    (the brand/model the words were read as) and `totals` per place.
+
+    Prices are compared in each car's own currency: pounds for the Egypt
+    showroom, euros for cars in Germany — the currency the customer's budget
+    is in decides which cars a price range can apply to."""
+    from car_import.services import catalogue
+
     rows = offerable()
-    totals = {'egypt': rows.filter(location__website_id=EGYPT).count(),
-              'germany': rows.filter(location__website_id=GERMANY).count()}
     if location == 'egypt':
         rows = rows.filter(location__website_id=EGYPT)
     elif location == 'germany':
         rows = rows.filter(location__website_id=GERMANY)
-    for word in str(query or '').split():
-        rows = rows.filter(Q(title_en__icontains=word) | Q(title_ar__icontains=word)
-                           | Q(brand__name_en__icontains=word) | Q(brand__name_ar__icontains=word)
-                           | Q(model__name_en__icontains=word) | Q(serial__iexact=word))
+
+    brand_row, model_row = catalogue.resolve(brand, model) if brand else (None, None)
+    if brand_row is None and (brand or model):
+        brand_row, model_row = catalogue.parse(' '.join(x for x in [brand, model] if x))
+    if brand_row is not None:
+        rows = rows.filter(brand=brand_row)
+        if model_row is not None:
+            rows = rows.filter(car_model=model_row)
+        elif model:
+            for word in str(model).split():
+                rows = rows.filter(Q(title_en__icontains=word) | Q(title_ar__icontains=word)
+                                   | Q(car_model__name__icontains=word))
+    else:
+        for word in ' '.join(x for x in [brand, model] if x).split():
+            rows = rows.filter(Q(title_en__icontains=word) | Q(title_ar__icontains=word)
+                               | Q(brand__name__icontains=word) | Q(brand__name_ar__icontains=word)
+                               | Q(car_model__name__icontains=word) | Q(serial__iexact=word))
+    money = None
+    if price_min or price_max:
+        money = budget_currency(price_min, price_max, currency, location)
+        rows = rows.filter(currency__code=money)
+    if price_min:
+        rows = rows.filter(price__gte=price_min)
+    if price_max:
+        rows = rows.filter(price__lte=price_max)
+    if year_min:
+        rows = rows.filter(year__gte=year_min)
+    if year_max:
+        rows = rows.filter(year__lte=year_max)
+
+    cap = max(1, min(int(limit or DEFAULT_LIMIT), MAX_LIMIT))
+    ordered = rows.order_by('price', '-website_id') if (price_min or price_max) else rows.order_by('-website_id')
     cars = []
-    for car in rows.order_by('-website_id')[:max(1, min(int(limit or 8), 20))]:
+    for car in ordered[:cap]:
         in_egypt = car.location_id and car.location.website_id == EGYPT
         cars.append({
             'reference': f'WC-{car.pk}',
             'title': car.title_ar or car.title_en,
-            'title_en': car.title_en,
-            'brand': car.brand.name_en if car.brand_id else None,
-            'model': car.model.name_en if car.model_id else None,
             'year': car.year,
             'mileage_km': car.distance,
-            'fuel': car.fuel.name_ar or car.fuel.name_en if car.fuel_id else None,
-            'gearbox': car.gearbox.name_ar or car.gearbox.name_en if car.gearbox_id else None,
-            'engine': car.engine.name_en if car.engine_id else None,
             'price': _fmt(car.price, 'ج.م' if in_egypt else '€'),
             'where': ('في معرضنا في مصر — استلام فوري' if in_egypt
                       else 'في ألمانيا عندنا — محتاجة شحن لمصر'),
-            'price_note': ('Final price in EGP as listed on our website.' if in_egypt
-                           else 'Price in EUR as listed on our website for the car in Germany. It is not the '
-                                'delivered-to-Egypt cost; do not add figures to it yourself.'),
-            'extras': car.extra_options.count(),
+            'link': car_link(car),
             'photos_available': int(bool(car.site_image_url)) + len(car.site_gallery_urls or []),
-            'about': (car.description_ar or car.description_en or '')[:220],
         })
-    return cars, totals
+    return {
+        'cars': cars,
+        'matching': rows.count(),
+        'see_all_on_website': cars_link(brand_row, model_row, price_min, price_max),
+        'understood': {'brand': brand_row.name if brand_row else None,
+                       'model': model_row.name if model_row else None,
+                       'budget_currency': money},
+        'totals': totals(),
+    }

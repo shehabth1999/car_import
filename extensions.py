@@ -72,7 +72,15 @@ class LeadCarImportExtension(ModelExtension):
         help_text=_("initiative / personal / commercial / first_owner / showroom / shipping_only"),
     )
     ka_initiative_type = models.CharField(max_length=16, blank=True, null=True, verbose_name=_("Initiative type"))
-    ka_model_wanted = models.CharField(max_length=128, blank=True, null=True, verbose_name=_("Model wanted"))
+    ka_brand_wanted = models.ForeignKey('car_import.CarBrand', null=True, blank=True, on_delete=models.SET_NULL,
+                                        related_name='+', verbose_name=_("Brand wanted"))
+    ka_car_model_wanted = models.ForeignKey('car_import.CarModel', null=True, blank=True,
+                                            on_delete=models.SET_NULL, related_name='+',
+                                            verbose_name=_("Model wanted"))
+    #: What the customer actually wrote — kept when it names no catalogue model
+    #: ("C-Class", "any SUV"), so a person still sees the request.
+    ka_model_wanted = models.CharField(max_length=128, blank=True, null=True,
+                                       verbose_name=_("In the customer's words"))
     ka_model_year_wanted = models.PositiveIntegerField(blank=True, null=True, verbose_name=_("Model year wanted"))
     ka_trim_wanted = models.CharField(max_length=128, blank=True, null=True, verbose_name=_("Trim wanted"))
     ka_colour_wanted = models.CharField(max_length=64, blank=True, null=True, verbose_name=_("Colour wanted"))
@@ -232,12 +240,15 @@ class ConversationCarImportExtension(ModelExtension):
         if lead is not None:
             for wizard_field, lead_field in (
                     ('program', 'ka_program'), ('initiative_type', 'ka_initiative_type'),
+                    ('brand_wanted', 'ka_brand_wanted'), ('car_model_wanted', 'ka_car_model_wanted'),
                     ('model_wanted', 'ka_model_wanted'), ('model_year_wanted', 'ka_model_year_wanted'),
                     ('trim_wanted', 'ka_trim_wanted'), ('colour_wanted', 'ka_colour_wanted'),
                     ('condition_wanted', 'ka_condition_wanted'), ('budget_eur', 'ka_budget_eur'),
                     ('funds_ready_on', 'ka_funds_ready_on')):
                 value = getattr(lead, lead_field, None)
-                if value not in (None, ''):
+                if hasattr(value, 'pk'):                  # a brand or a model: the relation's shape
+                    defaults[wizard_field] = ca.ref(value)
+                elif value not in (None, ''):
                     defaults[wizard_field] = str(value) if hasattr(value, 'isoformat') else value
         return {'status': True, 'open_mode': 'slideover', 'data': {
             'view_key': 'car_import_qualify_form_view', 'view_type': 'form', 'id': None,

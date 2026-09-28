@@ -166,8 +166,8 @@ car_import_deposit_list_view = _list(
     "car_import_deposit_list_view", "Deposit values", "car_import.deposittier",
     "car_import_menu_deposits",
     [
-        {"name": "make", "string": _("Make"), "widget": "text", "width": "140"},
-        {"name": "model", "string": _("Model"), "widget": "text", "width": "140"},
+        {"name": "car_model", "string": _("Model"), "widget": "relation", "displayField": "display_name",
+         "width": "220"},
         {"name": "model_year", "string": _("Year"), "widget": "number", "width": "90"},
         {"name": "tier", "string": _("Tier"), "widget": "select", "width": "120"},
         {"name": "region", "string": _("Region"), "widget": "select", "width": "150"},
@@ -179,8 +179,8 @@ car_import_customs_list_view = _list(
     "car_import_customs_list_view", "Customs values", "car_import.customsvaluation",
     "car_import_menu_customs",
     [
-        {"name": "make", "string": _("Make"), "widget": "text", "width": "140"},
-        {"name": "model", "string": _("Model"), "widget": "text", "width": "140"},
+        {"name": "car_model", "string": _("Model"), "widget": "relation", "displayField": "display_name",
+         "width": "220"},
         {"name": "model_year", "string": _("Year"), "widget": "number", "width": "90"},
         {"name": "value_eur", "string": _("Value (EUR)"), "widget": "number", "width": "140"},
         # Open question V1 lives in this column — visible, not hidden in a doc.
@@ -191,8 +191,8 @@ car_import_price_range_list_view = _list(
     "car_import_price_range_list_view", "Model price ranges", "car_import.modelpricerange",
     "car_import_menu_price_ranges",
     [
-        {"name": "make", "string": _("Make"), "widget": "text", "width": "140"},
-        {"name": "model", "string": _("Model"), "widget": "text", "width": "140"},
+        {"name": "car_model", "string": _("Model"), "widget": "relation", "displayField": "display_name",
+         "width": "220"},
         {"name": "model_year", "string": _("Year"), "widget": "number", "width": "90"},
         {"name": "price_from_eur", "string": _("From (EUR)"), "widget": "number", "width": "130"},
         {"name": "price_to_eur", "string": _("To (EUR)"), "widget": "number", "width": "130"},

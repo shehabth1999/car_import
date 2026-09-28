@@ -219,12 +219,10 @@ def sync_lookups(client=None):
             values = {'name_en': str(row.get('name') or '')[:190],
                       'name_ar': str((arabic.get(website_id) or {}).get('name') or '')[:190],
                       'is_active': True, 'synced_at': now}
-            if kind == 'model':
-                values['brand_website_id'] = row.get('brand_id')
-                values['category_website_id'] = row.get('category_id')
             WebsiteLookup.objects.update_or_create(kind=kind, website_id=website_id, defaults=values)
         WebsiteLookup.objects.filter(kind=kind).exclude(website_id__in=list(english)).update(is_active=False)
         counts[kind] = len(english)
+    counts.update(sync_catalogue(client))
     conn = client.conn
     type(conn)._base_manager.filter(pk=conn.pk).update(lookups_synced_at=now)
     return counts
@@ -238,24 +236,46 @@ def _names(value):
     return str(name or ''), ''
 
 
+def sync_catalogue(client):
+    """The website's brand and model lists into the car catalogue: linked by
+    website id, matched by name, or added. Genie's own names are never changed."""
+    from car_import.services import catalogue
+    brands = {row['id']: row for row in client.input_list('brands', 'en') if 'id' in row}
+    brands_ar = {row['id']: row for row in client.input_list('brands', 'ar') if 'id' in row}
+    for website_id, row in brands.items():
+        catalogue.brand_for_website(website_id, str(row.get('name') or ''),
+                                    str((brands_ar.get(website_id) or {}).get('name') or ''))
+    models_en = [row for row in client.input_list('models', 'en') if 'id' in row]
+    models_ar = {row['id']: row for row in client.input_list('models', 'ar') if 'id' in row}
+    for row in models_en:
+        brand = catalogue.brand_for_website(row.get('brand_id'))
+        catalogue.model_for_website(row['id'], brand, str(row.get('name') or ''),
+                                    str((models_ar.get(row['id']) or {}).get('name') or ''))
+    return {'brand': len(brands), 'model': len(models_en)}
+
+
 def lookup(kind, website_id, related=None):
-    """The list entry for a website id; a stub when the site no longer lists it (a deleted brand)."""
+    """The list entry for a website id; a stub when the site no longer lists it (a deleted brand).
+    Brands and models answer with catalogue rows."""
     from car_import.models import WebsiteLookup
+    from car_import.services import catalogue
     if not website_id:
         return None
     try:
         website_id = int(website_id)
     except (TypeError, ValueError):
         return None
+    en, ar = _names(related)
+    if kind == 'brand':
+        return catalogue.brand_for_website(website_id, en, ar)
+    if kind == 'model':
+        brand_id = related.get('brand_id') if isinstance(related, dict) else None
+        return catalogue.model_for_website(website_id, catalogue.brand_for_website(brand_id), en, ar)
     row = WebsiteLookup.objects.filter(kind=kind, website_id=website_id).first()
     if row is not None:
         return row
-    en, ar = _names(related)
-    values = {'name_en': en[:190], 'name_ar': ar[:190], 'is_active': False}
-    if kind == 'model' and isinstance(related, dict):
-        values['brand_website_id'] = related.get('brand_id')
-        values['category_website_id'] = related.get('category_id')
-    return WebsiteLookup.objects.create(kind=kind, website_id=website_id, **values)
+    return WebsiteLookup.objects.create(kind=kind, website_id=website_id, name_en=en[:190], name_ar=ar[:190],
+                                        is_active=False)
 
 
 # ── website → Genie: the cars ───────────────────────────────────────────────
@@ -300,7 +320,10 @@ def _apply_site_row(car, row):
     car.location = lookup('country', row.get('car_location'), row.get('carlocation'))
     car.category = lookup('category', row.get('category_id'), row.get('category'))
     car.brand = lookup('brand', row.get('brand_id'), row.get('brand'))
-    car.model = lookup('model', row.get('model_id'), row.get('models'))
+    related_model = row.get('models') if isinstance(row.get('models'), dict) else {}
+    car.car_model = lookup('model', row.get('model_id'), dict(related_model, brand_id=row.get('brand_id')))
+    if car.car_model is not None and car.brand is None:
+        car.brand = car.car_model.brand
     car.origin = lookup('origin', row.get('origin_id'), row.get('origin'))
     car.gearbox = lookup('gearbox', row.get('gearbox_id'), row.get('gearbox'))
     car.bodytype = lookup('bodytype', row.get('bodytype_id'), row.get('bodytype'))
@@ -377,7 +400,8 @@ def import_cars(mode='all', client=None):
 
 # ── Genie → website: one car ─────────────────────────────────────────────────
 REQUIRED = [('title', 'العنوان'), ('serial', 'رقم الشاسيه'), ('year', 'سنة الموديل'), ('price', 'السعر'),
-            ('category', 'الفئة'), ('brand', 'الماركة'), ('model', 'الموديل'), ('gearbox', 'الفتيس'),
+            ('category', 'الفئة'), ('brand', 'الماركة (من ماركات الموقع)'),
+            ('model', 'الموديل (من موديلات الموقع)'), ('gearbox', 'الفتيس'),
             ('bodytype', 'شكل العربية'), ('engine', 'الموتور'), ('fuel', 'الوقود'),
             ('location', 'مكان العربية')]
 
@@ -387,8 +411,10 @@ def build_payload(car):
     title = {k: v for k, v in (('en', car.title_en), ('ar', car.title_ar)) if v}
     present = {
         'title': bool(title), 'serial': len(car.serial or '') >= 2, 'year': bool(car.year),
-        'price': car.price is not None, 'category': bool(car.category_id), 'brand': bool(car.brand_id),
-        'model': bool(car.model_id), 'gearbox': bool(car.gearbox_id), 'bodytype': bool(car.bodytype_id),
+        'price': car.price is not None, 'category': bool(car.category_id),
+        'brand': bool(car.brand_id and car.brand.website_id),
+        'model': bool(car.car_model_id and car.car_model.website_id),
+        'gearbox': bool(car.gearbox_id), 'bodytype': bool(car.bodytype_id),
         'engine': bool(car.engine_id), 'fuel': bool(car.fuel_id), 'location': bool(car.location_id),
     }
     missing = [label for key, label in REQUIRED if not present[key]]
@@ -401,7 +427,7 @@ def build_payload(car):
         'price': float(car.price),
         'category_id': car.category.website_id,
         'brand_id': car.brand.website_id,
-        'model_id': car.model.website_id,
+        'model_id': car.car_model.website_id,
         'gearbox_id': car.gearbox.website_id,
         'bodytype_id': car.bodytype.website_id,
         'engine_id': car.engine.website_id,
@@ -572,15 +598,14 @@ def _norm(text):
     return re.sub(r'[^a-z0-9؀-ۿ]', '', str(text or '').lower())
 
 
-def match_lookup(kind, *texts, brand=None):
-    """The list entry whose name (or alias) matches one of these texts."""
+def match_lookup(kind, *texts):
+    """The website list entry (fuel, gearbox, body type…) whose name or alias
+    matches one of these texts. Brands and models are the catalogue's job."""
     from car_import.models import WebsiteLookup
     wanted = {_norm(t) for t in texts if t}
     if not wanted:
         return None
     rows = WebsiteLookup.objects.filter(kind=kind, is_active=True)
-    if brand is not None and kind == 'model':
-        rows = rows.filter(brand_website_id=brand.website_id)
     for row in rows:
         if wanted & {_norm(n) for n in row.names()}:
             return row
@@ -612,18 +637,18 @@ def car_from_vehicle(vehicle):
     existing = WebsiteCar.objects.filter(vehicle=vehicle).order_by('-id').first()
     if existing is not None:
         return existing
-    brand = match_lookup('brand', vehicle.make)
     body_names = {'sedan': 'sedan', 'hatchback': 'hatchback', 'suv': 'SUV', 'coupe': 'coupe',
                   'convertible': 'convertible', 'estate': 'station', 'van': 'van'}
     car = WebsiteCar(
         vehicle=vehicle,
-        title_en=' '.join(str(x) for x in [vehicle.make, vehicle.model, vehicle.trim, vehicle.model_year] if x)[:255],
+        title_en=' '.join(str(x) for x in [vehicle.brand_name, vehicle.model_name, vehicle.trim,
+                                           vehicle.model_year] if x)[:255],
         serial=vehicle.vin or '',
         year=vehicle.model_year,
         price=vehicle.price_gross_eur,
         distance=vehicle.mileage_km,
-        brand=brand,
-        model=match_lookup('model', vehicle.model, f'{vehicle.model} {vehicle.trim or ""}', brand=brand) if brand else None,
+        brand=vehicle.brand,
+        car_model=vehicle.car_model,
         category=WebsiteLookup.objects.filter(kind='category', is_active=True).order_by('website_id').first(),
         fuel=match_lookup('fuel', vehicle.fuel, {'benzin': 'Petrol', 'petrol': 'Petrol', 'gasoline': 'Petrol',
                                                  'diesel': 'Diesel'}.get(str(vehicle.fuel or '').lower())),
@@ -648,8 +673,7 @@ def ensure_vehicle(car):
     if vehicle is None:
         distance = car.distance or 0
         vehicle = Vehicle(
-            make=(car.brand.name_en if car.brand_id else '') or '—',
-            model=(car.model.name_en if car.model_id else '') or '—',
+            brand=car.brand, car_model=car.car_model,
             model_year=car.year, vin=vin, mileage_km=car.distance,
             fuel=(car.fuel.name_en if car.fuel_id else '')[:32],
             gearbox=(car.gearbox.name_en if car.gearbox_id else '')[:32],

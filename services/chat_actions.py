@@ -71,7 +71,9 @@ def qualification_summary(form):
     parts = []
     if form.program:
         parts.append(str(form.get_program_display()) + (f' / {form.initiative_type}' if form.initiative_type else ''))
-    car = ' '.join(str(x) for x in [form.model_wanted, form.model_year_wanted, form.trim_wanted,
+    named = (str(form.car_model_wanted) if form.car_model_wanted else
+             ' '.join(x for x in [form.brand_wanted.name if form.brand_wanted else '', form.model_wanted or ''] if x))
+    car = ' '.join(str(x) for x in [named, form.model_year_wanted, form.trim_wanted,
                                     form.colour_wanted] if x)
     if car:
         parts.append(car + (f' ({form.get_condition_wanted_display()})' if form.condition_wanted else ''))

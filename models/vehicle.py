@@ -77,8 +77,13 @@ class Vehicle(BaseModel):
     )
     internal_reference = models.CharField(max_length=64, blank=True,
                                           verbose_name=_("Internal reference"))
-    make = models.CharField(max_length=64, verbose_name=_("Make"))
-    model = models.CharField(max_length=128, verbose_name=_("Model"))
+    brand = models.ForeignKey('car_import.CarBrand', null=True, blank=True, on_delete=models.PROTECT,
+                              related_name='vehicles', verbose_name=_("Brand"))
+    car_model = models.ForeignKey('car_import.CarModel', null=True, blank=True, on_delete=models.PROTECT,
+                                  related_name='vehicles', verbose_name=_("Model"))
+    #: "Mercedes-Benz C200 AMG Line 2024" — kept so every car picker and list
+    #: can show and search the car without a join. Written by pre_save.
+    name = models.CharField(max_length=255, blank=True, editable=False, db_index=True, verbose_name=_("Car"))
     trim = models.CharField(max_length=128, blank=True, verbose_name=_("Trim"))
     model_year = models.PositiveIntegerField(null=True, blank=True, verbose_name=_("Model year"))
     production_month = models.CharField(max_length=16, blank=True, verbose_name=_("Production month"))
@@ -189,7 +194,18 @@ class Vehicle(BaseModel):
         ordering = ['-id']
 
     def __str__(self):
-        parts = [self.make, self.model, self.trim, str(self.model_year or '')]
+        return self.name or self.compose_name()
+
+    @property
+    def brand_name(self):
+        return self.brand.name if self.brand_id else ''
+
+    @property
+    def model_name(self):
+        return self.car_model.name if self.car_model_id else ''
+
+    def compose_name(self):
+        parts = [self.brand_name, self.model_name, self.trim, str(self.model_year or '')]
         return ' '.join(p for p in parts if p).strip() or (self.vin or '—')
 
     # ── the client's approval matrix, where the car is the subject ──────────
@@ -208,6 +224,20 @@ class Vehicle(BaseModel):
         'كرواتيا', 'بلغاريا', 'ليتوانيا', 'لاتفيا', 'إستونيا', 'استونيا', 'أيرلندا', 'ايرلندا',
         'لوكسمبورغ', 'مالطا', 'قبرص',
     }
+
+    @onchange('brand')
+    def _onchange_brand(self):
+        """A model of another brand is cleared the moment the brand changes."""
+        if self.car_model_id and self.brand_id and self.car_model.brand_id != self.brand_id:
+            return {'value': {'car_model': None}}
+        return None
+
+    @onchange('car_model')
+    def _onchange_car_model(self):
+        """Picking a model fills its brand."""
+        if self.car_model_id and self.car_model.brand_id != self.brand_id:
+            return {'value': {'brand': self.car_model.brand}}
+        return None
 
     @onchange('price_gross_eur')
     def _onchange_price_gross(self):
@@ -238,7 +268,16 @@ class Vehicle(BaseModel):
 
     def pre_save(self):
         super().pre_save()
+        from django.core.exceptions import ValidationError
+
         from .approval import require
+
+        if self.car_model_id and not self.brand_id:
+            self.brand_id = self.car_model.brand_id
+        if self.car_model_id and self.car_model.brand_id != self.brand_id:
+            raise ValidationError({'car_model': _("%(model)s is not a %(brand)s model.") % {
+                'model': self.car_model.name, 'brand': self.brand_name}})
+        self.name = self.compose_name()[:255]
 
         user = getattr(getattr(self, 'env', None), 'user', None)
         stored = (type(self)._base_manager.filter(pk=self.pk)

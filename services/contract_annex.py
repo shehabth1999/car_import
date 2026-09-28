@@ -72,8 +72,8 @@ def as_html(contract, vehicle):
 
 def _rows(vehicle):
     return [
-        ('الماركة', vehicle.make),
-        ('الموديل', vehicle.model),
+        ('الماركة', vehicle.brand_name),
+        ('الموديل', vehicle.model_name),
         ('الفئة (Trim)', vehicle.trim),
         ('سنة الموديل', vehicle.model_year),
         ('شهر الإنتاج', vehicle.production_month),

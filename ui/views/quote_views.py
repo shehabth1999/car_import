@@ -396,7 +396,7 @@ car_quote_search_view = {
             "search_fields": [
                 {"name": ["name"], "string": _("Reference"), "widget": "text"},
                 {"name": ["partner__name"], "string": _("Customer"), "widget": "text"},
-                {"name": ["vehicle__model"], "string": _("Model"), "widget": "text"},
+                {"name": ["vehicle__name"], "string": _("Car"), "widget": "text"},
                 {"name": ["band_label"], "string": _("Band"), "widget": "text"},
             ],
             "filters": [

@@ -23,7 +23,11 @@ class QualifyCustomer(TransientModel):
     ])
     initiative_type = models.CharField(max_length=16, blank=True, null=True, verbose_name=_("Initiative type"),
                                        choices=[('gulf', _("Gulf")), ('european', _("European"))])
-    model_wanted = models.CharField(max_length=128, blank=True, null=True, verbose_name=_("Model wanted"))
+    brand_wanted = models.ForeignKey('car_import.CarBrand', null=True, blank=True, on_delete=models.SET_NULL,
+                                     related_name='+', verbose_name=_("Brand wanted"))
+    car_model_wanted = models.ForeignKey('car_import.CarModel', null=True, blank=True, on_delete=models.SET_NULL,
+                                         related_name='+', verbose_name=_("Model wanted"))
+    model_wanted = models.CharField(max_length=128, blank=True, null=True, verbose_name=_("In the customer's words"))
     model_year_wanted = models.PositiveIntegerField(blank=True, null=True, verbose_name=_("Model year wanted"))
     trim_wanted = models.CharField(max_length=128, blank=True, null=True, verbose_name=_("Trim wanted"))
     colour_wanted = models.CharField(max_length=64, blank=True, null=True, verbose_name=_("Colour wanted"))
@@ -54,6 +58,8 @@ class QualifyCustomer(TransientModel):
         written = []
         pairs = [
             ('ka_program', form.program), ('ka_initiative_type', form.initiative_type),
+            ('ka_brand_wanted', form.brand_wanted or (form.car_model_wanted.brand if form.car_model_wanted else None)),
+            ('ka_car_model_wanted', form.car_model_wanted),
             ('ka_model_wanted', form.model_wanted), ('ka_model_year_wanted', form.model_year_wanted),
             ('ka_trim_wanted', form.trim_wanted), ('ka_colour_wanted', form.colour_wanted),
             ('ka_condition_wanted', form.condition_wanted), ('ka_budget_eur', form.budget_eur),

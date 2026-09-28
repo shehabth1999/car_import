@@ -42,7 +42,7 @@ class _Example:
     amount_due_marked = None
 
     class vehicle:
-        make, model, trim = 'Mercedes-Benz', 'C200', 'AMG Line'
+        brand_name, model_name, trim = 'Mercedes-Benz', 'C200', 'AMG Line'
         model_year, colour_exterior = 2024, 'أسود'
         vin = 'W1K2060461F123456'
 

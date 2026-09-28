@@ -49,6 +49,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         from car_import.models import CustomsValuation, DepositTier, ModelPriceRange
+        from car_import.services import catalogue
 
         path = options['file']
         dry = options['dry_run']
@@ -70,6 +71,10 @@ class Command(BaseCommand):
                 if not (make and model and year):
                     rejected.append((line_no, f'{make} {model}', 'missing make, model or year'))
                     continue
+                # The owner's workbook is authoritative: "Mercedes / C 200" is
+                # the catalogue's Mercedes C200, and a model it does not have
+                # yet is added rather than the row dropped.
+                _brand, car_model = catalogue.resolve(make, model, create=True)
 
                 full_eu = _decimal(row.get('deposit_full_europe_usd'))
                 full_out = _decimal(row.get('deposit_full_outside_usd'))
@@ -97,7 +102,7 @@ class Command(BaseCommand):
                         continue
                     if not dry:
                         DepositTier.objects.update_or_create(
-                            make=make, model=model, model_year=year, tier=tier, region=region,
+                            car_model=car_model, model_year=year, tier=tier, region=region,
                             defaults={'deposit_usd': value, 'effective_from': CONFIRMED,
                                       'source_note': SOURCE})
                     deposits += 1
@@ -106,7 +111,7 @@ class Command(BaseCommand):
                 if customs_value is not None:
                     if not dry:
                         CustomsValuation.objects.update_or_create(
-                            make=make, model=model, model_year=year,
+                            car_model=car_model, model_year=year,
                             # 'payable', not 'unknown': the client confirmed on
                             # 2026-09-16 that these are the amounts actually paid.
                             defaults={'value_eur': customs_value, 'basis': 'payable',
@@ -122,7 +127,7 @@ class Command(BaseCommand):
                         continue
                     if not dry:
                         ModelPriceRange.objects.update_or_create(
-                            make=make, model=model, model_year=year,
+                            car_model=car_model, model_year=year,
                             defaults={'price_from_eur': price_from, 'price_to_eur': price_to,
                                       'egypt_price_egp': _decimal(row.get('egypt_price_egp')),
                                       'hp': _int(row.get('hp')),

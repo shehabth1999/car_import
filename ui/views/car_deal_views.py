@@ -500,7 +500,7 @@ car_deal_search_view = {
                 {"name": ["name"], "string": _("Reference"), "widget": "text"},
                 {"name": ["partner__name"], "string": _("Customer"), "widget": "text"},
                 {"name": ["vehicle__vin"], "string": _("VIN"), "widget": "text"},
-                {"name": ["vehicle__model"], "string": _("Model"), "widget": "text"},
+                {"name": ["vehicle__name"], "string": _("Car"), "widget": "text"},
                 {"name": ["bl_number"], "string": _("Bill of lading"), "widget": "text"},
                 {"name": ["acid_number"], "string": _("ACID"), "widget": "text"},
             ],

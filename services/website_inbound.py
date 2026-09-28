@@ -181,21 +181,35 @@ def find_or_create_partner(name, phone, email):
     return partner, True
 
 
-def _lookup_name(kind, website_id):
-    from car_import.models import WebsiteLookup
-    if not website_id:
-        return ''
-    row = WebsiteLookup.objects.filter(kind=kind, website_id=website_id).first()
-    return (row.name_en or row.name_ar) if row else f'#{website_id}'
+def wanted_car(data, website_car=None):
+    """(brand, car_model) the visitor asked about, as catalogue rows. The
+    website sends its own ids (the catalogue keeps them); names are read when
+    no id matches. A name that matches nothing stays text — never a new brand."""
+    from car_import.models import CarBrand, CarModel
+    from car_import.services import catalogue
+    if website_car is not None:
+        return website_car.brand, website_car.car_model
+    brand_id, model_id = _int(data, 'brand_id'), _int(data, 'model_id')
+    car_model = CarModel.objects.filter(website_id=model_id).select_related('brand').first()         if isinstance(model_id, int) else None
+    brand = (car_model.brand if car_model else None) or (
+        CarBrand.objects.filter(website_id=brand_id).first() if isinstance(brand_id, int) else None)
+    if brand is None and _text(data, 'brand_name'):
+        brand = catalogue.find_brand(_text(data, 'brand_name'))
+    if car_model is None and brand is not None and _text(data, 'model_name'):
+        car_model = catalogue.find_model(brand, _text(data, 'model_name'))
+    return brand, car_model
 
 
 def _car_wanted(data, website_car):
     if website_car is not None:
         return str(website_car)[:255]
-    brand = _text(data, 'brand_name') or _lookup_name('brand', _int(data, 'brand_id'))
-    model = _text(data, 'model_name') or _lookup_name('model', _int(data, 'model_id'))
+    brand, car_model = wanted_car(data)
+    brand_text = brand.name if brand else (_text(data, 'brand_name') or
+                                           (f"#{_int(data, 'brand_id')}" if _int(data, 'brand_id') else ''))
+    model_text = car_model.name if car_model else (_text(data, 'model_name') or
+                                                   (f"#{_int(data, 'model_id')}" if _int(data, 'model_id') else ''))
     year = _int(data, 'year')
-    return ' '.join(str(x) for x in [brand, model, year if isinstance(year, int) else ''] if x)[:255]
+    return ' '.join(str(x) for x in [brand_text, model_text, year if isinstance(year, int) else ''] if x)[:255]
 
 
 def receive_lead(data, ip=''):
@@ -283,10 +297,15 @@ def _create_lead(submission, partner, data, clean, website_car):
     if lead is None:
         return None
     extra = {}
+    brand, car_model = wanted_car(data, website_car)
+    if brand is not None:
+        extra['ka_brand_wanted'] = brand
+    if car_model is not None:
+        extra['ka_car_model_wanted'] = car_model
     wanted = submission.car_wanted
     if clean['year'] and wanted.endswith(str(clean['year'])):
         wanted = wanted[:-len(str(clean['year']))].strip()    # the year has its own field
-    if wanted:
+    if wanted and car_model is None:                          # the words only when no model matched
         extra['ka_model_wanted'] = wanted[:128]
     if clean['year']:
         extra['ka_model_year_wanted'] = clean['year']
@@ -404,8 +423,8 @@ def tracking(chassis):
         'chassis_number': vin,
         'reference': deal.name or '',
         'car': {
-            'make': getattr(vehicle, 'make', '') or '',
-            'model': getattr(vehicle, 'model', '') or '',
+            'make': getattr(vehicle, 'brand_name', '') or '',
+            'model': getattr(vehicle, 'model_name', '') or '',
             'trim': getattr(vehicle, 'trim', '') or '',
             'year': getattr(vehicle, 'model_year', None),
             'color': getattr(vehicle, 'colour_exterior', '') or '',

@@ -148,6 +148,8 @@ website_car_list_view = {
         "tree": {"fields": [
             {"name": "website_id", "widget": "number", "string": _("Website id"), "width": "100"},
             {"name": "title_en", "widget": "text", "string": _("Title"), "width": "260"},
+            {"name": "brand", "widget": "relation", "displayField": "name", "string": _("Brand"), "width": "120"},
+            {"name": "car_model", "widget": "relation", "displayField": "name", "string": _("Model"), "width": "120"},
             {"name": "serial", "widget": "text", "string": _("Chassis number"), "width": "190"},
             {"name": "year", "widget": "number", "string": _("Year"), "width": "80"},
             {"name": "price", "widget": "number", "string": _("Price"), "width": "130"},
@@ -188,10 +190,17 @@ website_car_form_view = {
                             {"name": "sync_state", "string": _("Website sync"), "widget": "select", "invisible": True},
                             {"name": "title_ar", "string": _("Title (Arabic)"), "widget": "text"},
                             {"name": "title_en", "string": _("Title (English)"), "widget": "text"},
-                            _pick("brand", _("Brand"), "brand", required=True),
-                            {"name": "model", "string": _("Model"), "widget": "relation", "displayField": "name_en",
-                             "multiSelect": False, "required": True, "domain": _kind("model"),
-                             "help": _("Must belong to the brand — the website refuses anything else")},
+                            {"name": "brand", "string": _("Brand"), "widget": "relation", "displayField": "name",
+                             "multiSelect": False, "required": True, "onChange": True,
+                             "domain": {"filters": {"operator": "and", "filters": [
+                                 {"field": "website_id", "operator": "is_null", "value": False}]}},
+                             "help": _("Only brands the website carries")},
+                            {"name": "car_model", "string": _("Model"), "widget": "relation", "displayField": "name",
+                             "multiSelect": False, "required": True, "onChange": True,
+                             "domain": {"filters": {"operator": "and", "filters": [
+                                 {"field": "brand", "operator": "in", "value": ["{{brand.id}}"]},
+                                 {"field": "website_id", "operator": "is_null", "value": False}]}},
+                             "help": _("The brand's models the website carries — choose the brand first")},
                             _pick("category", _("Category"), "category", required=True),
                             {"name": "year", "string": _("Model year"), "widget": "number", "required": True},
                             {"name": "serial", "string": _("Chassis number"), "widget": "text", "required": True},
@@ -288,8 +297,8 @@ website_car_search_view = {
                 {"name": ["title_en"], "string": _("Title"), "widget": "text"},
                 {"name": ["title_ar"], "string": _("Title (Arabic)"), "widget": "text"},
                 {"name": ["serial"], "string": _("Chassis number"), "widget": "text"},
-                {"name": ["brand__name_en"], "string": _("Brand"), "widget": "text"},
-                {"name": ["model__name_en"], "string": _("Model"), "widget": "text"},
+                {"name": ["brand__name"], "string": _("Brand"), "widget": "text"},
+                {"name": ["car_model__name"], "string": _("Model"), "widget": "text"},
             ],
             "filters": [
                 {"name": "shown", "string": _("Shown on the website"),
@@ -358,7 +367,6 @@ website_lookup_form_view = {
         ]},
         {"fields": [
             {"name": "aliases", "string": _("Also matches"), "widget": "text"},
-            {"name": "brand_website_id", "string": _("Brand id (models)"), "widget": "number", "readonly": True},
             {"name": "is_active", "string": _("Still on the website"), "widget": "switch", "readonly": True},
         ]},
     ]}]}},
@@ -379,7 +387,7 @@ website_lookup_search_view = {
         ],
         "filters": [
             {"name": kind, "string": label, "filter": {"field": "kind", "operator": "eq", "value": kind}}
-            for kind, label in (("brand", _("Brands")), ("model", _("Models")), ("fuel", _("Fuels")),
+            for kind, label in (("fuel", _("Fuels")),
                                 ("gearbox", _("Gearboxes")), ("bodytype", _("Body types")),
                                 ("engine", _("Engines")), ("country", _("Locations")),
                                 ("extra_option", _("Extra options")))

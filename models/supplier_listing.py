@@ -38,8 +38,11 @@ class SupplierListing(BaseModel):
     url = models.URLField(max_length=500, blank=True, verbose_name=_("Advert link"))
 
     # ── the car ─────────────────────────────────────────────────────────────
-    make = models.CharField(max_length=64, blank=True, verbose_name=_("Make"))
-    model = models.CharField(max_length=128, blank=True, verbose_name=_("Model"))
+    # The advert's own words stay in `raw`; here they are catalogue rows.
+    brand = models.ForeignKey('car_import.CarBrand', null=True, blank=True, on_delete=models.PROTECT,
+                              related_name='supplier_listings', verbose_name=_("Brand"))
+    car_model = models.ForeignKey('car_import.CarModel', null=True, blank=True, on_delete=models.PROTECT,
+                                  related_name='supplier_listings', verbose_name=_("Model"))
     version = models.CharField(max_length=190, blank=True, verbose_name=_("Version"))
     model_year = models.PositiveIntegerField(null=True, blank=True, verbose_name=_("Model year"))
     first_registration = models.CharField(max_length=16, blank=True,
@@ -104,14 +107,20 @@ class SupplierListing(BaseModel):
             models.UniqueConstraint(fields=['source', 'ad_id'], name='uniq_listing_per_source'),
         ]
         indexes = [
-            models.Index(fields=['make', 'model', 'model_year']),
+            models.Index(fields=['brand', 'car_model', 'model_year'], name='car_import_listing_brand_idx'),
             models.Index(fields=['still_available', 'vatable']),
         ]
 
     def __str__(self):
-        bits = [self.make, self.model, self.version or '', str(self.model_year or '')]
+        bits = [self.brand.name if self.brand_id else '', self.car_model.name if self.car_model_id else '',
+                self.version or '', str(self.model_year or '')]
         label = ' '.join(b for b in bits if b).strip() or self.ad_id
         return f"{label} — {self.price_gross_eur or '?'} €"
+
+    def pre_save(self):
+        super().pre_save()
+        if self.car_model_id and self.brand_id != self.car_model.brand_id:
+            self.brand_id = self.car_model.brand_id
 
     # ── the one calculation that belongs here ───────────────────────────────
     @property

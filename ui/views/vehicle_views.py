@@ -6,6 +6,11 @@ Germany team fills the first eight while the sales agent reads the last ten.
 """
 from django.utils.translation import gettext as _
 
+#: The model picker lists the chosen brand's models only. Before a brand is
+#: picked it is empty: `in [null]` matches nothing, where `eq null` is refused.
+MODEL_OF_BRAND = {"filters": {"operator": "and", "filters": [
+    {"field": "brand", "operator": "in", "value": ["{{brand.id}}"]}]}}
+
 vehicle_list_view = {
     "key": "car_import_vehicle_list_view",
     "name": _("Cars"),
@@ -17,8 +22,10 @@ vehicle_list_view = {
     "body": {
         "tree": {
             "fields": [
-                {"name": "make", "widget": "text", "string": _("Make"), "width": "120"},
-                {"name": "model", "widget": "text", "string": _("Model"), "width": "160"},
+                {"name": "brand", "widget": "relation", "displayField": "name", "string": _("Brand"),
+                 "width": "130"},
+                {"name": "car_model", "widget": "relation", "displayField": "name", "string": _("Model"),
+                 "width": "150"},
                 {"name": "trim", "widget": "text", "string": _("Trim"), "width": "150"},
                 {"name": "model_year", "widget": "number", "string": _("Year"), "width": "90"},
                 {"name": "cc", "widget": "number", "string": _("cc"), "width": "90"},
@@ -51,8 +58,13 @@ vehicle_form_view = {
                     "groups": [
                         {
                             "fields": [
-                                {"name": "make", "string": _("Make"), "widget": "text", "required": True},
-                                {"name": "model", "string": _("Model"), "widget": "text", "required": True},
+                                {"name": "brand", "string": _("Brand"), "widget": "relation",
+                                 "displayField": "name", "multiSelect": False, "required": True,
+                                 "onChange": True},
+                                {"name": "car_model", "string": _("Model"), "widget": "relation",
+                                 "displayField": "name", "multiSelect": False, "required": True,
+                                 "onChange": True, "domain": MODEL_OF_BRAND,
+                                 "help": _("Choose the brand first. A missing model is added under Car models")},
                                 {"name": "trim", "string": _("Trim"), "widget": "text"},
                                 {"name": "model_year", "string": _("Model year"), "widget": "number",
                                  "help": _("The model year, not the registration year — the initiative rules read this one")},
@@ -207,4 +219,32 @@ vehicle_form_view = {
             },
         ],
     },
+}
+
+vehicle_search_view = {
+    "key": "car_import_vehicle_search_view",
+    "name": _("Cars search"),
+    "model": "car_import.vehicle",
+    "menu_item": "car_import_menu_vehicles",
+    "view_type": "search",
+    "priority": 20,
+    "module": "car_import",
+    "body": {"search": {
+        "search_fields": [
+            {"name": ["name"], "string": _("Car"), "widget": "text"},
+            {"name": ["vin"], "string": _("VIN"), "widget": "text"},
+            {"name": ["brand__name_ar"], "string": _("Brand (Arabic)"), "widget": "text"},
+        ],
+        "filters": [
+            {"name": "vatable", "string": _("VAT recoverable"),
+             "filter": {"field": "vatable", "operator": "eq", "value": True}},
+            {"name": "zero", "string": _("Zero"),
+             "filter": {"field": "condition", "operator": "eq", "value": "zero"}},
+        ],
+        "group_by": [
+            {"name": "brand", "string": _("Brand")},
+            {"name": "car_model", "string": _("Model")},
+            {"name": "model_year", "string": _("Year")},
+        ],
+    }},
 }

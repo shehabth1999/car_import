@@ -309,7 +309,7 @@ class Contract(BaseModel, BranchMixin, FullChatterMixin):
                               or (getattr(holder, 'name', '') if holder else '')
                               or self.customer_name)
         if vehicle is not None:
-            self.car_model = self.car_model or f'{vehicle.make} {vehicle.model}'.strip()
+            self.car_model = self.car_model or f'{vehicle.brand_name} {vehicle.model_name}'.strip()
             self.car_trim = self.car_trim or (vehicle.trim or '')
             self.car_model_year = self.car_model_year or str(vehicle.model_year or '')
 

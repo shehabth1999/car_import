@@ -61,8 +61,12 @@ def partner_facts(partner):
         if getattr(lead, 'ka_program', None):
             lines.append('البرنامج: %s%s' % (
                 lead.ka_program, ' / ' + lead.ka_initiative_type if getattr(lead, 'ka_initiative_type', None) else ''))
+        car_model = getattr(lead, 'ka_car_model_wanted', None)
+        brand = getattr(lead, 'ka_brand_wanted', None)
+        car = (str(car_model) if car_model else
+               ' '.join(x for x in [brand.name if brand else '', getattr(lead, 'ka_model_wanted', None) or ''] if x))
         wanted = ' '.join(str(x) for x in [
-            getattr(lead, 'ka_model_wanted', None), getattr(lead, 'ka_model_year_wanted', None),
+            car, getattr(lead, 'ka_model_year_wanted', None),
             getattr(lead, 'ka_trim_wanted', None), getattr(lead, 'ka_colour_wanted', None)] if x)
         if wanted:
             lines.append('العربية المطلوبة: %s%s' % (

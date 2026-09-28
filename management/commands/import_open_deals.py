@@ -48,7 +48,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         from car_import.models import CarDeal, ImportStage, Vehicle
-        from car_import.services import naming
+        from car_import.services import catalogue
         from modules.base.models import Partner
         from modules.base.models.user import User
 
@@ -100,9 +100,10 @@ class Command(BaseCommand):
 
                 vehicle = None
                 if (row.get('make') or '').strip():
+                    # The company's own file: an unknown make or model joins the catalogue.
+                    brand, car_model = catalogue.resolve(row['make'], row.get('model'), create=True)
                     vehicle = Vehicle.create(
-                        make=row['make'].strip(),
-                        model=(row.get('model') or '').strip(),
+                        brand=brand, car_model=car_model,
                         model_year=int(row['model_year']) if (row.get('model_year') or '').strip().isdigit() else None,
                         vin=(row.get('vin') or '').strip(),
                     )

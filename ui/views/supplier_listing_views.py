@@ -14,8 +14,10 @@ car_import_listing_list_view = {
         "tree": {
             "fields": [
                 {"name": "ad_id", "string": _("Advert"), "widget": "text", "width": "130"},
-                {"name": "make", "string": _("Make"), "widget": "text", "width": "130"},
-                {"name": "model", "string": _("Model"), "widget": "text", "width": "110"},
+                {"name": "brand", "string": _("Brand"), "widget": "relation", "displayField": "name",
+                 "width": "130"},
+                {"name": "car_model", "string": _("Model"), "widget": "relation", "displayField": "name",
+                 "width": "120"},
                 {"name": "version", "string": _("Version"), "widget": "text", "width": "200"},
                 {"name": "model_year", "string": _("Year"), "widget": "number", "width": "80"},
                 {"name": "mileage_km", "string": _("Km"), "widget": "number", "width": "90"},
@@ -83,8 +85,11 @@ car_import_listing_form_view = {
                     "groups": [
                         {
                             "fields": [
-                                {"name": "make", "string": _("Make"), "widget": "text"},
-                                {"name": "model", "string": _("Model"), "widget": "text"},
+                                {"name": "brand", "string": _("Brand"), "widget": "relation",
+                                 "displayField": "name", "multiSelect": False},
+                                {"name": "car_model", "string": _("Model"), "widget": "relation",
+                                 "displayField": "name", "multiSelect": False,
+                                 "domain": {"filters": {"operator": "and", "filters": [{"field": "brand", "operator": "in", "value": ["{{brand.id}}"]}]}}},
                                 {"name": "version", "string": _("Version"), "widget": "text"},
                                 {"name": "model_year", "string": _("Model year"), "widget": "number"},
                                 {"name": "first_registration", "string": _("First registration"), "widget": "text"},
@@ -138,7 +143,7 @@ car_import_listing_search_view = {
     "module": "car_import",
     "body": {
         "search": {
-            "search_fields": ["ad_id", "make", "model", "version", "seller_name"],
+            "search_fields": ["ad_id", "brand__name", "car_model__name", "version", "seller_name"],
             "filters": [
                 {"name": "available", "string": _("Still listed"),
                  "filter": {"field": "still_available", "operator": "eq", "value": True}},
@@ -150,8 +155,8 @@ car_import_listing_search_view = {
                  "filter": {"field": "still_available", "operator": "eq", "value": False}},
             ],
             "group_by": [
-                {"name": "make", "string": _("Make")},
-                {"name": "model", "string": _("Model")},
+                {"name": "brand", "string": _("Brand")},
+                {"name": "car_model", "string": _("Model")},
                 {"name": "seller_name", "string": _("Seller")},
                 {"name": "country", "string": _("Country")},
             ],

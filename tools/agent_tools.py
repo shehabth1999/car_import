@@ -43,16 +43,19 @@ def _failed(name, exc):
     name="ka_search_cars",
     display_name="Find cars (ours, and to import)",
     description=(
-        "Use this tool whenever the customer wants a car, asks what cars you have, what is available, or "
-        "whether a car is in the showroom. It is the ONLY source of the company's current cars — never "
-        "list or promise a car you did not get from it. Set `source` to `our_cars` for the cars the company "
-        "has NOW (in the Egypt showroom, ready for immediate delivery, and in Germany), `import` to search "
-        "cars to import from Europe, or `both` when the customer did not choose. Leave make and model empty "
-        "to get everything we have. Returns each car with a `reference` (use it for photos), year, mileage, "
-        "specs, where it is and its price as listed on our website; `totals` says how many cars we have in "
-        "each place. Import cars carry the German advert price, NOT the customer's cost — price those with "
-        "ka_quote_car. Do NOT offer a car whose `quotable` is false. If nothing matches, say so and offer "
-        "the other source."
+        "Use this tool when the customer wants a car or asks what cars you have. It is the ONLY source of "
+        "the company's current cars — never list or promise a car you did not get from it. BEFORE calling "
+        "it, ask the customer at least one of: the brand (and the model if they know it), their budget, or "
+        "the model year — never search with nothing; the tool refuses and tells you what to ask. If the "
+        "customer does not know what they want, send them the website link the tool gives you so they can "
+        "browse and come back with the car they like. Set `source` to `our_cars` for the cars the company "
+        "has NOW (Egypt showroom with immediate delivery, and cars in Germany), `import` to search cars to "
+        "import from Europe, or `both` when the customer did not choose. A budget goes in `price_min` / "
+        "`price_max` with `currency` EGP (showroom cars in Egypt) or EUR (cars in Germany). Returns at most "
+        "a few cars, each with a `reference` (use it for photos), year, mileage, price, where it is and its "
+        "`link`; `matching` is how many match in all and `see_all_on_website` links to all of them — share "
+        "that link instead of listing more cars. Import cars carry the German advert price, NOT the "
+        "customer's cost — price those with ka_quote_car. Do NOT offer a car whose `quotable` is false."
     ),
     category="car_import",
     parameters_schema={
@@ -62,45 +65,67 @@ def _failed(name, exc):
                        "description": "our_cars = the company's cars now; import = cars to import; both"},
             "where": {"type": "string", "enum": ["any", "egypt", "germany"],
                       "description": "our_cars only: egypt = ready in the showroom now; default any"},
-            "make": {"type": "string", "description": "e.g. Mercedes-Benz, BMW, Audi"},
-            "model": {"type": "string", "description": "e.g. C200, GLA 180, X1"},
-            "year_min": {"type": "integer", "description": "Oldest acceptable model year (import only)"},
+            "brand": {"type": "string", "description": "The brand the customer named, as they wrote it, "
+                                                       "e.g. Mercedes, مرسيدس, BMW"},
+            "model": {"type": "string", "description": "The model if they named one, e.g. C200, GLA 180, X1"},
+            "price_min": {"type": "number", "description": "Lowest price the customer mentioned"},
+            "price_max": {"type": "number", "description": "The customer's budget ceiling"},
+            "currency": {"type": "string", "enum": ["EGP", "EUR"],
+                         "description": "The budget's currency: EGP for the Egypt showroom, EUR for Germany"},
+            "year_min": {"type": "integer", "description": "Oldest acceptable model year"},
+            "year_max": {"type": "integer", "description": "Newest acceptable model year"},
             "max_mileage": {"type": "integer", "description": "Highest acceptable odometer in km (import only)"},
-            "limit": {"type": "integer", "description": "How many per source, default 5", "default": 5},
+            "limit": {"type": "integer", "description": "How many cars, 1 to 5, default 3", "default": 3},
         },
         "required": ["source"],
     },
 )
-def ka_search_cars(context, source: str = 'both', make: Optional[str] = None,
-                   model: Optional[str] = None, year_min: Optional[int] = None,
-                   max_mileage: Optional[int] = None, limit: int = 5,
-                   where: str = 'any') -> Dict[str, Any]:
-    """The company's own cars, and the market to import from."""
+def ka_search_cars(context, source: str = 'both', brand: Optional[str] = None,
+                   model: Optional[str] = None, price_min: Optional[float] = None,
+                   price_max: Optional[float] = None, currency: Optional[str] = None,
+                   year_min: Optional[int] = None, year_max: Optional[int] = None,
+                   max_mileage: Optional[int] = None, limit: int = 3,
+                   where: str = 'any', make: Optional[str] = None) -> Dict[str, Any]:
+    """The company's own cars, and the market to import from — always narrowed first."""
     try:
         from car_import.services import website_catalog
 
         from .market_tools import ka_search_vehicle_listings
 
+        brand = brand or make                    # `make` is the old name, from older conversations
         source = (source or 'both').strip().lower()
         if source == 'showroom':                 # the old name, from older conversations
             source, where = 'our_cars', 'egypt'
         if source not in ('import', 'our_cars', 'both'):
             source = 'both'
+        place = where if where in ('egypt', 'germany') else None
+
+        # Nothing to narrow on: the tool does not read the stock out. The
+        # customer says what they want, or browses the website and comes back.
+        if not any([brand, model, price_min, price_max, year_min, year_max]):
+            return {"success": True, "data": {
+                "searched": False,
+                "why": "No brand, budget or model year was given, so nothing was searched.",
+                "do_now": ("Ask the customer ONE short question: which brand (and model if they know it), "
+                           "what budget, or which model year. If they do not know or want to see everything, "
+                           "send them `website_link` to browse and ask them to come back with the car they "
+                           "like. Do not list cars."),
+                "website_link": website_catalog.cars_link(),
+                "stock": website_catalog.totals(),
+            }}
+
         data, errors = {}, []
         if source in ('our_cars', 'both'):
-            query = ' '.join(x for x in [make, model] if x)
-            place = where if where in ('egypt', 'germany') else None
-            cars, totals = website_catalog.our_cars(query, location=place, limit=max(int(limit or 5), 8))
-            data['our_cars'] = {
-                'count': len(cars), 'cars': cars,
-                'totals': {'in_egypt_showroom': totals['egypt'], 'in_germany': totals['germany']},
-                'note': ('These are the cars the company has now, as listed on our website. '
-                         'Egypt cars: final EGP price, immediate delivery. Germany cars: EUR price as listed, '
-                         'shipping to Egypt still to come.'),
-            }
+            found = website_catalog.our_cars(
+                brand=brand, model=model, price_min=price_min, price_max=price_max,
+                year_min=year_min, year_max=year_max, location=place, limit=limit, currency=currency)
+            found['note'] = ('The company\'s cars now, as on our website. Egypt: final EGP price, immediate '
+                             'delivery. Germany: EUR price as listed, shipping to Egypt still to come. Offer '
+                             'these few and share `see_all_on_website` for the rest.')
+            data['our_cars'] = found
         if source in ('import', 'both'):
-            found = ka_search_vehicle_listings(context, make=make, model=model, year_min=year_min,
-                                               max_mileage=max_mileage, limit=limit)
+            found = ka_search_vehicle_listings(context, make=brand, model=model, year_min=year_min,
+                                               max_mileage=max_mileage, limit=max(1, min(int(limit or 3), 5)))
             if found.get('success'):
                 data['import'] = found['data']
             else:

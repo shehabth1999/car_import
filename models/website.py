@@ -24,7 +24,7 @@ from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from modules.base.decorators import action
+from modules.base.decorators import action, onchange
 from modules.base.fields import AttachmentForeignKeyField, AttachmentManyToManyField
 from modules.base.models.base import BaseModel
 
@@ -162,10 +162,10 @@ class WebsiteConnection(BaseModel):
 class WebsiteLookup(BaseModel):
     """One entry of a website list, with the website's own id."""
 
+    #: Brands and models are not here: they live in the car catalogue
+    #: (CarBrand / CarModel), which the website's brand and model lists fill.
     KIND = [
         ('category', _("Category")),
-        ('brand', _("Brand")),
-        ('model', _("Model")),
         ('origin', _("Origin")),
         ('country', _("Car location")),
         ('fuel', _("Fuel")),
@@ -177,7 +177,7 @@ class WebsiteLookup(BaseModel):
     ]
     #: kind → the website's input-list path
     ENDPOINTS = {
-        'category': 'categories', 'brand': 'brands', 'model': 'models', 'origin': 'origins',
+        'category': 'categories', 'origin': 'origins',
         'country': 'countries', 'fuel': 'fuels', 'bodytype': 'body-types', 'gearbox': 'gearboxes',
         'engine': 'engines', 'extra_option': 'car-extra-options', 'vehicle_option': 'vehicle-options',
     }
@@ -186,9 +186,6 @@ class WebsiteLookup(BaseModel):
     website_id = models.PositiveIntegerField(verbose_name=_("Website id"))
     name_en = models.CharField(max_length=190, blank=True, verbose_name=_("Name (English)"))
     name_ar = models.CharField(max_length=190, blank=True, verbose_name=_("Name (Arabic)"))
-    brand_website_id = models.PositiveIntegerField(null=True, blank=True, verbose_name=_("Brand id (models)"))
-    category_website_id = models.PositiveIntegerField(null=True, blank=True,
-                                                      verbose_name=_("Category id (models)"))
     aliases = models.CharField(
         max_length=255, blank=True, verbose_name=_("Also matches"),
         help_text=_("Other spellings Genie should match to this entry, comma separated — "
@@ -252,10 +249,10 @@ class WebsiteCar(BaseModel):
                                  related_name='+', verbose_name=_("Car location"))
     category = models.ForeignKey(WebsiteLookup, null=True, blank=True, on_delete=models.PROTECT,
                                  related_name='+', verbose_name=_("Category"))
-    brand = models.ForeignKey(WebsiteLookup, null=True, blank=True, on_delete=models.PROTECT,
-                              related_name='+', verbose_name=_("Brand"))
-    model = models.ForeignKey(WebsiteLookup, null=True, blank=True, on_delete=models.PROTECT,
-                              related_name='+', verbose_name=_("Model"))
+    brand = models.ForeignKey('car_import.CarBrand', null=True, blank=True, on_delete=models.PROTECT,
+                              related_name='website_cars', verbose_name=_("Brand"))
+    car_model = models.ForeignKey('car_import.CarModel', null=True, blank=True, on_delete=models.PROTECT,
+                                  related_name='website_cars', verbose_name=_("Model"))
     origin = models.ForeignKey(WebsiteLookup, null=True, blank=True, on_delete=models.PROTECT,
                                related_name='+', verbose_name=_("Origin"))
     gearbox = models.ForeignKey(WebsiteLookup, null=True, blank=True, on_delete=models.PROTECT,
@@ -319,7 +316,7 @@ class WebsiteCar(BaseModel):
     _from_site = False
     #: Fields whose change means "send this to the website".
     PUSHED_FIELDS = ('title_ar', 'title_en', 'description_ar', 'description_en', 'serial', 'year', 'price',
-                     'location_id', 'category_id', 'brand_id', 'model_id', 'origin_id', 'gearbox_id',
+                     'location_id', 'category_id', 'brand_id', 'car_model_id', 'origin_id', 'gearbox_id',
                      'bodytype_id', 'engine_id', 'fuel_id', 'seat', 'distance', 'video_link', 'visible',
                      'main_image_id')
 
@@ -327,15 +324,28 @@ class WebsiteCar(BaseModel):
     def is_egypt(self):
         return bool(self.location_id and self.location.website_id == 1)
 
+    @onchange('brand')
+    def _onchange_brand(self):
+        if self.car_model_id and self.brand_id and self.car_model.brand_id != self.brand_id:
+            return {'value': {'car_model': None}}
+        return None
+
+    @onchange('car_model')
+    def _onchange_car_model(self):
+        if self.car_model_id and self.car_model.brand_id != self.brand_id:
+            return {'value': {'brand': self.car_model.brand}}
+        return None
+
     def pre_save(self):
         super().pre_save()
         if self.serial:
             self.serial = self.serial.strip().upper().replace(' ', '')
         if self.price is not None and self.price < 0:
             raise ValidationError({'price': _("A price cannot be negative.")})
-        if not self._from_site and self.model_id and self.brand_id and self.model.brand_website_id \
-                and self.model.brand_website_id != self.brand.website_id:
-            raise ValidationError({'model': _("This model belongs to another brand on the website.")})
+        if self.car_model_id and not self.brand_id:
+            self.brand_id = self.car_model.brand_id
+        if not self._from_site and self.car_model_id and self.car_model.brand_id != self.brand_id:
+            raise ValidationError({'car_model': _("This model belongs to another brand.")})
         from car_import.services import currencies
         if self.location_id:
             self.currency = currencies.egp() if self.is_egypt else currencies.eur()

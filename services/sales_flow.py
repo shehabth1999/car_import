@@ -162,7 +162,8 @@ def find_listing(reference):
 
 
 def listing_label(listing):
-    bits = [listing.make, listing.model, listing.version]
+    bits = [listing.brand.name if listing.brand_id else '', listing.car_model.name if listing.car_model_id else '',
+            listing.version]
     label = ' '.join(str(b) for b in bits if b).strip()
     if listing.model_year:
         label += f' — {listing.model_year}'
@@ -178,7 +179,7 @@ def vehicle_from_listing(listing):
         return listing.vehicle
     mileage = listing.mileage_km or 0
     vehicle = Vehicle(
-        make=listing.make or '—', model=listing.model or '—',
+        brand=listing.brand, car_model=listing.car_model,
         trim=(listing.version or '')[:128], model_year=listing.model_year,
         cc=listing.cc, hp=listing.power_hp, fuel=listing.fuel or '', gearbox=listing.gearbox or '',
         colour_exterior=listing.colour_exterior or '', mileage_km=listing.mileage_km,

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from .import_stage import ImportStage
+from .catalogue import CarBrand, CarModel
 from .vehicle import Vehicle
 from .car_deal import CarDeal
 from .stage_change_log import StageChangeLog
@@ -25,7 +26,7 @@ from .reference_data import (
 )
 
 __all__ = [
-    'ImportStage', 'Vehicle', 'CarDeal', 'StageChangeLog', 'SupplierListing',
+    'ImportStage', 'CarBrand', 'CarModel', 'Vehicle', 'CarDeal', 'StageChangeLog', 'SupplierListing',
     'DocumentRequirement', 'DealDocument', 'Initiative', 'CallRecording',
     'ShowroomListing', 'InitiativeListing', 'PricingBand', 'Quote', 'QuoteLine', 'QuoteOption', 'Contract', 'ContractTemplate', 'ApprovalPolicy', 'ApprovalRequest', 'ContractIssuer', 'ContractSignatory', 'SetStage', 'QualifyCustomer', 'ConsignmentMandate', 'ProformaInvoice', 'PaymentReceipt', 'WebsiteConnection', 'WebsiteLookup', 'WebsiteCar', 'WebsiteSubmission', 'WebsiteApiLog',
     'ImportProgram', 'TaxRule', 'Eur1Rule',

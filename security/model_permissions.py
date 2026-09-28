@@ -24,6 +24,16 @@ MODEL_PERMISSIONS = [
     {'model': 'car_import.vehicle', 'group': 'car_import.operations', 'permissions': VIEW_ONLY},
     {'model': 'car_import.vehicle', 'group': 'car_import.management', 'permissions': FULL},
 
+    # ── the car catalogue: everyone reads it, the people who add cars extend it
+    # Never deleted by anyone but management — every car, advert and price row
+    # points at it (and the database refuses while one does).
+    *[{'model': model, 'group': group, 'permissions': rights}
+      for model in ('car_import.carbrand', 'car_import.carmodel')
+      for group, rights in (('car_import.sales_agent', VIEW_ONLY), ('car_import.operations', VIEW_ONLY),
+                            ('car_import.accountant', VIEW_ONLY), ('car_import.showroom', MANAGE),
+                            ('car_import.germany_team', MANAGE), ('car_import.sales_manager', MANAGE),
+                            ('car_import.management', FULL))],
+
     # ── stages and their messages: ops and management only ──────────────────
     {'model': 'car_import.importstage', 'group': 'car_import.sales_agent', 'permissions': VIEW_ONLY},
     {'model': 'car_import.importstage', 'group': 'car_import.operations', 'permissions': MANAGE},
