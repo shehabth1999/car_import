@@ -4233,6 +4233,9 @@ msgstr "عربية واحدة بس هي اللي تتعلّم كمختارة."
 msgid "Only the accountant or management confirms that money arrived."
 msgstr "تأكيد وصول الفلوس للمحاسب أو الإدارة بس."
 
+msgid "Only the accountant or management records that money arrived."
+msgstr "المحاسب أو الإدارة بس هما اللي بيسجّلوا إن الفلوس وصلت."
+
 msgid "Only when asked for"
 msgstr "عند الطلب فقط"
 
@@ -6330,6 +6333,9 @@ msgstr "سعر التحويل وعمولته"
 
 msgid "The value the rate applies to"
 msgstr "القيمة اللي النسبة بتتحسب عليها"
+
+msgid "The website API address must start with https://"
+msgstr "رابط API الموقع لازم يبدأ بـ https://"
 
 msgid "The website API root, ending in /api — no trailing slash"
 msgstr "رابط الـ API بتاع الموقع، بينتهي بـ /api — من غير / في الآخر"
