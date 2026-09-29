@@ -289,15 +289,16 @@ def as_html(quote):
 <title>عرض سعر {_escape(quote.name or '')}</title>
 <style>
  {proforma_document._font_face()}
- @page {{ size: A4; margin: 16mm 15mm; }}
+ /* One A4 page: the customer forwards it to a bank or a brother, not a printer. */
+ @page {{ size: A4; margin: 12mm 14mm; }}
  body {{ font-family: 'Cairo', 'Noto Naskh Arabic', 'Noto Sans Arabic', 'DejaVu Sans', sans-serif;
-        color: #16324f; font-size: 11pt; line-height: 1.65; }}
- h1 {{ font-size: 19pt; margin: 0 0 1mm; }}
- h2 {{ font-size: 12pt; margin: 6mm 0 2mm; color: #55708c; }}
- .head {{ border-bottom: 2px solid #16324f; padding-bottom: 3mm; margin-bottom: 4mm; }}
- .meta {{ color: #55708c; font-size: 9.5pt; }}
+        color: #16324f; font-size: 10pt; line-height: 1.45; }}
+ h1 {{ font-size: 17pt; margin: 0 0 1mm; }}
+ h2 {{ font-size: 11pt; margin: 4mm 0 1.5mm; color: #55708c; }}
+ .head {{ border-bottom: 2px solid #16324f; padding-bottom: 2mm; margin-bottom: 3mm; }}
+ .meta {{ color: #55708c; font-size: 9pt; }}
  table {{ width: 100%; border-collapse: collapse; }}
- td {{ padding: 1.8mm 1mm; border-bottom: 1px solid #dfe6ee; }}
+ td {{ padding: 1.1mm 1mm; border-bottom: 1px solid #dfe6ee; }}
  td.n {{ text-align: left; direction: ltr; white-space: nowrap; }}
  td.v {{ text-align: left; }}
  /* A date or a reference is a left-to-right run inside Arabic text. Without
@@ -307,12 +308,14 @@ def as_html(quote):
  table.options tr.head td {{ font-weight: 700; color: #55708c; font-size: 9pt; }}
  table.options tr.chosen td {{ background: #eef6f1; font-weight: 600; }}
  table.options a {{ color: #55708c; font-size: 8pt; text-decoration: none; }}
- .due {{ margin: 5mm 0 2mm; padding: 3.5mm 5mm; background: #eef6f1; border-right: 4px solid #1f7a4d;
-         font-size: 13pt; font-weight: 700; }}
+ .due {{ margin: 3mm 0 1.5mm; padding: 2.5mm 4mm; background: #eef6f1; border-right: 4px solid #1f7a4d;
+         font-size: 12pt; font-weight: 700; }}
+ p {{ margin: 1.5mm 0; }}
  /* Each line finds its own direction: the IBAN left to right, a name right to left. */
- pre {{ font-family: inherit; white-space: pre-wrap; margin: 0; padding: 3mm 4mm;
-        background: #f6f8fb; unicode-bidi: plaintext; text-align: start; font-size: 10pt; }}
- ol {{ color: #55708c; font-size: 9.5pt; line-height: 1.7; padding-right: 5mm; }}
+ pre {{ font-family: inherit; white-space: pre-wrap; margin: 0; padding: 2mm 3mm; line-height: 1.35;
+        background: #f6f8fb; unicode-bidi: plaintext; text-align: start; font-size: 9pt;
+        page-break-inside: avoid; }}
+ ol {{ color: #55708c; font-size: 8.5pt; line-height: 1.5; padding-right: 5mm; margin: 0; }}
 </style></head><body>
 <div class="head">
   <h1>عرض سعر — Quotation</h1>
