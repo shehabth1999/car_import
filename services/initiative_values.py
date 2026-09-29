@@ -37,11 +37,38 @@ def year_in(text):
     return int(match.group(0)) if match else None
 
 
+#: Customers spell Mercedes classes out in Arabic letters («سي 180», «جي ال سي
+#: 200»). Longest first, so «جي ال سي» is not read as «سي».
+_ARABIC_CLASS_NAMES = [
+    ('جي ال اي', 'GLE'), ('جي ال إي', 'GLE'), ('جي ال سي', 'GLC'), ('جي ال ايه', 'GLA'),
+    ('جي ال اية', 'GLA'), ('جي ال بي', 'GLB'), ('جي ال اس', 'GLS'), ('سي ال ايه', 'CLA'),
+    ('سي ال اية', 'CLA'), ('سي ال اي', 'CLE'), ('سي ال إي', 'CLE'), ('اي', 'E'), ('إي', 'E'),
+    ('سي', 'C'), ('اس', 'S'), ('إس', 'S'), ('ايه', 'A'), ('اية', 'A'), ('إيه', 'A'), ('بي', 'B'),
+]
+
+
+def _latin_classes(text):
+    words = str(text or '').split()
+    out, i = [], 0
+    while i < len(words):
+        for arabic, latin in _ARABIC_CLASS_NAMES:
+            size = len(arabic.split())
+            if ' '.join(words[i:i + size]) == arabic:
+                out.append(latin)
+                i += size
+                break
+        else:
+            out.append(words[i])
+            i += 1
+    return ' '.join(out)
+
+
 def find_model(text):
     """The catalogue model a customer's words name ("E200", "مرسيدس سي 180")."""
     from car_import.models import CarModel
     from car_import.services import catalogue
 
+    text = _latin_classes(text)
     brand, car_model = catalogue.parse(text)
     if car_model is not None:
         return car_model
