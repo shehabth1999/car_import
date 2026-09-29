@@ -25,6 +25,7 @@ flag: a fake car must never be quotable to a customer by accident.
 import base64
 import json
 import logging
+import re
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -36,6 +37,7 @@ logger = logging.getLogger(__name__)
 
 BASE_URL = 'https://services.mobile.de'
 SEARCH_PATH = '/search-api/search'
+AD_PATH = '/search-api/ad/'
 JSON_MEDIA_TYPE = 'application/vnd.de.mobile.api+json'
 
 MAX_PAGE_SIZE = 100          # documented hard cap
@@ -140,7 +142,20 @@ class LiveBackend:
         self.timeout = timeout
 
     def search(self, params):
-        url = f'{BASE_URL}{SEARCH_PATH}?{urllib.parse.urlencode(params)}'
+        return self._get(f'{BASE_URL}{SEARCH_PATH}?{urllib.parse.urlencode(params)}')
+
+    def ad(self, ad_id):
+        """One advert by its id — `GET /search-api/ad/{ad-key}` (documented;
+        re-verified 2026-09-29). None when mobile.de has no such advert."""
+        try:
+            payload = self._get(f'{BASE_URL}{AD_PATH}{urllib.parse.quote(str(ad_id))}')
+        except MobileDeError as exc:
+            if 'HTTP 404' in str(exc):
+                return None
+            raise
+        return (payload.get('ad') if isinstance(payload, dict) and 'ad' in payload else payload) or None
+
+    def _get(self, url):
         token = base64.b64encode(f'{self.user}:{self.password}'.encode()).decode()
         request = urllib.request.Request(url, headers={
             'Accept': JSON_MEDIA_TYPE,
@@ -222,14 +237,22 @@ class SimulatedBackend:
             'simulated': True,
         }
 
+    def ad(self, ad_id):
+        return next((dict(a) for a in self.ads
+                     if str(a.get('ad_id') or a.get('id') or '') == str(ad_id)), None)
+
 
 def _slug(value):
     return str(value or '').strip().lower().replace('-', '').replace(' ', '')
 
 
 def _year_of(value):
+    """2023 from '2023', '2023-05' or the live API's '202305' (yyyyMM)."""
+    text = str(value or '').strip()
+    if len(text) == 6 and text.isdigit():
+        text = text[:4]
     try:
-        return int(str(value).split('-')[0])
+        return int(text.split('-')[0])
     except (TypeError, ValueError):
         return None
 
@@ -430,3 +453,56 @@ def refresh_availability(queryset=None):
             row.save()
 
     return {'seen': seen, 'gone': gone, 'failed': failed, 'simulated': backend.simulated}
+
+
+# ───────────────────────────────────────────────────────────────────────────
+# a link the customer pasted
+# ───────────────────────────────────────────────────────────────────────────
+_MOBILE_DE_LINK = re.compile(r'https?://[^\s]*mobile\.de[^\s]*', re.IGNORECASE)
+
+
+def ad_id_from_link(text):
+    """The advert id inside any mobile.de link — the app's share link
+    (m.mobile.de/…/details.html?id=…), the site's (suchen.mobile.de/…?id=…) or
+    an /auto-inserat/…/<id>.html page. None when there is no such link."""
+    match = _MOBILE_DE_LINK.search(str(text or ''))
+    if not match:
+        return None
+    parts = urllib.parse.urlparse(match.group(0))
+    query = urllib.parse.parse_qs(parts.query)
+    for key in ('id', 'adId'):
+        value = (query.get(key) or [''])[0]
+        if value.isdigit():
+            return value
+    tail = re.search(r'/(\d{6,12})(?:\.html)?/?$', parts.path)
+    return tail.group(1) if tail else None
+
+
+def read_advert(link):
+    """(listing, how) for a mobile.de link the customer sent.
+
+    `how` is `stored` or `fetched` with a listing, or — with None — why not:
+    `not_a_mobile_de_link`, `no_api_access` (no Search-API credentials: the
+    site itself refuses automated readers, so there is no fallback to
+    scraping), `not_found` (the advert is gone) or `mobile_de_error`.
+    """
+    from car_import.models import SupplierListing
+
+    ad_id = ad_id_from_link(link)
+    if not ad_id:
+        return None, 'not_a_mobile_de_link'
+    row = (SupplierListing.objects.filter(source='mobile.de', ad_id=ad_id)
+           .order_by('-id').first())
+    if row is not None and row.still_available and row.price_gross_eur:
+        return row, 'stored'
+    backend = get_backend()
+    try:
+        ad = backend.ad(ad_id)
+    except MobileDeError:
+        logger.warning('car_import: could not read mobile.de advert %s', ad_id, exc_info=True)
+        return None, 'mobile_de_error'
+    if not ad:
+        return None, ('no_api_access' if backend.simulated else 'not_found')
+    created, updated = import_listings([_normalise(ad, backend.simulated)])
+    rows = created or updated
+    return (rows[0], 'fetched') if rows else (None, 'not_found')

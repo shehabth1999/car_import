@@ -28,20 +28,23 @@ BUNDLE_FORMAT_VERSION = 2
 #: its LLMModel table was seeded before Claude 5 existed, so the command
 #: refused to build anything at all. The first name that resolves wins; the
 #: build reports which one it used.
-#: Haiku first, deliberately. This agent routes, reads intent and calls six
-#: tools — it does not reason its way through anything hard, because Python
-#: decided everything checkable before the model ever ran. Opus was costing
-#: real money per customer turn for work Haiku does. Move Sonnet up if quality
-#: measurably drops on the evals; do not move Opus up without a reason.
+#: Sonnet first since 2026-09-29. Haiku was chosen to save money on a job that
+#: looked like routing, and the owner's own test chat is the measurement the
+#: comment asked for: it lost which car was being discussed (priced a C180
+#: while the customer was on an E200), re-priced a car from an old offer's
+#: total, kept re-asking what the history already said, and ignored the same
+#: instruction three times. Selling a €40,000 car is reading a long thread, not
+#: routing. Haiku stays as the backup — same provider key, which a model on a
+#: provider the tenant never keyed is not. Do not move Opus up without a reason.
 LLM_MODEL_CANDIDATES = [
-    ('claude-haiku-4-5-20251001', 'Anthropic'),
-    ('claude-sonnet-5', 'Anthropic'),
     ('claude-sonnet-4-5-20250929', 'Anthropic'),
+    ('claude-sonnet-5', 'Anthropic'),
+    ('claude-haiku-4-5-20251001', 'Anthropic'),
 ]
 BACKUP_LLM_MODEL_CANDIDATES = [
+    ('claude-haiku-4-5-20251001', 'Anthropic'),
     ('gpt-5', 'OpenAI'),
     ('gpt-4.1-2025-04-14', 'OpenAI'),
-    ('claude-haiku-4-5-20251001', 'Anthropic'),
 ]
 
 #: What the exported bundle names. The importer resolves it by name and the
@@ -59,7 +62,8 @@ BACKUP_LLM_PROVIDER_NAME = BACKUP_LLM_MODEL_CANDIDATES[0][1]
 #: decided, which is a human's job, and handing it to a chat agent invites it to
 #: write minutes for a conversation that never happened.
 TOOL_NAMES = [
-    # Twelve, down from 21 (tools/agent_tools.py says why). What was knowledge —
+    # Thirteen: twelve, down from 21 (tools/agent_tools.py says why), plus the
+    # initiative deposit lookup the owner asked for on 2026-09-29. What was knowledge —
     # published fees, instalment terms, eligibility — lives in the approved-answers
     # collection now; the five merged tools are thin fronts over the originals,
     # which stay registered and can be bound again from here.
@@ -72,6 +76,7 @@ TOOL_NAMES = [
     'ka_save_contract_details',
     'ka_request_discount',
     'ka_deal_status',                     # status + missing papers + the written update
+    'ka_initiative_deposit',              # «قيمة المبادرة/الوديعة» from the owner's sheet
     'ka_initiative_market',
     'ka_schedule_followup',
     'ka_escalate_conversation_to_staff',

@@ -41,10 +41,16 @@ def _issuer():
         return None
 
 
+def _who(invoice):
+    from car_import.services import identity
+    return identity.id_details(invoice.partner) if invoice.partner_id else {
+        'name': '', 'national_id': '', 'address': '', 'from_id': False}
+
+
 def as_text(invoice):
     out = [f'فاتورة مبدئية {invoice.name}',
            f'التاريخ: {invoice.invoice_date:%Y-%m-%d}',
-           f'العميل: {getattr(invoice.partner, "name", "") or ""}']
+           f'العميل: {_who(invoice)["name"]}']
     if invoice.car_label:
         out.append(f'العربية: {invoice.car_label}')
     if invoice.quote_id:
@@ -76,13 +82,25 @@ def _font_face():
 
 
 def as_html(invoice):
+    from car_import.services.quote_document import customer_lines
+
     issuer = _issuer()
+    who = _who(invoice)
     lines = ''
     if invoice.quote_id:
-        for line in invoice.quote.lines.select_related('currency').all():
-            if getattr(line.currency, 'code', '') != 'EUR' or not (line.amount or line.code in ('gross', 'net')):
-                continue
-            lines += f'<tr><td>{_escape(line.label)}</td><td class="n">{_money(line.amount)}</td></tr>'
+        eur = [line for line in invoice.quote.lines.select_related('currency').all()
+               if getattr(line.currency, 'code', '') == 'EUR']
+        # No gross / VAT rows: the customer never paid the German VAT, and a
+        # "refunded after export" line reads as a refund owed to them (owner).
+        for label, amount, _code in customer_lines(eur):
+            lines += f'<tr><td>{_escape(label)}</td><td class="n">{_money(amount)}</td></tr>'
+    identity_rows = ''
+    if who['national_id']:
+        identity_rows += (f'<tr><td>الرقم القومي</td>'
+                          f'<td class="n"><bdi>{_escape(who["national_id"])}</bdi></td></tr>')
+    if who['address']:
+        identity_rows += (f'<tr><td>العنوان</td><td class="n" style="direction:rtl">'
+                          f'{_escape(who["address"])}</td></tr>')
     bank = (f'<h2>بيانات التحويل</h2><pre>{_escape(invoice.bank_details_text)}</pre>'
             f'<p class="meta">برجاء كتابة رقم الفاتورة <bdi>{_escape(invoice.name)}</bdi> في بيان التحويل.</p>'
             if invoice.bank_details_text else
@@ -122,7 +140,8 @@ def as_html(invoice):
 <table>
   <tr><td>رقم الفاتورة</td><td class="n"><bdi>{_escape(invoice.name)}</bdi></td></tr>
   <tr><td>التاريخ</td><td class="n">{invoice.invoice_date:%Y-%m-%d}</td></tr>
-  <tr><td>العميل</td><td class="n" style="direction:rtl">{_escape(getattr(invoice.partner, 'name', '') or '')}</td></tr>
+  <tr><td>العميل</td><td class="n" style="direction:rtl">{_escape(who['name'])}</td></tr>
+  {identity_rows}
   <tr><td>العربية</td><td class="n" style="direction:rtl">{_escape(invoice.car_label or '—')}</td></tr>
   <tr><td>على عرض السعر</td><td class="n"><bdi>{_escape(invoice.quote.name if invoice.quote_id else '—')}</bdi></td></tr>
   {f'<tr><td>سارية لحد</td><td class="n">{invoice.valid_until:%Y-%m-%d}</td></tr>' if invoice.valid_until else ''}

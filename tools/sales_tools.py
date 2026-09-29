@@ -63,15 +63,39 @@ def _partner(context):
     return getattr(context, 'partner', None)
 
 
+LINK_UNREADABLE_DO_NOW = (
+    "You cannot open this link: mobile.de refuses automatic readers. Ask the customer ONCE, in one short "
+    "line, for a screenshot of the advert showing the car's name and its price — you CAN read screenshots. "
+    "When it arrives, call ka_quote_car with gross_price_eur and car_description read off the screenshot. "
+    "If they type the price instead, use that. NEVER ask for the link again and never alternate "
+    "'send the link' / 'send the price' (the owner's complaint, 2026-09-29).")
+
+
 def _resolve_price(listing_reference, gross_price_eur):
     """(listing, gross, source_note) or an error dict."""
-    from car_import.services import policy, sales_flow
+    from car_import.services import mobile_de, policy, sales_flow
 
-    if listing_reference:
-        listing = sales_flow.find_listing(listing_reference)
+    reference = str(listing_reference or '').strip()
+    if reference.lower().startswith(('http', 'www.')) or mobile_de.ad_id_from_link(reference):
+        listing, how = mobile_de.read_advert(reference)
         if listing is None:
-            return {"success": False, "error": f"No stored advert with reference '{listing_reference}'. "
-                                               "Search again and use a reference from the result.",
+            if gross_price_eur:
+                reference = ''            # the customer's own price is the fallback
+            elif how == 'not_found':
+                return {"success": False, "error": "mobile.de says this advert no longer exists",
+                        "error_type": "listing_gone",
+                        "say_to_customer_ar": "الإعلان ده اتشال من الموقع — أدوّر لحضرتك على بديل؟"}
+            else:
+                return {"success": False, "error": f"The link could not be read ({how})",
+                        "error_type": "link_unreadable", "do_now": LINK_UNREADABLE_DO_NOW}
+        else:
+            reference = listing.ad_id
+    if reference:
+        listing = sales_flow.find_listing(reference)
+        if listing is None:
+            return {"success": False, "error": f"No stored advert with reference '{reference}'. "
+                                               "Search again and use a reference from the result. A "
+                                               "quotation number (Q/…) goes in `quotation_reference`.",
                     "error_type": "unknown_listing"}
         if listing.is_simulated and not policy.may_quote_simulated_cars():
             return {"success": False, "error": "This advert is simulated test data and must not be quoted",
@@ -93,11 +117,15 @@ def _resolve_price(listing_reference, gross_price_eur):
 
 
 def _stack(result):
-    """The calculator's answer in the words the customer will hear."""
-    lines = [{'label': line['label_ar'], 'amount': _fmt(line['amount'])}
-             for line in result['lines_eur'] if line['amount'] or line['code'] in ('gross', 'net')]
-    egp = [{'label': line['label_ar'], 'amount': _fmt(line['amount'], 'ج.م')}
-           for line in result['lines_egp'] if line['amount']]
+    """The calculator's answer in the words the customer will hear — without
+    the advert's gross price and the German VAT, which are our arithmetic, not
+    the customer's (owner, 2026-09-29; `quote_document.customer_lines`)."""
+    from car_import.services.quote_document import customer_lines
+
+    lines = [{'label': label, 'amount': _fmt(amount)}
+             for label, amount, _code in customer_lines(result['lines_eur'])]
+    egp = [{'label': label, 'amount': _fmt(amount, 'ج.م')}
+           for label, amount, _code in customer_lines(result['lines_egp'])]
     data = {
         "total_selling_price": _fmt(result['total_eur']),
         "deposit_percent": f"{float(result['deposit_pct']):g}%",
@@ -109,11 +137,44 @@ def _stack(result):
         "band": result['band'],
         "rules": ("State these figures exactly as written — do not round, convert or add to them. "
                   "The balance is due within 5 working days of contracting with the supplier. "
-                  "Licensing is not included."),
+                  "Licensing is not included. NEVER mention VAT, «الضريبة» or a tax refund: the "
+                  "customer's price is «سعر العربية» as listed here. If asked why it is below the "
+                  "advert, say the advert includes a German tax that is not charged on exported cars."),
     }
     if result.get('total_egp_indicative'):
         data["indicative_total_egp"] = _fmt(result['total_egp_indicative'], 'ج.م')
         data["egp_note"] = "Indicative only, at today's rate. The company does not promise a rate."
+    return data
+
+
+def _quote_sent_reply(quote, sent, resent=False):
+    """What the model is told after an offer went out (or did not)."""
+    from car_import.services import identity
+
+    as_pdf = sent.get('as') == 'pdf'
+    data = {
+        "quotation_reference": quote.name,
+        "offer_sent_to_customer": bool(sent.get('sent')),
+        "sent_as": "PDF file" if as_pdf else "text message",
+        "name_on_offer": identity.customer_name(quote.partner),
+        "name_is_from_the_id_card": bool(getattr(quote.partner, 'id_full_name', None)),
+        "total_selling_price": _fmt(quote.total_eur),
+        "deposit_now": _fmt(quote.deposit_eur),
+        "valid_until": str(quote.valid_until) if quote.valid_until else None,
+    }
+    if resent:
+        data["same_offer_resent"] = True
+    if sent.get('sent'):
+        data["next_step"] = (
+            ("The offer " + ("PDF" if as_pdf else "") + " is already in the chat with the deposit and the "
+             "bank details. Write ONE short line asking if they want to go ahead — no figures. When they "
+             "say yes, call ka_issue_proforma_invoice.")
+            + ("" if data["name_is_from_the_id_card"] else
+               " The offer carries the chat name; when the customer sends their ID card, read it with "
+               "ka_customer_sent_image kind=national_id and the documents will carry the ID's name."))
+    else:
+        data["next_step"] = ("The offer could NOT be sent to the chat. Give the customer the total and "
+                             "the deposit_now above in one short message, then ask if they want to go ahead.")
     return data
 
 
@@ -244,11 +305,11 @@ def ka_send_car_photos(context, reference: str, count: int = 3) -> Dict[str, Any
                     "error_type": "messages_off"}
 
         from modules.chat.services.omnichannel_send_service import OmnichannelSendService
-        sender, sent = OmnichannelSendService(), 0
+        sender, sent, me = OmnichannelSendService(), 0, stage_notifier.system_sender()
         for index, url in enumerate(urls[:max(1, min(int(count or 3), 3))]):
             result = sender.send_and_broadcast(
                 partner, {'url': sales_flow.absolute_url(url)}, message_type='image',
-                caption=label if index == 0 else None) or {}
+                caption=label if index == 0 else None, system_partner=me) or {}
             if not (result.get('success') is False or result.get('status') is False):
                 sent += 1
         if not sent:
@@ -348,10 +409,15 @@ def ka_price_car(context, listing_reference: Optional[str] = None,
 def ka_send_quotation(context, listing_reference: Optional[str] = None,
                       gross_price_eur: Optional[float] = None, car_description: str = '',
                       with_eur1: bool = False, shipping_type: str = '', port: str = 'alexandria',
-                      collect_from_showroom: bool = False) -> Dict[str, Any]:
-    """Record the quotation and send the offer text to the customer."""
+                      collect_from_showroom: bool = False, initiative_tier: str = '',
+                      initiative_region: str = '') -> Dict[str, Any]:
+    """Record the quotation and send the offer PDF to the customer.
+
+    With an initiative tier and region (from `ka_quote_car`), the offer's notes
+    carry the initiative deposit for this exact car from the owner's sheet.
+    """
     try:
-        from car_import.services import policy, quote_document, sales_flow
+        from car_import.services import initiative_values, policy, sales_flow
 
         if not policy.ai_first():
             return _refused_by_policy()
@@ -372,7 +438,13 @@ def ka_send_quotation(context, listing_reference: Optional[str] = None,
             return {"success": False, "error": "; ".join(exc.messages), "error_type": "refused",
                     "must_escalate": True}
 
-        sent = sales_flow.send_text(partner, quote_document.as_text(quote))
+        if initiative_tier or initiative_region:
+            car_model, year = initiative_values.car_of(quote.listing, quote.car_label)
+            note = initiative_values.quote_note(car_model, year, initiative_tier, initiative_region)
+            if note:
+                type(quote)._base_manager.filter(pk=quote.pk).update(notes=note)
+                quote.notes = note
+        sent = sales_flow.send_quote(quote)
         url = sales_flow.form_url('car_import_menu_quotes', 'car_import.quote', quote.pk)
         sales_flow.note(
             partner,
@@ -383,18 +455,7 @@ def ka_send_quotation(context, listing_reference: Optional[str] = None,
             + ('' if sent.get('sent') else f'\n⚠️ العرض متبعتش: {sent.get("error")}'),
             recipients=sales_flow.owners(partner), conversation=conversation,
             subject=f'عرض سعر من المساعد — {quote.name}', url=url)
-        return {"success": True, "data": {
-            "quotation_reference": quote.name,
-            "offer_sent_to_customer": bool(sent.get('sent')),
-            "total_selling_price": _fmt(quote.total_eur),
-            "deposit_now": _fmt(quote.deposit_eur),
-            "valid_until": str(quote.valid_until) if quote.valid_until else None,
-            "next_step": (("The offer is already in the chat. Write ONE short line asking if they want to "
-                           "go ahead. When they say yes, call ka_issue_proforma_invoice.")
-                          if sent.get('sent') else
-                          ("The offer could NOT be sent to the chat. Give the customer the total and "
-                           "the deposit_now above in one short message, then ask if they want to go ahead.")),
-        }}
+        return {"success": True, "data": _quote_sent_reply(quote, sent)}
     except Exception as e:
         logger.exception("ka_send_quotation failed")
         return {"success": False, "error": str(e), "error_type": "unknown"}

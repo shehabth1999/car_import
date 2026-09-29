@@ -30,6 +30,10 @@ class PartnerCarImportExtension(ModelExtension):
 
     # Contracts cannot be generated without these, and they are restricted:
     # only management and operations see them (client, 2026-09-14).
+    # The buyer on the paperwork is often not the chat's display name (a brother's
+    # initiative, a nickname on WhatsApp): quotes, proformas and contracts print
+    # this one when it is known (client, 2026-09-29).
+    id_full_name = models.CharField(max_length=190, blank=True, null=True, verbose_name=_("Name as on the ID"))
     national_id = models.CharField(max_length=32, blank=True, null=True, verbose_name=_("National ID"))
     passport_number = models.CharField(max_length=32, blank=True, null=True, verbose_name=_("Passport number"))
     nationality = models.CharField(max_length=64, blank=True, null=True, verbose_name=_("Nationality"))

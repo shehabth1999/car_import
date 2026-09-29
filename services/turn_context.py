@@ -37,6 +37,12 @@ def partner_facts(partner):
         return 'مفيش بيانات مسجّلة عن العميل.'
 
     lines.append('الاسم: %s' % (getattr(partner, 'name', None) or '-'))
+    # Whether the ID card was read — the name, never the number (see above).
+    if getattr(partner, 'id_full_name', None):
+        lines.append('الاسم في البطاقة (اتقرت ومتسجّلة، وده اللي بيتكتب في العرض والفاتورة): %s'
+                     % partner.id_full_name)
+    else:
+        lines.append('البطاقة: لسه متقرتش — العرض بيطلع بالاسم اللي في الشات لحد ما العميل يبعت البطاقة.')
     if getattr(partner, 'phone', None):
         lines.append('الرقم: %s' % partner.phone)
     if getattr(partner, 'residence_country', None):

@@ -44,9 +44,9 @@ def _failed(name, exc):
     display_name="Find cars (ours, and to import)",
     description=(
         "Use this tool when the customer wants a car or asks what cars you have. It is the ONLY source of "
-        "the company's current cars — never list or promise a car you did not get from it. BEFORE calling "
-        "it, ask the customer at least one of: the brand (and the model if they know it), their budget, or "
-        "the model year — never search with nothing; the tool refuses and tells you what to ask. If the "
+        "the company's current cars — never list or promise a car you did not get from it. Call it with "
+        "whatever the customer already said — one brand, model, budget or year is enough; do not question "
+        "them first. With nothing at all it returns the website link to browse instead of cars. If the "
         "customer does not know what they want, send them the website link the tool gives you so they can "
         "browse and come back with the car they like. Set `source` to `our_cars` for the cars the company "
         "has NOW (Egypt showroom with immediate delivery, and cars in Germany), `import` to search cars to "
@@ -153,14 +153,21 @@ def ka_search_cars(context, source: str = 'both', brand: Optional[str] = None,
     name="ka_quote_car",
     display_name="Price a car / send the quotation",
     description=(
-        "Use this tool whenever the customer asks what an imported car will cost, and again when they want "
-        "the offer in writing. Before calling it you MUST have EITHER the car's `listing_reference` from "
-        "ka_search_cars (preferred — the price is read from the advert) OR the advert price with VAT in EUR "
-        "that the customer gave you. With `send_offer` false it only calculates and returns the full price: "
-        "total, deposit percent and amount, balance, and what is due in EGP on arrival — state them exactly "
-        "as returned. With `send_offer` true it records a numbered quotation and sends the customer the full "
-        "offer by itself; then write ONE short line asking whether to go ahead, without repeating figures. "
-        "Do NOT use it for showroom cars, and do not send the same offer twice."
+        "Use this tool whenever the customer asks what an imported car will cost, sends a mobile.de link, "
+        "wants the offer in writing, or wants an earlier offer again. Give it ONE of: the `listing_reference` "
+        "from ka_search_cars, the mobile.de LINK the customer sent (put the link in `listing_reference`), the "
+        "advert price with VAT in EUR that the customer typed or that you read off their screenshot "
+        "(`gross_price_eur` + `car_description`), or an earlier quotation number Q/… in "
+        "`quotation_reference`. NEVER pass a total from an earlier offer as `gross_price_eur`. With "
+        "`send_offer` false it only calculates: total, deposit percent and amount, balance, and what is due "
+        "in EGP on arrival — state them exactly as returned. With `send_offer` true it records a numbered "
+        "quotation and sends the customer the offer as a PDF by itself — with the name, national ID and "
+        "address of their ID card when you have read it, the deposit to transfer and the bank details; then "
+        "write ONE short line asking whether to go ahead, without figures. `quotation_reference` with "
+        "`send_offer` true resends that same offer (rebuilt with the ID data) while it is valid, and prices it "
+        "again from the same car when it expired. For an initiative customer pass `initiative_tier` and "
+        "`initiative_region` and the offer also states the initiative deposit for that car. Do NOT use it "
+        "for showroom cars (WC-…), and do not send the same offer twice."
     ),
     category="car_import",
     side_effect=True,
@@ -168,12 +175,21 @@ def ka_search_cars(context, source: str = 'both', brand: Optional[str] = None,
         "type": "object",
         "properties": {
             "send_offer": {"type": "boolean",
-                           "description": "false = calculate only. true = record the quotation and send it"},
-            "listing_reference": {"type": "string", "description": "The advert reference from ka_search_cars"},
+                           "description": "false = calculate only. true = record the quotation and send it as a PDF"},
+            "listing_reference": {"type": "string",
+                                  "description": "The advert reference from ka_search_cars, OR the mobile.de link "
+                                                 "exactly as the customer sent it"},
+            "quotation_reference": {"type": "string",
+                                    "description": "An earlier quotation number (Q/2026/0007) to resend or renew"},
             "gross_price_eur": {"type": "number",
-                                "description": "Only when there is no reference: the advert price with VAT, in EUR"},
+                                "description": "Only when there is no reference: the ADVERT price with VAT in EUR, as "
+                                               "the customer typed it or as shown on their screenshot"},
             "car_description": {"type": "string",
-                                "description": "Only when there is no reference: make, model, year, colour"},
+                                "description": "Only when there is no reference: make, model, year, trim"},
+            "initiative_tier": {"type": "string", "enum": ["full", "medium"],
+                                "description": "Initiative customers: full (فئة كاملة) or medium trim"},
+            "initiative_region": {"type": "string", "enum": ["europe", "outside"],
+                                  "description": "Initiative customers: where they live — europe or outside"},
             "with_eur1": {"type": "boolean",
                           "description": "True when the car is EU-built and the customer wants the EUR 1 certificate"},
             "shipping_type": {"type": "string",
@@ -189,10 +205,54 @@ def ka_search_cars(context, source: str = 'both', brand: Optional[str] = None,
 def ka_quote_car(context, send_offer: bool = False, listing_reference: Optional[str] = None,
                  gross_price_eur: Optional[float] = None, car_description: str = '',
                  with_eur1: bool = False, shipping_type: str = '', port: str = 'alexandria',
-                 collect_from_showroom: bool = False) -> Dict[str, Any]:
+                 collect_from_showroom: bool = False, quotation_reference: Optional[str] = None,
+                 initiative_tier: Optional[str] = None,
+                 initiative_region: Optional[str] = None) -> Dict[str, Any]:
     """The calculator; and, when asked, the quotation."""
     try:
-        from .sales_tools import ka_price_car, ka_send_quotation
+        import re
+        from datetime import date
+
+        from car_import.models import Quote
+        from car_import.services import initiative_values, sales_flow
+
+        from .sales_tools import _quote_sent_reply, ka_price_car, ka_send_quotation
+
+        partner = getattr(context, 'partner', None)
+
+        # An earlier offer, by its number. On 2026-09-29 the assistant put
+        # "Q/2026/0005" in listing_reference, failed, and then re-priced the car
+        # from the old offer's TOTAL as if it were the advert price.
+        qref = str(quotation_reference or '').strip()
+        if not qref and re.fullmatch(r'Q/\d{4}/\d+', str(listing_reference or '').strip(), re.IGNORECASE):
+            qref, listing_reference = str(listing_reference).strip(), None
+        if qref:
+            old = (Quote.all_objects.filter(partner=partner, name__iexact=qref).first()
+                   if partner is not None else None)
+            if old is None:
+                theirs = (list(Quote.all_objects.filter(partner=partner).order_by('-id')
+                               .values_list('name', flat=True)[:5]) if partner is not None else [])
+                return {"success": False, "error_type": "unknown_quotation",
+                        "error": f"This customer has no quotation {qref}",
+                        "data": {"their_quotations": theirs}}
+            new_inputs = bool(gross_price_eur or listing_reference)
+            valid = old.valid_until is None or old.valid_until >= date.today()
+            if send_offer and valid and old.state in ('sent', 'accepted') and not new_inputs \
+                    and old.total_eur:
+                # The same offer, rebuilt (the ID card may have been read since) and sent again.
+                sent = sales_flow.send_quote(old, rerender=True)
+                return {"success": True, "data": _quote_sent_reply(old, sent, resent=True)}
+            if not new_inputs:
+                if old.listing_id:
+                    listing_reference = old.listing.ad_id
+                else:
+                    gross_price_eur = float(old.gross_price_eur or 0) or None
+                    car_description = car_description or old.car_label
+            with_eur1 = with_eur1 or old.with_eur1
+            shipping_type = shipping_type or old.shipping_type
+            if not port or port == 'alexandria':
+                port = old.port or 'alexandria'
+            collect_from_showroom = collect_from_showroom or old.collect_from_showroom
 
         if str(listing_reference or '').strip().upper().startswith('WC-'):
             return {"success": False, "error_type": "our_own_car",
@@ -207,9 +267,20 @@ def ka_quote_car(context, send_offer: bool = False, listing_reference: Optional[
         if send_offer:
             return ka_send_quotation(context, listing_reference=listing_reference,
                                      gross_price_eur=gross_price_eur,
-                                     car_description=car_description, **options)
-        return ka_price_car(context, listing_reference=listing_reference,
-                            gross_price_eur=gross_price_eur, **options)
+                                     car_description=car_description,
+                                     initiative_tier=initiative_tier or '',
+                                     initiative_region=initiative_region or '', **options)
+        result = ka_price_car(context, listing_reference=listing_reference,
+                              gross_price_eur=gross_price_eur, **options)
+        if result.get('success') and (initiative_tier or initiative_region):
+            from car_import.services import mobile_de
+            ref = str(listing_reference or '').strip()
+            listing = sales_flow.find_listing(mobile_de.ad_id_from_link(ref) or ref) if ref else None
+            car_model, year = initiative_values.car_of(listing, car_description)
+            note = initiative_values.quote_note(car_model, year, initiative_tier, initiative_region)
+            if note:
+                result['data']['initiative_deposit'] = note
+        return result
     except Exception as e:
         return _failed("ka_quote_car", e)
 
@@ -220,20 +291,30 @@ def ka_quote_car(context, send_offer: bool = False, listing_reference: Optional[
     display_name="File an image the customer sent",
     description=(
         "Use this tool the moment the customer sends a photo, screenshot or file that is paperwork or proof "
-        "of payment. Set `kind` to `payment` for a bank transfer screenshot, deposit slip or InstaPay/Wise "
-        "confirmation: read the image first and pass what it shows — amount, currency, date, sender name, "
-        "bank, reference — leaving out anything you cannot read; it is filed for the accountant, and you "
-        "must NEVER say the money arrived. Set `kind` to `document` for an ID, passport, residence permit, "
-        "bank statement, import approval or power of attorney, and pass its `requirement_code`. Call it once "
-        "per image. Do NOT call it for photos of cars or screenshots of adverts."
+        "of payment. You CAN read images — read it first. Set `kind` to `national_id` for an Egyptian national "
+        "ID card: pass `full_name` exactly as printed in Arabic, the 14-digit `national_id` and the `address` "
+        "on the card; it is saved on the customer and every quotation, proforma and contract then carries "
+        "that name instead of the chat name. Never write the national ID number back in the chat. Set `kind` "
+        "to `payment` for a bank transfer screenshot, deposit slip or InstaPay/Wise confirmation: pass what "
+        "it shows — amount, currency, date, sender name, bank, reference — leaving out anything you cannot "
+        "read; it is filed for the accountant, and you must NEVER say the money arrived. Set `kind` to "
+        "`document` for a passport, residence permit, bank statement, import approval or power of attorney, "
+        "and pass its `requirement_code`. Call it once per image. Do NOT call it for photos of cars or "
+        "screenshots of adverts — read an advert screenshot yourself and price it with ka_quote_car."
     ),
     category="car_import",
     side_effect=True,
     parameters_schema={
         "type": "object",
         "properties": {
-            "kind": {"type": "string", "enum": ["payment", "document"],
-                     "description": "payment = proof of a transfer. document = a required paper"},
+            "kind": {"type": "string", "enum": ["national_id", "payment", "document"],
+                     "description": "national_id = the customer's ID card. payment = proof of a transfer. "
+                                    "document = any other required paper"},
+            "full_name": {"type": "string",
+                          "description": "national_id only: the full name exactly as printed on the card"},
+            "national_id": {"type": "string",
+                            "description": "national_id only: the 14-digit number as printed on the card"},
+            "address": {"type": "string", "description": "national_id only: the address on the card"},
             "requirement_code": {"type": "string",
                                  "description": "document only: national_id_front_back, passport, residence_permit, "
                                                 "bank_statement_6m, deposit_receipts, import_approval, customs_broker_poa"},
@@ -255,13 +336,17 @@ def ka_customer_sent_image(context, kind: str, requirement_code: str = '', note:
                            amount: Optional[float] = None, currency: str = '',
                            transfer_date: Optional[str] = None, sender_name: str = '',
                            bank_name: str = '', reference: str = '', confidence: str = '',
-                           remarks: str = '') -> Dict[str, Any]:
-    """A transfer for the accountant, or a paper for the file."""
+                           remarks: str = '', full_name: str = '', national_id: str = '',
+                           address: str = '') -> Dict[str, Any]:
+    """A transfer for the accountant, the ID card read onto the customer, or a paper for the file."""
     try:
         from .document_tools import ka_file_customer_document
         from .sales_tools import ka_record_payment_receipt
 
-        if (kind or '').strip().lower() == 'payment':
+        kind = (kind or '').strip().lower()
+        if kind == 'national_id' or full_name or national_id:
+            return _read_id_card(context, full_name, national_id, address, note)
+        if kind == 'payment':
             return ka_record_payment_receipt(
                 context, amount=amount, currency=currency or '', transfer_date=transfer_date,
                 sender_name=sender_name, bank_name=bank_name, reference=reference,
@@ -272,6 +357,98 @@ def ka_customer_sent_image(context, kind: str, requirement_code: str = '', note:
         return ka_file_customer_document(context, requirement_code=requirement_code, note=note)
     except Exception as e:
         return _failed("ka_customer_sent_image", e)
+
+
+def _read_id_card(context, full_name, national_id, address, note):
+    """Save what the assistant read off the ID card, and file the photo when
+    there is a deal to file it on.
+
+    Until 2026-09-29 an ID photo was only filed: nothing read the name or the
+    number off it, the quote kept the chat name, and the assistant told the
+    owner it could not read the card it had just read the name from.
+    """
+    from car_import.services import identity
+
+    from .document_tools import ka_file_customer_document
+
+    partner = getattr(context, 'partner', None)
+    if partner is None:
+        return {"success": False, "error": "No customer in context", "error_type": "no_partner"}
+    if not (full_name or national_id or address):
+        return {"success": False, "error_type": "nothing_read",
+                "error": "Read the card first and pass full_name, national_id and address as printed."}
+
+    saved, problems = identity.save_id_card(partner, full_name=full_name, national_id=national_id,
+                                            address=address)
+    filed = ka_file_customer_document(context, requirement_code='national_id_front_back', note=note)
+    digits = identity.normalise_national_id(national_id)
+    data = {
+        "saved": saved,
+        "name_on_documents": identity.customer_name(partner),
+        "national_id_on_file": identity.masked(partner.national_id or '') if partner.national_id else None,
+        "photo_filed_on_deal": bool(filed.get('success')),
+    }
+    if problems:
+        data["national_id_problem"] = problems
+        data["next_step"] = ("The number could not be taken from the card as read "
+                             f"({'; '.join(problems)}). Ask the customer to TYPE the 14 digits once, then call "
+                             "this tool again with kind=national_id and national_id.")
+    else:
+        data["next_step"] = ("Saved. Thank them in one line. Never write the national ID number in the chat. "
+                             "If they asked for the quotation or proforma with their ID data, resend it now: "
+                             "ka_quote_car with send_offer=true and quotation_reference = their latest offer "
+                             "(the file is rebuilt with the ID's name, number and address).")
+    if digits and not problems and len(digits) == 14:
+        data["checked"] = "14 digits, valid birth date"
+    return {"success": True, "data": data}
+
+
+# ── the initiative's deposit ─────────────────────────────────────────────────
+@tool(
+    name="ka_initiative_deposit",
+    display_name="The initiative's deposit for a car",
+    description=(
+        "Use this tool whenever the customer asks for «قيمة المبادرة» or «قيمة الوديعة» (they are the same "
+        "thing: the USD deposit an initiative car needs) for a model. Call it at once with the model as the "
+        "customer wrote it (e.g. «E200», «سي 180», «GLC 200») and the model year if they gave one — do NOT "
+        "ask about colour, options, sunroof, mileage or anything else first: only the model, the year, the "
+        "tier (full / medium) and the region (inside / outside Europe) change the figure. Pass `tier` and "
+        "`region` only when the customer already said them; otherwise the tool returns every variant and you "
+        "state them all in one short message («فئة كاملة: …، فئة متوسطة: …»). State the figures exactly as "
+        "returned, in US dollars. «فئة كاملة» is the full tier — never list the options to the customer. "
+        "Europe = residence in an EU country; UK and Turkey count as outside Europe for this table."
+    ),
+    category="car_import",
+    parameters_schema={
+        "type": "object",
+        "properties": {
+            "model": {"type": "string", "description": "The model as the customer wrote it, e.g. E200, C 180"},
+            "year": {"type": "integer", "description": "The model year, when the customer gave one"},
+            "tier": {"type": "string", "enum": ["full", "medium"],
+                     "description": "Only if known: full (فئة كاملة) or medium (فئة متوسطة)"},
+            "region": {"type": "string", "enum": ["europe", "outside"],
+                       "description": "Only if known: europe = lives in an EU country, outside = anywhere else"},
+        },
+        "required": ["model"],
+    },
+)
+def ka_initiative_deposit(context, model: str, year: Optional[int] = None, tier: Optional[str] = None,
+                          region: Optional[str] = None) -> Dict[str, Any]:
+    """Straight from the owner's deposit workbook (DepositTier)."""
+    try:
+        from car_import.services import initiative_values
+
+        found = initiative_values.lookup(model, year=year, tier=tier, region=region)
+        if not found.get('found'):
+            found["do_now"] = ("Say plainly that this model/year is not in the initiative table and offer the "
+                               "closest model or year listed — do not guess a figure, and do not escalate.")
+            return {"success": True, "data": found}
+        found["rules"] = ("State these USD figures exactly. It is paid in dollars and returned after 5 years; "
+                          "it is not part of the car's EUR price. One short message, no questions about "
+                          "options or colour.")
+        return {"success": True, "data": found}
+    except Exception as e:
+        return _failed("ka_initiative_deposit", e)
 
 
 # ── an existing deal ─────────────────────────────────────────────────────────

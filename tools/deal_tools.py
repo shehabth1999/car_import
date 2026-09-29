@@ -298,7 +298,9 @@ def ka_send_deal_status_update(context, deal_reference: Optional[str] = None) ->
 
         from modules.chat.services.omnichannel_send_service import OmnichannelSendService
         text = _status_text(deal)
-        result = OmnichannelSendService().send_and_broadcast(partner, {'text': text}, message_type='text') or {}
+        from car_import.services.stage_notifier import system_sender
+        result = OmnichannelSendService().send_and_broadcast(
+            partner, {'text': text}, message_type='text', system_partner=system_sender()) or {}
         if result.get('success') is False or result.get('status') is False:
             return {"success": False, "error": str(result.get('error') or 'send failed'), "error_type": "send_failed"}
         return {"success": True, "data": {"sent": True, "deal_reference": deal.name, "text": text}}

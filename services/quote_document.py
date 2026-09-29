@@ -19,8 +19,26 @@ Neither renderer computes anything. Both read the lines the quote froze when it
 was calculated, which is the point: the document a customer holds and the row
 the company can audit are the same numbers, not two renderings of a formula
 that has since moved on.
+
+**What the customer sees is not the whole calculation** (owner, 2026-09-29,
+three times in one chat): the advert's gross price and the German VAT taken
+off it are the company's arithmetic. A line reading "VAT 19% (refunded after
+export)" makes the customer think the refund is his — on a tax he never paid.
+The customer sees the car's price (the net), the company's lines and the
+total. `customer_lines` is the one place that decides it, for the quote, the
+proforma and the figures the assistant is given to say.
+
+The offer goes out as a PDF (`attach`), with the name, number and address of
+the customer's national ID when the assistant has read the card
+(`services/identity.py`), the deposit to transfer and the bank details — the
+document the owner asked for, one file the customer can act on.
 """
-from django.utils.translation import gettext as _
+import logging
+
+from django.core.files.base import ContentFile
+from django.utils import timezone
+
+logger = logging.getLogger(__name__)
 
 #: Egyptian pounds and euros are never mixed into one total, so the document
 #: has two blocks and says plainly what each one is for.
@@ -28,6 +46,24 @@ EUR = 'EUR'
 EGP = 'EGP'
 
 SYMBOLS = {EUR: '€', EGP: 'ج.م'}
+
+#: Calculation lines the customer never sees, and the words for the ones they do.
+HIDDEN_FROM_CUSTOMER = ('gross', 'vat')
+CUSTOMER_LABELS = {'net': 'سعر العربية'}
+
+
+def customer_lines(lines):
+    """[(label, amount, code)] fit for a customer, from QuoteLine rows or the
+    calculator's dicts. Zero rows go too, except the car's own price."""
+    out = []
+    for line in lines:
+        code = line['code'] if isinstance(line, dict) else line.code
+        label = line.get('label_ar') if isinstance(line, dict) else line.label
+        amount = line['amount'] if isinstance(line, dict) else line.amount
+        if code in HIDDEN_FROM_CUSTOMER or not (amount or code == 'net'):
+            continue
+        out.append((CUSTOMER_LABELS.get(code, label), amount, code))
+    return out
 
 
 def _amount(value, currency):
@@ -41,14 +77,19 @@ def _pct(value):
 
 
 def _visible_lines(quote, currency):
-    """The rows worth showing a customer.
+    """[(label, amount, code)] worth showing a customer, in one currency.
 
     Zero rows are dropped: an offer that lists "EUR 1 certificate — 0.00 €" is
     an offer that invites a question about a service nobody bought.
     """
-    return [line for line in quote.lines.all()
-            if getattr(line.currency, 'code', None) == currency
-            and (line.amount or line.code in ('gross', 'net'))]
+    return customer_lines(line for line in quote.lines.all()
+                          if getattr(line.currency, 'code', None) == currency)
+
+
+def _customer(quote):
+    from car_import.services import identity
+    return identity.id_details(quote.partner) if quote.partner_id else {
+        'name': '', 'national_id': '', 'address': '', 'from_id': False}
 
 
 def _options(quote):
@@ -120,13 +161,16 @@ def car_label(quote):
 
 
 def as_text(quote):
-    """The offer as a WhatsApp message, in Arabic."""
-    customer = getattr(quote.partner, 'name', '') or ''
+    """The offer as a WhatsApp message, in Arabic — the fallback when no PDF
+    could be made."""
+    who = _customer(quote)
     car = car_label(quote)
 
     out = ['عرض سعر سيارة']
-    if customer:
-        out.append(f'الاسم: {customer}')
+    if who['name']:
+        out.append(f'الاسم: {who["name"]}')
+    if who['national_id']:
+        out.append(f'الرقم القومي: {who["national_id"]}')
     if car:
         out.append(f'العربية: {car}')
     out.append(f'التاريخ: {quote.quote_date:%Y-%m-%d}')
@@ -135,8 +179,8 @@ def as_text(quote):
     out.append('')
     out.extend(_options_text(quote))
 
-    for line in _visible_lines(quote, EUR):
-        out.append(f'{line.label}: {_amount(line.amount, EUR)}')
+    for label, amount, _code in _visible_lines(quote, EUR):
+        out.append(f'{label}: {_amount(amount, EUR)}')
 
     out.append('')
     out.append(f'إجمالي سعر البيع: {_amount(quote.total_eur, EUR)}')
@@ -147,8 +191,8 @@ def as_text(quote):
     if egp_lines:
         out.append('')
         out.append('مصاريف بتتحصّل في مصر عند الوصول:')
-        for line in egp_lines:
-            out.append(f'{line.label}: {_amount(line.amount, EGP)}')
+        for label, amount, _code in egp_lines:
+            out.append(f'{label}: {_amount(amount, EGP)}')
 
     out.append('')
     out.append('ملاحظات:')
@@ -194,69 +238,123 @@ def _notes(quote):
 
 
 def as_html(quote):
-    """The same offer, for printing."""
+    """The offer as the customer's file — A4, the same look as the proforma.
+
+    It carries what the owner asked for on 2026-09-29: the customer as their ID
+    names them (name, national ID, address), the car, the price, the deposit
+    to transfer now with the bank details, and the notes.
+    """
+    from car_import.services import proforma_document, sales_flow
+
+    who = _customer(quote)
+    issuer = proforma_document._issuer()
+    company = _escape(getattr(issuer, 'name', '') or 'Khaled Automobile')
+
     rows_eur = ''.join(
-        f'<tr><td>{_escape(line.label)}</td>'
-        f'<td class="n">{_amount(line.amount, EUR)}</td></tr>'
-        for line in _visible_lines(quote, EUR))
+        f'<tr><td>{_escape(label)}</td><td class="n">{_amount(amount, EUR)}</td></tr>'
+        for label, amount, _code in _visible_lines(quote, EUR))
 
     egp_lines = _visible_lines(quote, EGP)
     block_egp = ''
     if egp_lines:
         rows_egp = ''.join(
-            f'<tr><td>{_escape(line.label)}</td>'
-            f'<td class="n">{_amount(line.amount, EGP)}</td></tr>'
-            for line in egp_lines)
+            f'<tr><td>{_escape(label)}</td><td class="n">{_amount(amount, EGP)}</td></tr>'
+            for label, amount, _code in egp_lines)
         block_egp = (
             '<h2>مصاريف بتتحصّل في مصر عند الوصول</h2>'
             f'<table>{rows_egp}'
-            f'<tr class="total"><td>الإجمالي</td>'
+            f'<tr class="total"><td>الإجمالي بالجنيه</td>'
             f'<td class="n">{_amount(quote.egp_due_on_arrival, EGP)}</td></tr></table>')
 
+    customer_rows = (f'<tr><td>الاسم{" (زي البطاقة)" if who["from_id"] else ""}</td>'
+                     f'<td class="v">{_escape(who["name"] or "—")}</td></tr>')
+    if who['national_id']:
+        customer_rows += (f'<tr><td>الرقم القومي</td>'
+                          f'<td class="n"><bdi>{_escape(who["national_id"])}</bdi></td></tr>')
+    if who['address']:
+        customer_rows += f'<tr><td>العنوان</td><td class="v">{_escape(who["address"])}</td></tr>'
+
+    bank_text = sales_flow.bank_details_text()
+    bank = (f'<h2>بيانات التحويل</h2><pre>{_escape(bank_text)}</pre>'
+            f'<p class="meta">برجاء كتابة رقم العرض <bdi>{_escape(quote.name or "")}</bdi> في بيان '
+            'التحويل، وابعت صورة التحويل على الواتساب.</p>') if bank_text else ''
+
     notes = ''.join(f'<li>{_escape(note)}</li>' for note in _notes(quote))
-    customer = _escape(getattr(quote.partner, 'name', '') or '—')
     car = _escape(car_label(quote) or '—')
+    valid = (f'<tr><td>العرض ساري لحد</td><td class="n">{quote.valid_until:%Y-%m-%d}</td></tr>'
+             if quote.valid_until else '')
 
     return f"""<!doctype html>
 <html lang="ar" dir="rtl"><head><meta charset="utf-8">
-<title>{_escape(quote.name or 'عرض سعر')}</title>
+<title>عرض سعر {_escape(quote.name or '')}</title>
 <style>
- body {{ font-family: 'Cairo', 'Segoe UI', sans-serif; margin: 2.5rem; color: #16324f; }}
- h1 {{ font-size: 1.5rem; margin-bottom: .25rem; }}
- h2 {{ font-size: 1.05rem; margin-top: 2rem; }}
- .meta {{ color: #55708c; font-size: .9rem; margin-bottom: 1.5rem; }}
+ {proforma_document._font_face()}
+ @page {{ size: A4; margin: 16mm 15mm; }}
+ body {{ font-family: 'Cairo', 'Noto Naskh Arabic', 'Noto Sans Arabic', 'DejaVu Sans', sans-serif;
+        color: #16324f; font-size: 11pt; line-height: 1.65; }}
+ h1 {{ font-size: 19pt; margin: 0 0 1mm; }}
+ h2 {{ font-size: 12pt; margin: 6mm 0 2mm; color: #55708c; }}
+ .head {{ border-bottom: 2px solid #16324f; padding-bottom: 3mm; margin-bottom: 4mm; }}
+ .meta {{ color: #55708c; font-size: 9.5pt; }}
  table {{ width: 100%; border-collapse: collapse; }}
- td {{ padding: .5rem .25rem; border-bottom: 1px solid #e3eaf2; }}
+ td {{ padding: 1.8mm 1mm; border-bottom: 1px solid #dfe6ee; }}
  td.n {{ text-align: left; direction: ltr; white-space: nowrap; }}
+ td.v {{ text-align: left; }}
  /* A date or a reference is a left-to-right run inside Arabic text. Without
-    an isolate the browser reorders "2026-09-16" into "16-09-2026" on the page
-    — the right characters in the wrong order, which is worse than either. */
+    an isolate it is reordered — the right characters in the wrong order. */
  bdi {{ unicode-bidi: isolate; }}
  tr.total td {{ font-weight: 700; border-top: 2px solid #16324f; border-bottom: none; }}
- table.options tr.head td {{ font-weight: 700; color: #55708c; font-size: .85rem; }}
+ table.options tr.head td {{ font-weight: 700; color: #55708c; font-size: 9pt; }}
  table.options tr.chosen td {{ background: #eef6f1; font-weight: 600; }}
- table.options a {{ color: #55708c; font-size: .8rem; text-decoration: none; }}
- ol {{ color: #55708c; font-size: .9rem; line-height: 1.8; }}
- /* Printed on A4 by a salesman with a customer waiting. One page, no chrome. */
- @media print {{ body {{ margin: 1.2cm; }} }}
+ table.options a {{ color: #55708c; font-size: 8pt; text-decoration: none; }}
+ .due {{ margin: 5mm 0 2mm; padding: 3.5mm 5mm; background: #eef6f1; border-right: 4px solid #1f7a4d;
+         font-size: 13pt; font-weight: 700; }}
+ /* Each line finds its own direction: the IBAN left to right, a name right to left. */
+ pre {{ font-family: inherit; white-space: pre-wrap; margin: 0; padding: 3mm 4mm;
+        background: #f6f8fb; unicode-bidi: plaintext; text-align: start; font-size: 10pt; }}
+ ol {{ color: #55708c; font-size: 9.5pt; line-height: 1.7; padding-right: 5mm; }}
 </style></head><body>
-<h1>عرض سعر سيارة</h1>
-<div class="meta">
-  الاسم: <bdi>{customer}</bdi> &nbsp;·&nbsp; العربية: <bdi>{car}</bdi> &nbsp;·&nbsp;
-  التاريخ: <bdi>{quote.quote_date:%Y-%m-%d}</bdi> &nbsp;·&nbsp;
-  رقم العرض: <bdi>{_escape(quote.name or '—')}</bdi>
+<div class="head">
+  <h1>عرض سعر — Quotation</h1>
+  <div class="meta">{company}</div>
 </div>
+<table>
+  <tr><td>رقم العرض</td><td class="n"><bdi>{_escape(quote.name or '—')}</bdi></td></tr>
+  <tr><td>التاريخ</td><td class="n">{quote.quote_date:%Y-%m-%d}</td></tr>
+  {valid}
+  {customer_rows}
+  <tr><td>العربية</td><td class="v">{car}</td></tr>
+</table>
 {_options_html(quote)}
+<h2>السعر</h2>
 <table>{rows_eur}
 <tr class="total"><td>إجمالي سعر البيع</td><td class="n">{_amount(quote.total_eur, EUR)}</td></tr>
-<tr><td>مقدم التعاقد <bdi>({_pct(quote.deposit_pct)}%)</bdi></td>
-    <td class="n">{_amount(quote.deposit_eur, EUR)}</td></tr>
-<tr><td>الباقي</td><td class="n">{_amount(quote.balance_eur, EUR)}</td></tr>
 </table>
+<div class="due">مقدم التعاقد المطلوب للحجز (<bdi>{_pct(quote.deposit_pct)}%</bdi>): <bdi>{_amount(quote.deposit_eur, EUR)}</bdi></div>
+<p>الباقي: <bdi>{_amount(quote.balance_eur, EUR)}</bdi> — مستحق خلال 5 أيام عمل من التعاقد مع المورد.</p>
 {block_egp}
+{bank}
 <h2>ملاحظات</h2>
 <ol>{notes}</ol>
 </body></html>"""
+
+
+def attach(quote):
+    """Render the offer as a PDF and store it on the quote. Never raises;
+    False when no file could be made (the caller then sends `as_text`)."""
+    try:
+        from car_import.services import proforma_document
+        pdf = proforma_document.to_pdf(as_html(quote))
+        if not pdf:
+            return False
+        reference = (quote.name or f'quote-{quote.pk}').replace('/', '-')
+        stamp = timezone.now().strftime('%Y%m%d%H%M%S')
+        quote.document.save(f'{reference}-{stamp}.pdf', ContentFile(pdf), save=False)
+        type(quote)._base_manager.filter(pk=quote.pk).update(document=quote.document.name)
+        return True
+    except Exception:
+        logger.exception('car_import: could not attach the quotation PDF')
+        return False
 
 
 def _escape(value):

@@ -298,7 +298,13 @@ class Contract(BaseModel, BranchMixin, FullChatterMixin):
         partner = getattr(deal, 'partner', None)
         vehicle = getattr(deal, 'vehicle', None)
 
-        self.customer_name = self.customer_name or (getattr(partner, 'name', '') or '')
+        # The name on the ID when the assistant read the card, the chat name
+        # only as a last resort — a WhatsApp nickname is not a legal name.
+        from car_import.services import identity
+        details = identity.id_details(partner) if partner is not None else {}
+        self.customer_name = self.customer_name or details.get('name', '')
+        self.customer_national_id = self.customer_national_id or details.get('national_id', '')
+        self.customer_address = self.customer_address or details.get('address', '')
         self.customer_email = self.customer_email or (getattr(partner, 'email', '') or '')
         # Clause: "وشحنها باسم السيد/…". On a provided initiative the car ships
         # in the HOLDER's name, not the buyer's — that is the whole mechanism of

@@ -266,9 +266,25 @@ def deliver(log):
     return _mark(log, 'sent', text=text, channel=channel, message_id=message_id)
 
 
+def system_sender():
+    """The contact an automated message is sent AS — the assistant's own.
+
+    Without it the core bridge files an outbound message under the CUSTOMER
+    (`system_partner if system_partner else customer_partner`), so every quote,
+    proforma and bank-details message this module sent showed in the chat as
+    if the customer had written it (found in the owner's test chat, 2026-09-29).
+    """
+    try:
+        from modules.base.models import Partner
+        return Partner.all_objects.filter(ai_agent=True, email='genie@genie-erp.com').first()
+    except Exception:  # noqa: BLE001 — a send with the old attribution beats no send
+        return None
+
+
 def _send_free_text(partner, text):
     from modules.chat.services.omnichannel_send_service import OmnichannelSendService
-    return OmnichannelSendService().send_and_broadcast(partner, {'text': text}, message_type='text') or {}
+    return OmnichannelSendService().send_and_broadcast(
+        partner, {'text': text}, message_type='text', system_partner=system_sender()) or {}
 
 
 def _sender_partner(deal):

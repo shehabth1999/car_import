@@ -133,7 +133,8 @@ def send_document(partner, file_field, caption):
         from modules.chat.services.omnichannel_send_service import OmnichannelSendService
         result = OmnichannelSendService().send_and_broadcast(
             partner, {'url': absolute_url(file_field.url)}, message_type='document',
-            filename=file_field.name.rsplit('/', 1)[-1], caption=caption) or {}
+            filename=file_field.name.rsplit('/', 1)[-1], caption=caption,
+            system_partner=stage_notifier.system_sender()) or {}
     except Exception as exc:  # noqa: BLE001
         logger.exception('car_import: could not send the document')
         return {'sent': False, 'error': str(exc)}
@@ -319,6 +320,26 @@ def send_proforma(invoice):
                     'وابعتلنا صورة التحويل هنا.')
     if outcome.get('sent'):
         type(invoice)._base_manager.filter(pk=invoice.pk).update(sent_at=timezone.now())
+    return outcome
+
+
+def send_quote(quote, rerender=False):
+    """The offer as its PDF — the owner's rule since 2026-09-29: a quotation is a
+    file, never a chat message. The text goes only when no file could be made.
+    `rerender` rebuilds the file first (the customer's ID was read since)."""
+    from car_import.services import quote_document
+    if rerender or not quote.document:
+        quote_document.attach(quote)
+    if quote.document:
+        caption = (f'عرض سعر {quote.name} — الإجمالي {quote.total_eur:,.2f} € — '
+                   f'مقدم التعاقد {quote.deposit_eur:,.2f} €')
+        outcome = send_document(quote.partner, quote.document, caption)
+        outcome['as'] = 'pdf'
+    else:
+        outcome = send_text(quote.partner, quote_document.as_text(quote))
+        outcome['as'] = 'text'
+    if outcome.get('sent'):
+        type(quote)._base_manager.filter(pk=quote.pk).update(sent_at=timezone.now())
     return outcome
 
 

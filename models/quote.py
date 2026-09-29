@@ -182,6 +182,10 @@ class Quote(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
 
     notes = models.TextField(blank=True, verbose_name=_("Notes"))
     sent_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Sent at"), editable=False)
+    #: The PDF the customer received — the owner wants the offer as a file with
+    #: the ID's name on it, never as a chat message (2026-09-29).
+    document = models.FileField(upload_to='car_import/quotes/', blank=True,
+                                verbose_name=_("Offer file"), editable=False)
 
     class Meta:
         verbose_name = _("Quotation")
@@ -577,7 +581,7 @@ class Quote(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
         module refuses to let the AI handle — so this is a button a person
         presses, never something that fires on its own.
         """
-        from car_import.services import quote_document, stage_notifier
+        from car_import.services import sales_flow, stage_notifier
 
         if not stage_notifier.messages_enabled():
             return {'status': False, 'open_mode': 'message', 'data': {},
@@ -596,14 +600,11 @@ class Quote(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
             if stage_notifier.customer_opted_out(quote.partner):
                 refused.append(f"{label}: {_('this customer asked not to be messaged')}")
                 continue
-            try:
-                result = stage_notifier._send_free_text(
-                    quote.partner, quote_document.as_text(quote)) or {}
-            except Exception as exc:  # noqa: BLE001 — the outcome belongs in the message
-                refused.append(f"{label}: {exc}")
-                continue
-            if result.get('success') is False or result.get('status') is False:
-                refused.append(f"{label}: {result.get('error') or result.get('message') or 'send failed'}")
+            # The PDF (the text only when no file could be made) — the same
+            # sender the assistant uses, so staff and AI send one document.
+            result = sales_flow.send_quote(quote)
+            if not result.get('sent'):
+                refused.append(f"{label}: {result.get('error') or 'send failed'}")
                 continue
             quote.state = 'sent'
             quote.sent_at = timezone.now()
