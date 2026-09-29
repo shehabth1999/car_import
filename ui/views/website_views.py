@@ -221,65 +221,65 @@ website_car_form_view = {
                     ],
                 },
             ],
+            "tabs": [
+                    {
+                        "title": _("Specification"),
+                        "sections": [{"groups": [
+                            {"fields": [
+                                _pick("fuel", _("Fuel"), "fuel", required=True),
+                                _pick("gearbox", _("Gearbox"), "gearbox", required=True),
+                                _pick("bodytype", _("Body type"), "bodytype", required=True),
+                                _pick("engine", _("Engine"), "engine", required=True),
+                                _pick("origin", _("Origin"), "origin"),
+                            ]},
+                            {"fields": [
+                                {"name": "seat", "string": _("Seats"), "widget": "select"},
+                                {"name": "distance", "string": _("Mileage (km)"), "widget": "number"},
+                                {"name": "video_link", "string": _("Video link"), "widget": "text"},
+                                {"name": "extra_options", "string": _("Extra options"), "widget": "relation",
+                                 "displayField": "name_en", "multiSelect": True, "domain": _kind("extra_option")},
+                            ]},
+                        ]}],
+                    },
+                    {
+                        "title": _("Description"),
+                        "sections": [{"groups": [{"fields": [
+                            {"name": "description_ar", "string": _("Description (Arabic)"), "widget": "textarea"},
+                            {"name": "description_en", "string": _("Description (English)"), "widget": "textarea"},
+                        ]}]}],
+                    },
+                    {
+                        "title": _("Photos"),
+                        "sections": [{"groups": [
+                            {"fields": [
+                                {"name": "site_image_url", "string": _("Main photo on the website"), "widget": "text",
+                                 "readonly": True},
+                                {"name": "main_image", "string": _("New main photo"), "widget": "files",
+                                 "multiSelect": False, "accept": "image/*"},
+                                {"name": "gallery", "string": _("New gallery photos"), "widget": "files",
+                                 "maxFiles": 30, "accept": "image/*"},
+                            ]},
+                        ]}],
+                    },
+                    {
+                        "title": _("Website"),
+                        "sections": [{"groups": [
+                            {"fields": [
+                                {"name": "website_id", "string": _("Website id"), "widget": "number", "readonly": True},
+                                {"name": "odoo_id", "string": _("Old Odoo id"), "widget": "number", "readonly": True},
+                                {"name": "last_synced_at", "string": _("Last synced"), "widget": "datetime",
+                                 "readonly": True},
+                                {"name": "last_error", "string": _("Last sending error"), "widget": "textarea",
+                                 "readonly": True},
+                            ]},
+                            {"fields": [
+                                {"name": "needs_review", "string": _("Needs review"), "widget": "switch"},
+                                {"name": "review_reason", "string": _("Why"), "widget": "text"},
+                            ]},
+                        ]}],
+                    },
+            ],
         },
-        "tabs": [
-                {
-                    "title": _("Specification"),
-                    "sections": [{"groups": [
-                        {"fields": [
-                            _pick("fuel", _("Fuel"), "fuel", required=True),
-                            _pick("gearbox", _("Gearbox"), "gearbox", required=True),
-                            _pick("bodytype", _("Body type"), "bodytype", required=True),
-                            _pick("engine", _("Engine"), "engine", required=True),
-                            _pick("origin", _("Origin"), "origin"),
-                        ]},
-                        {"fields": [
-                            {"name": "seat", "string": _("Seats"), "widget": "select"},
-                            {"name": "distance", "string": _("Mileage (km)"), "widget": "number"},
-                            {"name": "video_link", "string": _("Video link"), "widget": "text"},
-                            {"name": "extra_options", "string": _("Extra options"), "widget": "relation",
-                             "displayField": "name_en", "multiSelect": True, "domain": _kind("extra_option")},
-                        ]},
-                    ]}],
-                },
-                {
-                    "title": _("Description"),
-                    "sections": [{"groups": [{"fields": [
-                        {"name": "description_ar", "string": _("Description (Arabic)"), "widget": "textarea"},
-                        {"name": "description_en", "string": _("Description (English)"), "widget": "textarea"},
-                    ]}]}],
-                },
-                {
-                    "title": _("Photos"),
-                    "sections": [{"groups": [
-                        {"fields": [
-                            {"name": "site_image_url", "string": _("Main photo on the website"), "widget": "text",
-                             "readonly": True},
-                            {"name": "main_image", "string": _("New main photo"), "widget": "files",
-                             "multiSelect": False, "accept": "image/*"},
-                            {"name": "gallery", "string": _("New gallery photos"), "widget": "files",
-                             "maxFiles": 30, "accept": "image/*"},
-                        ]},
-                    ]}],
-                },
-                {
-                    "title": _("Website"),
-                    "sections": [{"groups": [
-                        {"fields": [
-                            {"name": "website_id", "string": _("Website id"), "widget": "number", "readonly": True},
-                            {"name": "odoo_id", "string": _("Old Odoo id"), "widget": "number", "readonly": True},
-                            {"name": "last_synced_at", "string": _("Last synced"), "widget": "datetime",
-                             "readonly": True},
-                            {"name": "last_error", "string": _("Last sending error"), "widget": "textarea",
-                             "readonly": True},
-                        ]},
-                        {"fields": [
-                            {"name": "needs_review", "string": _("Needs review"), "widget": "switch"},
-                            {"name": "review_reason", "string": _("Why"), "widget": "text"},
-                        ]},
-                    ]}],
-                },
-        ],
     },
 }
 

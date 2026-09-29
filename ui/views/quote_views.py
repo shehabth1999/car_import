@@ -215,170 +215,170 @@ car_quote_form_view = {
                 ],
                 "position": "end",
             },
-        },
-        "tabs": [
-            {
-                "title": _("The price, as the customer sees it"),
-                "sections": [
-                    {
+            "tabs": [
+                {
+                    "title": _("The price, as the customer sees it"),
+                    "sections": [
+                        {
+                            "title": "",
+                            "groups": [
+                                {"title": _("In euros"), "fields": [
+                                    {"name": "band_label", "string": _("Band used"), "widget": "text",
+                                     "readonly": True,
+                                     "help": _("Which pricing band the gross price fell into — it fixes the admin fee and the deposit %")},
+                                    _ro("net_eur", _("Net price (€)"), _("Gross without German VAT")),
+                                    _ro("vat_reclaimable_eur", _("VAT reclaimed (€)"),
+                                        _("Reclaimed on export when the seller's invoice shows VAT")),
+                                    _ro("shipping_eur", _("Shipping (€)")),
+                                    _ro("admin_fee_before_discount_eur", _("Admin fee (€)"), _("The band's fee, before any discount")),
+                                    _ro("admin_fee_eur", _("Admin fee after discount (€)")),
+                                    _ro("eur1_eur", _("EUR 1 (€)")),
+                                    _ro("shipping_extra_eur", _("Shipping option (€)")),
+                                ]},
+                                {"title": _("What the customer pays"), "fields": [
+                                    _ro("total_eur", _("Total selling price (€)")),
+                                    _ro("deposit_pct", _("Deposit %"), _("Set by the band, never typed")),
+                                    _ro("deposit_eur", _("Deposit (€)")),
+                                    _ro("balance_eur", _("Balance (€)"), _("Total minus deposit — due before the car ships")),
+                                    {"name": "calculated_at", "string": _("Calculated at"),
+                                     "widget": "datetime", "readonly": True},
+                                    # Only ever filled when the engine refused. It is a
+                                    # sentence, not a code: "no band covers 30,000.50 €".
+                                    {"name": "pricing_error", "string": _("Why there is no price"),
+                                     "widget": "text", "readonly": True},
+                                ]},
+                            ],
+                        },
+                        {
+                            # Kept apart, and never added to the euro total. These are
+                            # collected in Egypt, on arrival, in pounds. Summing them
+                            # with the euros would turn a quote into a promise about an
+                            # exchange rate nobody made.
+                            "title": _("Collected in Egypt, on arrival (EGP)"),
+                            "groups": [
+                                {"fields": [
+                                    _ro("port_fee_egp", _("Port fees (EGP)")),
+                                    _ro("showroom_fee_egp", _("Showroom collection discount (EGP)"),
+                                        _("A minus: it comes off the port fee. The port fee line itself does not change")),
+                                ]},
+                                {"fields": [
+                                    _ro("egp_due_on_arrival", _("Due on arrival (EGP)")),
+                                    _ro("total_egp_indicative", _("Indicative total (EGP) — today's rate only"),
+                                        _("Euro total × the rate you typed. Indicative, and the document says so")),
+                                ]},
+                            ],
+                        },
+                    ],
+                },
+                {
+                    # The plan's shape, and the client's own habit: an agent answers
+                    # "do you have a C200?" with five links at five prices. Each row
+                    # carries its own whole stack, because a cheaper car can land in
+                    # a band with a BIGGER deposit percentage — which is exactly the
+                    # comparison the customer is making.
+                    "title": _("Candidate cars"),
+                    "sections": [{
+                        "title": _("Tick the one the customer chose — its figures become the quotation's"),
+                        "groups": [{"fullWidth": True, "fields": [
+                            {"name": "options", "string": "", "widget": "list",
+                             "required": False, "minRows": 0, "maxRows": 12,
+                             "createable": True, "deleteable": True, "selectable": False,
+                             "editable": True,
+                             "listConfig": {"fields": [
+                                 {"name": "options.sequence", "widget": "number", "string": _("#")},
+                                 {"name": "options.label", "widget": "text", "string": _("Car")},
+                                 {"name": "options.listing_url", "widget": "text",
+                                  "string": _("Advert link")},
+                                 {"name": "options.gross_price_eur", "widget": "number",
+                                  "string": _("With VAT €"), "required": True},
+                                 {"name": "options.with_eur1", "widget": "switch",
+                                  "string": _("EUR 1")},
+                                 {"name": "options.shipping_type", "widget": "select",
+                                  "string": _("Shipping")},
+                                 {"name": "options.port", "widget": "select", "string": _("Port")},
+                                 {"name": "options.admin_fee_discount_eur", "widget": "number",
+                                  "string": _("Fee discount €")},
+                                 {"name": "options.total_eur", "widget": "number",
+                                  "string": _("Total €"), "readonly": True},
+                                 {"name": "options.deposit_pct", "widget": "number",
+                                  "string": _("Dep. %"), "readonly": True},
+                                 {"name": "options.deposit_eur", "widget": "number",
+                                  "string": _("Deposit €"), "readonly": True},
+                                 {"name": "options.is_accepted", "widget": "switch",
+                                  "string": _("Chosen")},
+                             ]},
+                             },
+                        ]}],
+                    }],
+                },
+                {
+                    "title": _("What the customer has paid"),
+                    "sections": [{
                         "title": "",
                         "groups": [
-                            {"title": _("In euros"), "fields": [
-                                {"name": "band_label", "string": _("Band used"), "widget": "text",
-                                 "readonly": True,
-                                 "help": _("Which pricing band the gross price fell into — it fixes the admin fee and the deposit %")},
-                                _ro("net_eur", _("Net price (€)"), _("Gross without German VAT")),
-                                _ro("vat_reclaimable_eur", _("VAT reclaimed (€)"),
-                                    _("Reclaimed on export when the seller's invoice shows VAT")),
-                                _ro("shipping_eur", _("Shipping (€)")),
-                                _ro("admin_fee_before_discount_eur", _("Admin fee (€)"), _("The band's fee, before any discount")),
-                                _ro("admin_fee_eur", _("Admin fee after discount (€)")),
-                                _ro("eur1_eur", _("EUR 1 (€)")),
-                                _ro("shipping_extra_eur", _("Shipping option (€)")),
-                            ]},
-                            {"title": _("What the customer pays"), "fields": [
-                                _ro("total_eur", _("Total selling price (€)")),
-                                _ro("deposit_pct", _("Deposit %"), _("Set by the band, never typed")),
-                                _ro("deposit_eur", _("Deposit (€)")),
-                                _ro("balance_eur", _("Balance (€)"), _("Total minus deposit — due before the car ships")),
-                                {"name": "calculated_at", "string": _("Calculated at"),
-                                 "widget": "datetime", "readonly": True},
-                                # Only ever filled when the engine refused. It is a
-                                # sentence, not a code: "no band covers 30,000.50 €".
-                                {"name": "pricing_error", "string": _("Why there is no price"),
-                                 "widget": "text", "readonly": True},
-                            ]},
-                        ],
-                    },
-                    {
-                        # Kept apart, and never added to the euro total. These are
-                        # collected in Egypt, on arrival, in pounds. Summing them
-                        # with the euros would turn a quote into a promise about an
-                        # exchange rate nobody made.
-                        "title": _("Collected in Egypt, on arrival (EGP)"),
-                        "groups": [
                             {"fields": [
-                                _ro("port_fee_egp", _("Port fees (EGP)")),
-                                _ro("showroom_fee_egp", _("Showroom collection discount (EGP)"),
-                                    _("A minus: it comes off the port fee. The port fee line itself does not change")),
+                                # A real amount somebody types, not a status somebody
+                                # picks: customers pay more than the deposit, and
+                                # sometimes the whole car.
+                                {"name": "paid_eur", "string": _("Paid so far (€)"), "widget": "number",
+                                 "onChange": True,
+                                 "help": _("The real amount received, as the accountant confirmed it. The deal's payment mark follows this once the quotation is accepted")},
+                                {"name": "deposit_covered", "string": _("Deposit covered"),
+                                 "widget": "switch", "readonly": True},
+                                {"name": "fully_paid", "string": _("Paid in full"), "widget": "switch",
+                                 "readonly": True},
                             ]},
                             {"fields": [
-                                _ro("egp_due_on_arrival", _("Due on arrival (EGP)")),
-                                _ro("total_egp_indicative", _("Indicative total (EGP) — today's rate only"),
-                                    _("Euro total × the rate you typed. Indicative, and the document says so")),
+                                _ro("remaining_eur", _("Still owed (€)")),
+                                _ro("overpaid_eur", _("Overpaid (€)"),
+                                    _("The customer sent more than the total — do not ask for money already paid")),
+                                {"name": "sent_at", "string": _("Sent at"), "widget": "datetime",
+                                 "readonly": True},
                             ]},
                         ],
+                    }],
+                    "footer": {
+                        "fields": [
+                            {"name": "paid_eur", "string": _("Paid €"), "widget": "number"},
+                            {"separator": "thin"},
+                            {"name": "remaining_eur", "string": _("Still owed €"), "widget": "number",
+                             "highlight": True},
+                        ],
+                        "position": "end",
                     },
-                ],
-            },
-            {
-                # The plan's shape, and the client's own habit: an agent answers
-                # "do you have a C200?" with five links at five prices. Each row
-                # carries its own whole stack, because a cheaper car can land in
-                # a band with a BIGGER deposit percentage — which is exactly the
-                # comparison the customer is making.
-                "title": _("Candidate cars"),
-                "sections": [{
-                    "title": _("Tick the one the customer chose — its figures become the quotation's"),
-                    "groups": [{"fullWidth": True, "fields": [
-                        {"name": "options", "string": "", "widget": "list",
-                         "required": False, "minRows": 0, "maxRows": 12,
-                         "createable": True, "deleteable": True, "selectable": False,
-                         "editable": True,
-                         "listConfig": {"fields": [
-                             {"name": "options.sequence", "widget": "number", "string": _("#")},
-                             {"name": "options.label", "widget": "text", "string": _("Car")},
-                             {"name": "options.listing_url", "widget": "text",
-                              "string": _("Advert link")},
-                             {"name": "options.gross_price_eur", "widget": "number",
-                              "string": _("With VAT €"), "required": True},
-                             {"name": "options.with_eur1", "widget": "switch",
-                              "string": _("EUR 1")},
-                             {"name": "options.shipping_type", "widget": "select",
-                              "string": _("Shipping")},
-                             {"name": "options.port", "widget": "select", "string": _("Port")},
-                             {"name": "options.admin_fee_discount_eur", "widget": "number",
-                              "string": _("Fee discount €")},
-                             {"name": "options.total_eur", "widget": "number",
-                              "string": _("Total €"), "readonly": True},
-                             {"name": "options.deposit_pct", "widget": "number",
-                              "string": _("Dep. %"), "readonly": True},
-                             {"name": "options.deposit_eur", "widget": "number",
-                              "string": _("Deposit €"), "readonly": True},
-                             {"name": "options.is_accepted", "widget": "switch",
-                              "string": _("Chosen")},
-                         ]},
-                         },
-                    ]}],
-                }],
-            },
-            {
-                "title": _("What the customer has paid"),
-                "sections": [{
-                    "title": "",
-                    "groups": [
-                        {"fields": [
-                            # A real amount somebody types, not a status somebody
-                            # picks: customers pay more than the deposit, and
-                            # sometimes the whole car.
-                            {"name": "paid_eur", "string": _("Paid so far (€)"), "widget": "number",
-                             "onChange": True,
-                             "help": _("The real amount received, as the accountant confirmed it. The deal's payment mark follows this once the quotation is accepted")},
-                            {"name": "deposit_covered", "string": _("Deposit covered"),
-                             "widget": "switch", "readonly": True},
-                            {"name": "fully_paid", "string": _("Paid in full"), "widget": "switch",
-                             "readonly": True},
-                        ]},
-                        {"fields": [
-                            _ro("remaining_eur", _("Still owed (€)")),
-                            _ro("overpaid_eur", _("Overpaid (€)"),
-                                _("The customer sent more than the total — do not ask for money already paid")),
-                            {"name": "sent_at", "string": _("Sent at"), "widget": "datetime",
-                             "readonly": True},
-                        ]},
-                    ],
-                }],
-                "footer": {
-                    "fields": [
-                        {"name": "paid_eur", "string": _("Paid €"), "widget": "number"},
-                        {"separator": "thin"},
-                        {"name": "remaining_eur", "string": _("Still owed €"), "widget": "number",
-                         "highlight": True},
-                    ],
-                    "position": "end",
                 },
-            },
-            {
-                "title": _("The offer, line by line"),
-                "sections": [{
-                    "title": _("Exactly what the customer was shown — regenerated on every save"),
-                    "groups": [{"fullWidth": True, "fields": [
-                        {"name": "lines", "string": "", "widget": "list",
-                         "required": False, "minRows": 0, "maxRows": 40,
-                         "createable": False, "deleteable": False, "selectable": False,
-                         "editable": False,
-                         "listConfig": {"fields": [
-                             {"name": "lines.sequence", "widget": "number", "string": _("#")},
-                             {"name": "lines.label", "widget": "text", "string": _("Description")},
-                             {"name": "lines.amount", "widget": "number", "string": _("Amount")},
-                             {"name": "lines.currency", "widget": "relation", "displayField": "code",
-                              "string": _("Currency")},
-                         ]},
-                         },
-                    ]}],
-                }],
-            },
-            {
-                "title": _("Notes"),
-                "sections": [{
-                    "title": "",
-                    "groups": [{"fullWidth": True, "fields": [
-                        {"name": "notes", "string": _("Notes"), "widget": "textarea", "rows": 5,
-                         "help": _("Internal. Nothing here reaches the offer document")},
-                    ]}],
-                }],
-            },
-        ],
+                {
+                    "title": _("The offer, line by line"),
+                    "sections": [{
+                        "title": _("Exactly what the customer was shown — regenerated on every save"),
+                        "groups": [{"fullWidth": True, "fields": [
+                            {"name": "lines", "string": "", "widget": "list",
+                             "required": False, "minRows": 0, "maxRows": 40,
+                             "createable": False, "deleteable": False, "selectable": False,
+                             "editable": False,
+                             "listConfig": {"fields": [
+                                 {"name": "lines.sequence", "widget": "number", "string": _("#")},
+                                 {"name": "lines.label", "widget": "text", "string": _("Description")},
+                                 {"name": "lines.amount", "widget": "number", "string": _("Amount")},
+                                 {"name": "lines.currency", "widget": "relation", "displayField": "code",
+                                  "string": _("Currency")},
+                             ]},
+                             },
+                        ]}],
+                    }],
+                },
+                {
+                    "title": _("Notes"),
+                    "sections": [{
+                        "title": "",
+                        "groups": [{"fullWidth": True, "fields": [
+                            {"name": "notes", "string": _("Notes"), "widget": "textarea", "rows": 5,
+                             "help": _("Internal. Nothing here reaches the offer document")},
+                        ]}],
+                    }],
+                },
+            ],
+        },
     },
 }
 

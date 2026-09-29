@@ -148,140 +148,140 @@ car_contract_form_view = {
                 ],
                 "position": "end",
             },
+            "tabs": [
+                {
+                    "title": _("The customer"),
+                    "sections": [{
+                        "title": _("Exactly as their ID reads"),
+                        "groups": [
+                            {"fields": [
+                                {"name": "customer_name", "string": _("Name as on the ID"),
+                                 "widget": "text", "required": True,
+                                 "help": _("Not the WhatsApp name. The contract is void against a name that is not on the ID")},
+                                {"name": "customer_national_id", "string": _("National ID number"),
+                                 "widget": "text", "required": True,
+                                 "help": _("14 digits. Filed against the deal's paperwork too")},
+                                {"name": "shipping_name", "string": _("Ships in the name of"),
+                                 "widget": "text",
+                                 "help": _("Usually the customer. On a provided initiative it is the initiative holder — the customs papers carry this name")},
+                            ]},
+                            {"fields": [
+                                {"name": "customer_address", "string": _("Address"), "widget": "text",
+                                 "help": _("As on the ID — clause 10 sends formal notices there")},
+                                {"name": "customer_email", "string": _("Email"), "widget": "email",
+                                 "help": _("Formal correspondence goes here as well as by registered post")},
+                            ]},
+                        ],
+                    }],
+                },
+                {
+                    "title": _("The car"),
+                    "sections": [{
+                        "title": _("As the annex prints it"),
+                        "groups": [
+                            {"fields": [
+                                {"name": "car_model", "string": _("Model"), "widget": "text",
+                                 "required": True},
+                                {"name": "car_trim", "string": _("Trim"), "widget": "text"},
+                            ]},
+                            {"fields": [
+                                {"name": "car_model_year", "string": _("Model year"), "widget": "text",
+                                 "help": _("Replaces the literal year the lawyer typed in the template")},
+                                {"name": "car_configuration", "string": _("Configuration number"),
+                                 "widget": "text",
+                                 "help": _("The manufacturer's build code — Annex 2 settles disputes about options against it")},
+                            ]},
+                        ],
+                    }],
+                },
+                {
+                    "title": _("The money"),
+                    "sections": [
+                        {
+                            "title": _("Article 4 — the price and how it is paid"),
+                            "groups": [
+                                {"fields": [
+                                    {"name": "currency", "string": _("Currency"), "widget": "relation", "displayField": "code", "multiSelect": False},
+                                    {"name": "total_eur", "string": _("Total contract value (€)"),
+                                     "widget": "number", "required": True, "onChange": True,
+                                     "help": _("The three payments below must add up to this — the form says so as you type, and the save refuses otherwise")},
+                                    {"name": "deposit_pct", "string": _("Deposit %"), "widget": "number",
+                                     "help": _("From the quotation's band")},
+                                ]},
+                                {"fields": [
+                                    {"name": "down_payment_eur", "string": _("Received at signing (€)"),
+                                     "widget": "number", "onChange": True},
+                                    {"name": "bank_transfer_eur", "string": _("Bank transfer (€)"),
+                                     "widget": "number", "onChange": True},
+                                    {"name": "cash_on_bl_eur", "string": _("Cash on bill of lading (€)"),
+                                     "widget": "number", "onChange": True,
+                                     "help": _("Due when the bill of lading is issued — before the ship sails")},
+                                ]},
+                            ],
+                        },
+                        {
+                            "title": _("Annex 1 — the payment schedule"),
+                            "groups": [
+                                {"fields": [
+                                    {"name": "instalment_1_date", "string": _("Payment 1 — date"),
+                                     "widget": "date"},
+                                    {"name": "instalment_2_date", "string": _("Payment 2 — date"),
+                                     "widget": "date"},
+                                    {"name": "instalment_3_date", "string": _("Payment 3 — date"),
+                                     "widget": "date"},
+                                ]},
+                                {"fields": [
+                                    {"name": "instalment_1_amount", "string": _("Payment 1 — amount"),
+                                     "widget": "number"},
+                                    {"name": "instalment_2_amount", "string": _("Payment 2 — amount"),
+                                     "widget": "number"},
+                                    {"name": "instalment_3_amount", "string": _("Payment 3 — amount"),
+                                     "widget": "number"},
+                                ]},
+                            ],
+                        },
+                    ],
+                },
+                {
+                    "title": _("The document"),
+                    "sections": [{
+                        "title": "",
+                        "groups": [
+                            {"title": _("Generated"), "fields": [
+                                {"name": "document", "string": _("Generated contract"),
+                                 "widget": "file", "readonly": True,
+                                 "help": _("Kept as generated, never rebuilt from today's data — it is what the customer holds")},
+                                {"name": "generated_at", "string": _("Generated at"),
+                                 "widget": "datetime", "readonly": True},
+                                {"name": "generated_by", "string": _("Generated by"),
+                                 "widget": "relation", "displayField": "name", "readonly": True,
+                                 "multiSelect": False},
+                                {"name": "sent_at", "string": _("Sent at"), "widget": "datetime",
+                                 "readonly": True},
+                            ]},
+                            {"title": _("Signed"), "fields": [
+                                {"name": "signed_on", "string": _("Signed on"), "widget": "date"},
+                                {"name": "signed_document", "string": _("Signed copy"),
+                                 "widget": "file",
+                                 "help": _("The copy that came back with a signature. A generated file proves what we offered; only this proves what they agreed to")},
+                                {"name": "void_reason", "string": _("Why it was voided"),
+                                 "widget": "text",
+                                 "invisible": {"field": "state", "operator": "ne", "value": "cancelled"}},
+                            ]},
+                        ],
+                    }],
+                },
+                {
+                    "title": _("Notes"),
+                    "sections": [{
+                        "title": "",
+                        "groups": [{"fullWidth": True, "fields": [
+                            {"name": "notes", "string": _("Notes"), "widget": "textarea", "rows": 5},
+                        ]}],
+                    }],
+                },
+            ],
         },
-        "tabs": [
-            {
-                "title": _("The customer"),
-                "sections": [{
-                    "title": _("Exactly as their ID reads"),
-                    "groups": [
-                        {"fields": [
-                            {"name": "customer_name", "string": _("Name as on the ID"),
-                             "widget": "text", "required": True,
-                             "help": _("Not the WhatsApp name. The contract is void against a name that is not on the ID")},
-                            {"name": "customer_national_id", "string": _("National ID number"),
-                             "widget": "text", "required": True,
-                             "help": _("14 digits. Filed against the deal's paperwork too")},
-                            {"name": "shipping_name", "string": _("Ships in the name of"),
-                             "widget": "text",
-                             "help": _("Usually the customer. On a provided initiative it is the initiative holder — the customs papers carry this name")},
-                        ]},
-                        {"fields": [
-                            {"name": "customer_address", "string": _("Address"), "widget": "text",
-                             "help": _("As on the ID — clause 10 sends formal notices there")},
-                            {"name": "customer_email", "string": _("Email"), "widget": "email",
-                             "help": _("Formal correspondence goes here as well as by registered post")},
-                        ]},
-                    ],
-                }],
-            },
-            {
-                "title": _("The car"),
-                "sections": [{
-                    "title": _("As the annex prints it"),
-                    "groups": [
-                        {"fields": [
-                            {"name": "car_model", "string": _("Model"), "widget": "text",
-                             "required": True},
-                            {"name": "car_trim", "string": _("Trim"), "widget": "text"},
-                        ]},
-                        {"fields": [
-                            {"name": "car_model_year", "string": _("Model year"), "widget": "text",
-                             "help": _("Replaces the literal year the lawyer typed in the template")},
-                            {"name": "car_configuration", "string": _("Configuration number"),
-                             "widget": "text",
-                             "help": _("The manufacturer's build code — Annex 2 settles disputes about options against it")},
-                        ]},
-                    ],
-                }],
-            },
-            {
-                "title": _("The money"),
-                "sections": [
-                    {
-                        "title": _("Article 4 — the price and how it is paid"),
-                        "groups": [
-                            {"fields": [
-                                {"name": "currency", "string": _("Currency"), "widget": "relation", "displayField": "code", "multiSelect": False},
-                                {"name": "total_eur", "string": _("Total contract value (€)"),
-                                 "widget": "number", "required": True, "onChange": True,
-                                 "help": _("The three payments below must add up to this — the form says so as you type, and the save refuses otherwise")},
-                                {"name": "deposit_pct", "string": _("Deposit %"), "widget": "number",
-                                 "help": _("From the quotation's band")},
-                            ]},
-                            {"fields": [
-                                {"name": "down_payment_eur", "string": _("Received at signing (€)"),
-                                 "widget": "number", "onChange": True},
-                                {"name": "bank_transfer_eur", "string": _("Bank transfer (€)"),
-                                 "widget": "number", "onChange": True},
-                                {"name": "cash_on_bl_eur", "string": _("Cash on bill of lading (€)"),
-                                 "widget": "number", "onChange": True,
-                                 "help": _("Due when the bill of lading is issued — before the ship sails")},
-                            ]},
-                        ],
-                    },
-                    {
-                        "title": _("Annex 1 — the payment schedule"),
-                        "groups": [
-                            {"fields": [
-                                {"name": "instalment_1_date", "string": _("Payment 1 — date"),
-                                 "widget": "date"},
-                                {"name": "instalment_2_date", "string": _("Payment 2 — date"),
-                                 "widget": "date"},
-                                {"name": "instalment_3_date", "string": _("Payment 3 — date"),
-                                 "widget": "date"},
-                            ]},
-                            {"fields": [
-                                {"name": "instalment_1_amount", "string": _("Payment 1 — amount"),
-                                 "widget": "number"},
-                                {"name": "instalment_2_amount", "string": _("Payment 2 — amount"),
-                                 "widget": "number"},
-                                {"name": "instalment_3_amount", "string": _("Payment 3 — amount"),
-                                 "widget": "number"},
-                            ]},
-                        ],
-                    },
-                ],
-            },
-            {
-                "title": _("The document"),
-                "sections": [{
-                    "title": "",
-                    "groups": [
-                        {"title": _("Generated"), "fields": [
-                            {"name": "document", "string": _("Generated contract"),
-                             "widget": "file", "readonly": True,
-                             "help": _("Kept as generated, never rebuilt from today's data — it is what the customer holds")},
-                            {"name": "generated_at", "string": _("Generated at"),
-                             "widget": "datetime", "readonly": True},
-                            {"name": "generated_by", "string": _("Generated by"),
-                             "widget": "relation", "displayField": "name", "readonly": True,
-                             "multiSelect": False},
-                            {"name": "sent_at", "string": _("Sent at"), "widget": "datetime",
-                             "readonly": True},
-                        ]},
-                        {"title": _("Signed"), "fields": [
-                            {"name": "signed_on", "string": _("Signed on"), "widget": "date"},
-                            {"name": "signed_document", "string": _("Signed copy"),
-                             "widget": "file",
-                             "help": _("The copy that came back with a signature. A generated file proves what we offered; only this proves what they agreed to")},
-                            {"name": "void_reason", "string": _("Why it was voided"),
-                             "widget": "text",
-                             "invisible": {"field": "state", "operator": "ne", "value": "cancelled"}},
-                        ]},
-                    ],
-                }],
-            },
-            {
-                "title": _("Notes"),
-                "sections": [{
-                    "title": "",
-                    "groups": [{"fullWidth": True, "fields": [
-                        {"name": "notes", "string": _("Notes"), "widget": "textarea", "rows": 5},
-                    ]}],
-                }],
-            },
-        ],
     },
 }
 

@@ -306,182 +306,182 @@ car_deal_form_view = {
                 ],
                 "position": "end",
             },
+            "tabs": [
+                {
+                    "title": _("Stage and shipping"),
+                    "sections": [
+                        {
+                            "title": "",
+                            "groups": [
+                                {
+                                    "title": _("Where it is"),
+                                    "fields": [
+                                        # Read-only: a stage moves through the buttons or the
+                                        # kanban, so the gates in the stage machine always run.
+                                        {"name": "import_stage", "string": _("Current stage"), "widget": "relation",
+                                         "displayField": "name", "readonly": True, "multiSelect": False,
+                                         "help": _("Moved with the buttons above, never typed — each move can message the customer")},
+                                        {"name": "stage_entered_at", "string": _("In this stage since"),
+                                         "widget": "datetime", "readonly": True},
+                                        {"name": "previous_stage", "string": _("Previous stage"), "widget": "relation",
+                                         "displayField": "name", "readonly": True, "multiSelect": False},
+                                        {"name": "stage_is_blocked", "string": _("Blocked"), "widget": "switch",
+                                         "help": _("A gate is refusing the next stage — the reason says which")},
+                                        {"name": "blocked_reason", "string": _("Why it is blocked"), "widget": "text",
+                                         "invisible": {"field": "stage_is_blocked", "operator": "eq", "value": False}},
+                                        {"name": "notifications_suppressed", "string": _("Hold customer messages"),
+                                         "widget": "switch",
+                                         "help": _("On during migration or corrections, so a stage move tells nobody. Untick once the customer knows the system writes to them")},
+                                        {"name": "public_status", "string": _("Customer-facing status"), "widget": "text",
+                                         "help": _("The line the customer reads on the tracking page and in the AI's answer")},
+                                    ],
+                                },
+                                {
+                                    "title": _("Papers and the ship"),
+                                    "fields": [
+                                        {"name": "acid_number", "string": _("ACID number"), "widget": "text",
+                                         "help": _("Egypt's advance cargo ID — the longest wait in the whole journey, and not in our hands")},
+                                        {"name": "import_approval_number", "string": _("Import approval"), "widget": "text"},
+                                        {"name": "carrier", "string": _("Carrier"), "widget": "text"},
+                                        {"name": "vessel", "string": _("Vessel"), "widget": "text"},
+                                        {"name": "booking_ref", "string": _("Booking"), "widget": "text"},
+                                        {"name": "sail_date", "string": _("Sailed on"), "widget": "date"},
+                                        {"name": "bl_number", "string": _("Bill of lading"), "widget": "text",
+                                         "help": _("The cash-on-B/L instalment in the contract falls due when this exists")},
+                                        {"name": "bl_date", "string": _("B/L date"), "widget": "date"},
+                                        {"name": "eta", "string": _("ETA"), "widget": "date",
+                                         "help": _("What the customer is told. Change it and say so — the AI quotes this date")},
+                                        {"name": "arrival_port", "string": _("Port"), "widget": "text"},
+                                        {"name": "arrival_date", "string": _("Arrived on"), "widget": "date"},
+                                        {"name": "notification_date", "string": _("Notification (إخطار) date"), "widget": "date"},
+                                        {"name": "release_date", "string": _("Customs released on"), "widget": "date"},
+                                        {"name": "tracking_url", "string": _("Tracking link"), "widget": "url"},
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+                {
+                    "title": _("Payment and plan"),
+                    "sections": [
+                        {
+                            "title": "",
+                            "groups": [
+                                {
+                                    "title": _("The marks — not accounting"),
+                                    "fields": [
+                                        {"name": "payment_state", "string": _("Payment"), "widget": "select", "readonly": True,
+                                         "help": _("Follows the accepted quotation's 'paid so far', or the two Mark buttons. Never typed")},
+                                        {"name": "amount_agreed", "string": _("Agreed amount"), "widget": "number",
+                                         "onChange": True,
+                                         "help": _("Copied from the accepted quotation's total; the due amount recomputes as you type")},
+                                        {"name": "amount_paid_marked", "string": _("Marked as paid"), "widget": "number",
+                                         "onChange": True,
+                                         "help": _("What the accountant confirmed received. A mark, not a ledger entry")},
+                                        {"name": "amount_due_marked", "string": _("Marked as due"), "widget": "number",
+                                         "readonly": True, "help": _("Agreed minus paid")},
+                                        {"name": "currency", "string": _("Currency"), "widget": "relation", "displayField": "code", "multiSelect": False,
+                                         "help": _("EUR for imports; EGP for showroom cars")},
+                                        {"name": "payment_marked_by", "string": _("Marked by"), "widget": "relation",
+                                         "displayField": "name", "readonly": True, "multiSelect": False},
+                                        {"name": "payment_marked_at", "string": _("Marked at"), "widget": "datetime",
+                                         "readonly": True},
+                                        {"name": "payment_note", "string": _("Note"), "widget": "text"},
+                                    ],
+                                },
+                                {
+                                    "title": _("The plan the customer agreed"),
+                                    "fields": [
+                                        {"name": "financing_type", "string": _("Payment plan"), "widget": "select",
+                                         "onChange": True,
+                                         "help": _("Company instalments need management's approval and are refused to an initiative holder")},
+                                        {"name": "financing_down_payment_pct", "string": _("Down payment %"), "widget": "number",
+                                         "invisible": _IS_CASH},
+                                        {"name": "financing_term_months", "string": _("Term (months)"), "widget": "number",
+                                         "invisible": _IS_CASH},
+                                        {"name": "financing_rate_pct", "string": _("Rate % a year (flat)"), "widget": "number",
+                                         "invisible": _IS_CASH,
+                                         "help": _("Flat, on the financed part — the company's published rate")},
+                                        {"name": "financing_bank", "string": _("Bank"), "widget": "text",
+                                         "invisible": _NOT_BANK},
+                                        {"name": "cheques_received", "string": _("All cheques received"), "widget": "switch",
+                                         "invisible": _IS_CASH,
+                                         "help": _("The stage 'contract signed and money transferred' is gated on this for instalment deals")},
+                                        {"name": "financing_note", "string": _("Financing note"), "widget": "text"},
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+                {
+                    "title": _("Contract"),
+                    "sections": [
+                        {
+                            "title": "",
+                            "groups": [
+                                {
+                                    "title": _("As printed on the contract"),
+                                    "fields": [
+                                        {"name": "contract_date", "string": _("Contract date"), "widget": "date"},
+                                        {"name": "contract_total_eur", "string": _("Contract total (EUR)"), "widget": "number",
+                                         "help": _("What the accountant agreed. Wins over the quotation when the contract is generated")},
+                                        {"name": "contract_down_payment_eur", "string": _("Received at signing (EUR)"),
+                                         "widget": "number"},
+                                        {"name": "contract_bank_transfer_eur", "string": _("Bank transfer (EUR)"),
+                                         "widget": "number"},
+                                        {"name": "contract_cash_on_bl_eur", "string": _("Cash on bill of lading (EUR)"),
+                                         "widget": "number",
+                                         "help": _("The three payments must add up to the total — the contract refuses otherwise")},
+                                    ],
+                                },
+                                {
+                                    "title": _("Consent"),
+                                    "fields": [
+                                        {"name": "media_consent", "string": _("Consent for photos and video"),
+                                         "widget": "switch",
+                                         "help": _("The customer agreed in the contract that their car may appear in content")},
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+                {
+                    "title": _("Delivery and after-sales"),
+                    "sections": [
+                        {
+                            "title": "",
+                            "groups": [
+                                {
+                                    "title": _("Handover"),
+                                    "fields": [
+                                        {"name": "delivery_date", "string": _("Delivered on"), "widget": "date"},
+                                        {"name": "delivery_receipt", "string": _("Delivery receipt"), "widget": "files",
+                                         "multiSelect": False, "accept": "image/*,application/pdf",
+                                         "help": _("The signed محضر استلام. The final stage is gated on it")},
+                                    ],
+                                },
+                                {
+                                    "title": _("After the keys"),
+                                    "fields": [
+                                        {"name": "licensing_state", "string": _("Licensing"), "widget": "text",
+                                         "help": _("Not included in the price — a licensing agent is available by power of attorney")},
+                                        {"name": "protection_state", "string": _("Protection film"), "widget": "text"},
+                                        {"name": "warranty_activated", "string": _("Warranty activated"), "widget": "switch",
+                                         "help": _("The manufacturer's two years from production. The company itself gives none")},
+                                        {"name": "public_token", "string": _("Tracking token"), "widget": "text",
+                                         "readonly": True,
+                                         "help": _("The key on the customer's tracking link — never share it in a group")},
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
         },
-        "tabs": [
-            {
-                "title": _("Stage and shipping"),
-                "sections": [
-                    {
-                        "title": "",
-                        "groups": [
-                            {
-                                "title": _("Where it is"),
-                                "fields": [
-                                    # Read-only: a stage moves through the buttons or the
-                                    # kanban, so the gates in the stage machine always run.
-                                    {"name": "import_stage", "string": _("Current stage"), "widget": "relation",
-                                     "displayField": "name", "readonly": True, "multiSelect": False,
-                                     "help": _("Moved with the buttons above, never typed — each move can message the customer")},
-                                    {"name": "stage_entered_at", "string": _("In this stage since"),
-                                     "widget": "datetime", "readonly": True},
-                                    {"name": "previous_stage", "string": _("Previous stage"), "widget": "relation",
-                                     "displayField": "name", "readonly": True, "multiSelect": False},
-                                    {"name": "stage_is_blocked", "string": _("Blocked"), "widget": "switch",
-                                     "help": _("A gate is refusing the next stage — the reason says which")},
-                                    {"name": "blocked_reason", "string": _("Why it is blocked"), "widget": "text",
-                                     "invisible": {"field": "stage_is_blocked", "operator": "eq", "value": False}},
-                                    {"name": "notifications_suppressed", "string": _("Hold customer messages"),
-                                     "widget": "switch",
-                                     "help": _("On during migration or corrections, so a stage move tells nobody. Untick once the customer knows the system writes to them")},
-                                    {"name": "public_status", "string": _("Customer-facing status"), "widget": "text",
-                                     "help": _("The line the customer reads on the tracking page and in the AI's answer")},
-                                ],
-                            },
-                            {
-                                "title": _("Papers and the ship"),
-                                "fields": [
-                                    {"name": "acid_number", "string": _("ACID number"), "widget": "text",
-                                     "help": _("Egypt's advance cargo ID — the longest wait in the whole journey, and not in our hands")},
-                                    {"name": "import_approval_number", "string": _("Import approval"), "widget": "text"},
-                                    {"name": "carrier", "string": _("Carrier"), "widget": "text"},
-                                    {"name": "vessel", "string": _("Vessel"), "widget": "text"},
-                                    {"name": "booking_ref", "string": _("Booking"), "widget": "text"},
-                                    {"name": "sail_date", "string": _("Sailed on"), "widget": "date"},
-                                    {"name": "bl_number", "string": _("Bill of lading"), "widget": "text",
-                                     "help": _("The cash-on-B/L instalment in the contract falls due when this exists")},
-                                    {"name": "bl_date", "string": _("B/L date"), "widget": "date"},
-                                    {"name": "eta", "string": _("ETA"), "widget": "date",
-                                     "help": _("What the customer is told. Change it and say so — the AI quotes this date")},
-                                    {"name": "arrival_port", "string": _("Port"), "widget": "text"},
-                                    {"name": "arrival_date", "string": _("Arrived on"), "widget": "date"},
-                                    {"name": "notification_date", "string": _("Notification (إخطار) date"), "widget": "date"},
-                                    {"name": "release_date", "string": _("Customs released on"), "widget": "date"},
-                                    {"name": "tracking_url", "string": _("Tracking link"), "widget": "url"},
-                                ],
-                            },
-                        ],
-                    },
-                ],
-            },
-            {
-                "title": _("Payment and plan"),
-                "sections": [
-                    {
-                        "title": "",
-                        "groups": [
-                            {
-                                "title": _("The marks — not accounting"),
-                                "fields": [
-                                    {"name": "payment_state", "string": _("Payment"), "widget": "select", "readonly": True,
-                                     "help": _("Follows the accepted quotation's 'paid so far', or the two Mark buttons. Never typed")},
-                                    {"name": "amount_agreed", "string": _("Agreed amount"), "widget": "number",
-                                     "onChange": True,
-                                     "help": _("Copied from the accepted quotation's total; the due amount recomputes as you type")},
-                                    {"name": "amount_paid_marked", "string": _("Marked as paid"), "widget": "number",
-                                     "onChange": True,
-                                     "help": _("What the accountant confirmed received. A mark, not a ledger entry")},
-                                    {"name": "amount_due_marked", "string": _("Marked as due"), "widget": "number",
-                                     "readonly": True, "help": _("Agreed minus paid")},
-                                    {"name": "currency", "string": _("Currency"), "widget": "relation", "displayField": "code", "multiSelect": False,
-                                     "help": _("EUR for imports; EGP for showroom cars")},
-                                    {"name": "payment_marked_by", "string": _("Marked by"), "widget": "relation",
-                                     "displayField": "name", "readonly": True, "multiSelect": False},
-                                    {"name": "payment_marked_at", "string": _("Marked at"), "widget": "datetime",
-                                     "readonly": True},
-                                    {"name": "payment_note", "string": _("Note"), "widget": "text"},
-                                ],
-                            },
-                            {
-                                "title": _("The plan the customer agreed"),
-                                "fields": [
-                                    {"name": "financing_type", "string": _("Payment plan"), "widget": "select",
-                                     "onChange": True,
-                                     "help": _("Company instalments need management's approval and are refused to an initiative holder")},
-                                    {"name": "financing_down_payment_pct", "string": _("Down payment %"), "widget": "number",
-                                     "invisible": _IS_CASH},
-                                    {"name": "financing_term_months", "string": _("Term (months)"), "widget": "number",
-                                     "invisible": _IS_CASH},
-                                    {"name": "financing_rate_pct", "string": _("Rate % a year (flat)"), "widget": "number",
-                                     "invisible": _IS_CASH,
-                                     "help": _("Flat, on the financed part — the company's published rate")},
-                                    {"name": "financing_bank", "string": _("Bank"), "widget": "text",
-                                     "invisible": _NOT_BANK},
-                                    {"name": "cheques_received", "string": _("All cheques received"), "widget": "switch",
-                                     "invisible": _IS_CASH,
-                                     "help": _("The stage 'contract signed and money transferred' is gated on this for instalment deals")},
-                                    {"name": "financing_note", "string": _("Financing note"), "widget": "text"},
-                                ],
-                            },
-                        ],
-                    },
-                ],
-            },
-            {
-                "title": _("Contract"),
-                "sections": [
-                    {
-                        "title": "",
-                        "groups": [
-                            {
-                                "title": _("As printed on the contract"),
-                                "fields": [
-                                    {"name": "contract_date", "string": _("Contract date"), "widget": "date"},
-                                    {"name": "contract_total_eur", "string": _("Contract total (EUR)"), "widget": "number",
-                                     "help": _("What the accountant agreed. Wins over the quotation when the contract is generated")},
-                                    {"name": "contract_down_payment_eur", "string": _("Received at signing (EUR)"),
-                                     "widget": "number"},
-                                    {"name": "contract_bank_transfer_eur", "string": _("Bank transfer (EUR)"),
-                                     "widget": "number"},
-                                    {"name": "contract_cash_on_bl_eur", "string": _("Cash on bill of lading (EUR)"),
-                                     "widget": "number",
-                                     "help": _("The three payments must add up to the total — the contract refuses otherwise")},
-                                ],
-                            },
-                            {
-                                "title": _("Consent"),
-                                "fields": [
-                                    {"name": "media_consent", "string": _("Consent for photos and video"),
-                                     "widget": "switch",
-                                     "help": _("The customer agreed in the contract that their car may appear in content")},
-                                ],
-                            },
-                        ],
-                    },
-                ],
-            },
-            {
-                "title": _("Delivery and after-sales"),
-                "sections": [
-                    {
-                        "title": "",
-                        "groups": [
-                            {
-                                "title": _("Handover"),
-                                "fields": [
-                                    {"name": "delivery_date", "string": _("Delivered on"), "widget": "date"},
-                                    {"name": "delivery_receipt", "string": _("Delivery receipt"), "widget": "files",
-                                     "multiSelect": False, "accept": "image/*,application/pdf",
-                                     "help": _("The signed محضر استلام. The final stage is gated on it")},
-                                ],
-                            },
-                            {
-                                "title": _("After the keys"),
-                                "fields": [
-                                    {"name": "licensing_state", "string": _("Licensing"), "widget": "text",
-                                     "help": _("Not included in the price — a licensing agent is available by power of attorney")},
-                                    {"name": "protection_state", "string": _("Protection film"), "widget": "text"},
-                                    {"name": "warranty_activated", "string": _("Warranty activated"), "widget": "switch",
-                                     "help": _("The manufacturer's two years from production. The company itself gives none")},
-                                    {"name": "public_token", "string": _("Tracking token"), "widget": "text",
-                                     "readonly": True,
-                                     "help": _("The key on the customer's tracking link — never share it in a group")},
-                                ],
-                            },
-                        ],
-                    },
-                ],
-            },
-        ],
     },
 }
 
