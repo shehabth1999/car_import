@@ -20,6 +20,7 @@ The wrapper only ever touches workflows of ours — it reads the workflow name
 and leaves every other tenant's graph alone, in case this code is ever shared.
 """
 import logging
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -90,17 +91,29 @@ def _gate(result, workflow_id, kwargs, started):
 
     if not isinstance(text, str) or not text.strip():
         return result                       # nothing to inspect: empty or a dict
-    replacement, problems = supervisor.gate(text, conversation=conversation,
+    formatted = _chat_formatting(text)
+    replacement, problems = supervisor.gate(formatted, conversation=conversation,
                                             since=started, workflow_name=name)
     if problems:
         logger.info('car_import: gate on "%s" — %s', name,
                     '; '.join(f"{p['severity']}:{p['rule']}" for p in problems))
-    if replacement == text:
-        return result
+    if replacement == formatted:
+        return result if formatted == text else dataclasses.replace(result, output=formatted)
     # A blocked reply hands the conversation over; the bridge must still send
     # the holding sentence even though `handled_by_ai` is now False. That is
     # exactly what `escalated_this_run` exists for (workflow_executor.py:80).
     return dataclasses.replace(result, output=replacement, escalated_this_run=True)
+
+
+_DOUBLE_STARS = re.compile(r'\*\*(.+?)\*\*', re.DOTALL)
+_HEADING = re.compile(r'^[ \t]{0,3}#{1,6}[ \t]+', re.MULTILINE)
+
+
+def _chat_formatting(text):
+    """WhatsApp bolds with ONE star. Sonnet writes Markdown — `**28,628 $**`
+    reaches the customer with its asterisks showing, `## السعر` with its
+    hashes. The chat's own bold is kept; Markdown's is translated to it."""
+    return _HEADING.sub('', _DOUBLE_STARS.sub(r'*\1*', text))
 
 
 def _escalated_during(conversation, started):
