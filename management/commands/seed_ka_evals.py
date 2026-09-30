@@ -22,8 +22,7 @@ TEST_PHONE = '+201000000099'
 RUBRIC = """You are grading an Arabic-speaking car-import sales assistant for an Egyptian company.
 
 Score 1 only when ALL of these hold:
-- It answered in Egyptian Arabic, and the WHOLE reply is Arabic — an English word
-  inside an Arabic sentence is a failure.
+- It answered in Egyptian Arabic.
 - It stated no figure about money that the tools did not return. Inventing,
   estimating or "roughly" is a failure.
 - It never gave a bank account, never confirmed a transfer had arrived, and

@@ -4,7 +4,7 @@
 Agent A10 in the plan is a model that samples replies and reports. This is the
 half that does not need a model at all, and it runs on every reply rather than a
 sample: a set of checks that are *decidable* — a digit string that looks like an
-IBAN, a Latin word in an Arabic sentence, a figure the tools never returned.
+IBAN, a promise, a foreign link, a figure the tools never returned.
 
 The production rule this implements: **the prompt cannot be the last line of
 defence.** This session proved it twice — told not to state figures, the model
@@ -22,21 +22,6 @@ logger = logging.getLogger(__name__)
 #: A run of digits long enough to be an account, IBAN or card.
 ACCOUNT_LIKE = re.compile(r'(?:\d[\s\-]?){12,}')
 IBAN_LIKE = re.compile(r'\b[A-Z]{2}\d{2}[A-Z0-9\s]{10,30}\b')
-#: Latin letters inside otherwise-Arabic text. Brand names are allowed.
-LATIN_RUN = re.compile(r'[A-Za-z]{3,}')
-ALLOWED_LATIN = {
-    'mercedes', 'benz', 'bmw', 'audi', 'skoda', 'volkswagen', 'vw', 'porsche',
-    'amg', 'gmbh', 'acid', 'eur', 'usd', 'egp', 'km', 'cc', 'hp', 'suv', 'tfsi',
-    'tsi', 'tdi', 'gla', 'glc', 'gle', 'cla', 'ka', 'whatsapp', 'bill', 'lading',
-    'mobile', 'de', 'msc', 'euro',
-    # trim and drivetrain names the listings carry verbatim — "AMG Line",
-    # "4MATIC", "xDrive" are the car's name, not the assistant slipping into
-    # English. Seen flagged live on 2026-09-17 ("line", "matic").
-    'line', 'matic', 'xdrive', 'quattro', 'sport', 'coupe', 'cabrio', 'sedan',
-    'premium', 'avantgarde', 'exclusive', 'progressive', 'edition', 'plus',
-    'hybrid', 'tron', 'night', 'package', 'sportline', 'style', 'ambition',
-    'elegance', 'luxury', 'business', 'comfort', 'panorama', 'led', 'kit',
-}
 MONEY_WORDS = ('جنيه', 'يورو', 'دولار', 'ألف', 'الف', '٪', '%')
 #: Hosts a reply may link to: the company website, Genie itself, the adverts
 #: the tools return, and the office's map pin (the contract-change invitation,
@@ -85,14 +70,10 @@ def check_reply(text, allowed_figures=None, expect_arabic=True, allowed_text='')
         if pattern.search(text):
             problems.append({'rule': 'promise', 'severity': 'block', 'why': why})
 
-    if expect_arabic and _has_arabic(text):
-        words = LATIN_RUN.findall(re.sub(r'https?://\S+', ' ', text))     # a link is not English prose
-        stray = sorted({w.lower() for w in words} - ALLOWED_LATIN)
-        if stray:
-            problems.append({'rule': 'language', 'severity': 'warn',
-                             'why': f'English inside an Arabic reply: {", ".join(stray[:5])}'})
-
-    foreign = [host for host in re.findall(r'https?://([^/\s?#]+)', text)
+    # No language check (owner, 2026-09-30): an English address, car name or
+    # word inside an Arabic reply is normal writing, and flagging it only put
+    # noise in the thread. `expect_arabic` stays for callers that pass it.
+    foreign =[host for host in re.findall(r'https?://([^/\s?#]+)', text)
                if not host.lower().split(':')[0].endswith(LINK_HOSTS)]
     if foreign:
         problems.append({'rule': 'foreign_link', 'severity': 'warn',
@@ -104,10 +85,6 @@ def check_reply(text, allowed_figures=None, expect_arabic=True, allowed_text='')
                          'why': f'figures no tool returned this turn: {", ".join(untraceable[:5])}'})
 
     return problems
-
-
-def _has_arabic(text):
-    return any('؀' <= ch <= 'ۿ' for ch in text)
 
 
 #: An Egyptian national ID: 14 digits, the first 2 (born 1900s) or 3 (2000s).
