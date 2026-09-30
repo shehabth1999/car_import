@@ -366,15 +366,19 @@ def ka_check_import_eligibility(
             from django.utils import timezone as _tz
             oldest = _tz.localdate().year - 3
             if model_year is not None and model_year < oldest:
-                blocked_reason = ("المبادرة بتسمح بعربية مستعملة بحد أقصى ثلاث سنوات "
-                                  f"(موديل {oldest} وأحدث) أو زيرو موديل السنة.")
+                blocked_reason = ("المبادرة بتسمح بموديلات التلات سنين اللي قبل السنة الحالية "
+                                  f"(موديل {oldest} وأحدث)، أو موديل السنة الحالية لو مستعملة.")
+            elif model_year is not None and model_year >= oldest + 3:
+                warnings.append("موديل السنة الحالية: لو زيرو يبقى استيراد شخصي بس (ميناء بورسعيد + جمارك)، "
+                                "ولو مستعملة يبقى مبادرة (قاعدة الإدارة 2026-09-30).")
             if (initiative_region or '').lower() == 'gulf' and cc and cc > 1600:
                 warnings.append("مبادرة خليجي على موتور أكبر من 1600cc: الوديعة بتعدّي 60–70 ألف دولار "
                                 "لأن مفيش شهادة يورو وان — الأفضل موديل أقل من 1600cc.")
             if mileage_km and mileage_km > 20000:
                 warnings.append("العداد أعلى من 20 ألف كم: مسموح، بس الشركة بتنصح بأقل من كده.")
         elif program in ('personal', 'commercial'):
-            if model_year is not None and model_year < 2026:
+            from django.utils import timezone as _tz
+            if model_year is not None and model_year < _tz.localdate().year:
                 blocked_reason = "الاستيراد الشخصي والتجاري لازم عربية زيرو موديل السنة الحالية."
             if program == 'commercial':
                 warnings.append("الاستيراد التجاري متاح بموافقة الإدارة لكل حالة — لازم تتحوّل لموظف للموافقة.")
@@ -517,8 +521,13 @@ def _file_discount_request(partner, context, reason):
 #: may take the customer back, so a free-text topic ("استرداد", "refund_request")
 #: must never slip past it.
 ESCALATION_TOPICS = ('refund', 'cancellation', 'complaint', 'legal', 'instalment_amount',
-                     'commercial_import', 'showroom_purchase', 'tool_refused', 'discount', 'money', 'other')
+                     'commercial_import', 'showroom_purchase', 'foreign_destination', 'tool_refused',
+                     'discount', 'money', 'other')
 _TOPIC_WORDS = (
+    # A car that is to go to a country other than Egypt (owner, 2026-09-30) —
+    # a colleague takes it. Only the explicit words: a customer who LIVES in
+    # Saudi Arabia and imports to Egypt is the initiative, not this.
+    ('foreign_destination', ('foreign_destination', 'خارج مصر', 'outside egypt', 'غير مصر')),
     ('refund', ('refund', 'استرد', 'ترجيع الفلوس', 'رجوع الفلوس', 'فلوسي')),
     ('cancellation', ('cancel', 'إلغاء', 'الغاء', 'ألغي', 'الغي')),
     ('complaint', ('complain', 'شكوى', 'شكوي', 'مشكلة في العربية', 'عيب')),
@@ -548,11 +557,13 @@ def _escalation_topic(topic, reason=''):
     display_name="Hand the customer to a colleague",
     description=(
         "Use this tool ONLY for what a colleague must handle: a refund or cancellation, a complaint, anything "
-        "legal or a change to a signed contract, the exact amount of an instalment, a commercial-import "
-        "request, a customer who wants to BUY one of our own cars (a `WC-` reference from ka_search_cars), "
-        "or when another tool returned `must_escalate`. Do NOT use it for prices, quotations, the proforma "
-        "invoice, bank details (ka_share_bank_details sends them), transfer screenshots "
-        "(ka_customer_sent_image) or discounts (ka_request_discount) — you handle those yourself. It hands "
+        "legal, the exact amount of an instalment, a commercial-import request, a customer who wants to BUY "
+        "one of our own cars (a `WC-` reference from ka_search_cars), a customer who wants the car delivered "
+        "to a country OTHER than Egypt (topic foreign_destination), or when another tool returned "
+        "`must_escalate`. Do NOT use it for prices, quotations, the proforma invoice, bank details "
+        "(ka_share_bank_details sends them), transfer screenshots (ka_customer_sent_image), discounts "
+        "(ka_request_discount), or a customer who wants to read or change the contract (ka_contract_request) "
+        "— you handle those yourself. It hands "
         "the conversation to a human, sends the customer a short holding message and notifies the team. "
         "Before calling it you MUST have a one-line reason and the topic. After it succeeds, reply with an "
         "EMPTY message: the platform sends the customer the holding line itself."
@@ -569,8 +580,10 @@ def _escalation_topic(topic, reason=''):
             "topic": {
                 "type": "string",
                 "enum": ["refund", "cancellation", "complaint", "legal", "instalment_amount",
-                         "commercial_import", "showroom_purchase", "tool_refused", "other"],
-                "description": "Why a person is needed. showroom_purchase = buying one of our own (WC-) cars",
+                         "commercial_import", "showroom_purchase", "foreign_destination", "tool_refused",
+                         "other"],
+                "description": "Why a person is needed. showroom_purchase = buying one of our own (WC-) cars. "
+                               "foreign_destination = the car is to be delivered outside Egypt",
             },
         },
         "required": ["reason"],

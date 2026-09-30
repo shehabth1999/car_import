@@ -39,8 +39,10 @@ ALLOWED_LATIN = {
 }
 MONEY_WORDS = ('جنيه', 'يورو', 'دولار', 'ألف', 'الف', '٪', '%')
 #: Hosts a reply may link to: the company website, Genie itself, the adverts
-#: the tools return. A live run invented "khaled-automobile.com".
-LINK_HOSTS = ('khaledautomobilegmbh.de', 'genie-erp.com', 'mobile.de', 'autoscout24.de', 'wise.com')
+#: the tools return, and the office's map pin (the contract-change invitation,
+#: `services/contract_preview.py`). A live run invented "khaled-automobile.com".
+LINK_HOSTS = ('khaledautomobilegmbh.de', 'genie-erp.com', 'mobile.de', 'autoscout24.de', 'wise.com',
+              'maps.app.goo.gl', 'goo.gl', 'maps.google.com', 'google.com')
 
 # Sentences that promise something the company will not honour.
 PROMISE_PATTERNS = [

@@ -160,6 +160,38 @@ def car_label(quote):
     return getattr(quote, 'car_label', '') or ''
 
 
+def _programme_line(quote):
+    """«مبادرة — ميناء الإسكندرية», or '' for a quotation made before programmes."""
+    from car_import.services import programme as rules
+    if quote.programme not in rules.PORTS:
+        return ''
+    return f'{rules.PROGRAMME_AR[quote.programme]} — {rules.PORT_AR.get(quote.port, quote.port)}'
+
+
+def _programme_block(quote):
+    """(title, [(label, value)], footnote) of what the programme adds to the
+    offer outside the EUR total — the customs of a personal import, the
+    initiative's deposit — or None. When the owner's table has no figure the
+    block still says the charge exists; it never shows a number nobody gave."""
+    from car_import.services import programme as rules
+    if quote.programme == rules.PERSONAL:
+        if quote.customs_eur is not None:
+            return ('الجمارك والضرائب (استيراد شخصي)',
+                    [('جمارك وضرائب العربية دي', rules.eur(quote.customs_eur))],
+                    'مش داخلة في إجمالي سعر البيع.')
+        return ('الجمارك والضرائب (استيراد شخصي)', [],
+                'العربية دي عليها جمارك وضرائب، وقيمتها بتتأكد من الشركة قبل التعاقد. '
+                'مش داخلة في إجمالي سعر البيع.')
+    if quote.programme == rules.INITIATIVE:
+        rows = [(rules.deposit_label(r), rules.usd(r['usd'])) for r in (quote.initiative_deposits or [])]
+        if rows:
+            return ('قيمة المبادرة (الوديعة الدولارية)', rows,
+                    'بتتدفع بالدولار وبترجع بعد 5 سنين، ومش داخلة في إجمالي سعر البيع.')
+        return ('قيمة المبادرة (الوديعة الدولارية)', [],
+                'قيمة المبادرة للعربية دي بتتأكد من الشركة قبل التعاقد، وبتتدفع بالدولار وبترجع بعد 5 سنين.')
+    return None
+
+
 def as_text(quote):
     """The offer as a WhatsApp message, in Arabic — the fallback when no PDF
     could be made."""
@@ -173,6 +205,8 @@ def as_text(quote):
         out.append(f'الرقم القومي: {who["national_id"]}')
     if car:
         out.append(f'العربية: {car}')
+    if _programme_line(quote):
+        out.append(f'البرنامج: {_programme_line(quote)}')
     out.append(f'التاريخ: {quote.quote_date:%Y-%m-%d}')
     if quote.name:
         out.append(f'رقم العرض: {quote.name}')
@@ -186,6 +220,15 @@ def as_text(quote):
     out.append(f'إجمالي سعر البيع: {_amount(quote.total_eur, EUR)}')
     out.append(f'مقدم التعاقد ({_pct(quote.deposit_pct)}%): {_amount(quote.deposit_eur, EUR)}')
     out.append(f'الباقي: {_amount(quote.balance_eur, EUR)}')
+
+    block = _programme_block(quote)
+    if block:
+        title, rows, footnote = block
+        out.append('')
+        out.append(f'{title}:')
+        for label, value in rows:
+            out.append(f'{label}: {value}')
+        out.append(footnote)
 
     egp_lines = _visible_lines(quote, EGP)
     if egp_lines:
@@ -228,6 +271,9 @@ def _notes(quote):
             f'الاستلام من المعرض بيخصم {abs(quote.showroom_fee_egp):,.0f} جنيه من مصاريف الميناء، '
             f'فالمستحق عند الوصول {quote.egp_due_on_arrival:,.0f} جنيه.')
     notes.append(f'نسبة مقدم التعاقد من إجمالي سعر البيع: {_pct(quote.deposit_pct)}%.')
+    if quote.programme:
+        from car_import.services import programme as rules
+        notes.append(rules.contract_term_ar(quote.programme))
     if quote.total_egp_indicative:
         notes.append(
             f'أي رقم بالجنيه تقريبي بسعر اليوم ({quote.fx_rate_egp:,.2f}) وعليه عمولة تحويل '
@@ -281,6 +327,16 @@ def as_html(quote):
 
     notes = ''.join(f'<li>{_escape(note)}</li>' for note in _notes(quote))
     car = _escape(car_label(quote) or '—')
+    programme_row = (f'<tr><td>البرنامج</td><td class="v">{_escape(_programme_line(quote))}</td></tr>'
+                     if _programme_line(quote) else '')
+    block = _programme_block(quote)
+    block_programme = ''
+    if block:
+        title, rows, footnote = block
+        table = ''.join(f'<tr><td>{_escape(label)}</td><td class="n">{_escape(value)}</td></tr>'
+                        for label, value in rows)
+        block_programme = (f'<h2>{_escape(title)}</h2>' + (f'<table>{table}</table>' if table else '')
+                           + f'<p class="meta">{_escape(footnote)}</p>')
     valid = (f'<tr><td>العرض ساري لحد</td><td class="n">{quote.valid_until:%Y-%m-%d}</td></tr>'
              if quote.valid_until else '')
 
@@ -327,6 +383,7 @@ def as_html(quote):
   {valid}
   {customer_rows}
   <tr><td>العربية</td><td class="v">{car}</td></tr>
+  {programme_row}
 </table>
 {_options_html(quote)}
 <h2>السعر</h2>
@@ -335,6 +392,7 @@ def as_html(quote):
 </table>
 <div class="due">مقدم التعاقد المطلوب للحجز (<bdi>{_pct(quote.deposit_pct)}%</bdi>): <bdi>{_amount(quote.deposit_eur, EUR)}</bdi></div>
 <p>الباقي: <bdi>{_amount(quote.balance_eur, EUR)}</bdi> — مستحق خلال 5 أيام عمل من التعاقد مع المورد.</p>
+{block_programme}
 {block_egp}
 {bank}
 <h2>ملاحظات</h2>

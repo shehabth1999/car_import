@@ -71,6 +71,65 @@ LINK_UNREADABLE_DO_NOW = (
     "'send the link' / 'send the price' (the owner's complaint, 2026-09-29).")
 
 
+def id_name_needed():
+    """The written offer waits for the name on the ID (owner, 2026-09-30:
+    «عرض السعر مياخدش اسم العميل من واتساب» — the name in four parts, as on
+    the card). The figures themselves never wait: send_offer=false answers."""
+    return {
+        "success": False, "error_type": "id_name_needed",
+        "error": "The offer carries the customer's name as on their national ID, and it is not on file yet.",
+        "do_now": ("Do NOT send the offer with the WhatsApp name. Ask in ONE short line for a photo of their "
+                   "national ID card (best), or their full four-part name exactly as on the card and the "
+                   "14-digit national ID number. A photo → ka_customer_sent_image kind=national_id; typed → "
+                   "ka_save_contract_details. Then call ka_quote_car with send_offer=true again. If they "
+                   "already wrote the full name and number earlier in the chat, save them now and carry on."),
+        "say_to_customer_ar": ("عشان أطلّع عرض السعر باسم حضرتك، ممكن صورة البطاقة؟ "
+                               "أو الاسم رباعي زي ما هو في البطاقة بالظبط والرقم القومي."),
+    }
+
+
+def _programme_problem(decided, year):
+    from car_import.services import programme as rules
+    problem = decided['problem']
+    reply = {"success": False, "error_type": problem, "error": decided['why']}
+    if problem == 'year_needed':
+        reply["do_now"] = ("The model year decides the programme (initiative or personal import), the port and "
+                           "what the offer states. Read it off the advert or screenshot; if it is not there, ask "
+                           "ONE short question for the model year. Then call again with `model_year`.")
+    elif problem == 'condition_needed':
+        reply["do_now"] = (f"A {year} car goes by personal import when it is NEW (zero km) and by the initiative "
+                           f"when it is USED. Read the mileage off the advert or screenshot; if it is not shown, "
+                           f"ask ONE short question: new or used? Then call again with `condition`.")
+    else:
+        oldest = decided.get('oldest_year') or rules.current_year() - rules.INITIATIVE_YEARS_BACK
+        reply["do_now"] = "Say it politely in one line and offer to look for a newer model year. Do not escalate."
+        reply["say_to_customer_ar"] = (f"للأسف موديل {year} أقدم من المسموح — المبادرة بتسمح بموديل {oldest} "
+                                       f"وأحدث. أدوّر لحضرتك على نفس العربية موديل أحدث؟")
+    return reply
+
+
+def _programme_for(listing, car_description='', condition='', model_year=None):
+    """(decision, car model, model year, is_new) for the car being priced, or
+    the error dict telling the assistant what it still needs.
+
+    The advert decides when there is one; otherwise the words the assistant
+    read off the screenshot or the customer typed."""
+    from car_import.services import initiative_values
+    from car_import.services import programme as rules
+
+    year = model_year or (getattr(listing, 'model_year', None) if listing is not None else None) \
+        or initiative_values.year_in(car_description)
+    is_new = rules.is_new_listing(listing)
+    if is_new is None:
+        is_new = rules.normalise_condition(condition)
+    decided = rules.decide(year, is_new)
+    if decided['problem']:
+        return _programme_problem(decided, year)
+    vehicle = getattr(listing, 'vehicle', None) if listing is not None and listing.vehicle_id else None
+    car_model = rules.car_model_of(listing, vehicle, car_description)
+    return decided, car_model, int(year), is_new
+
+
 def _resolve_price(listing_reference, gross_price_eur):
     """(listing, gross, source_note) or an error dict."""
     from car_import.services import mobile_de, policy, sales_flow
@@ -162,16 +221,19 @@ def _quote_sent_reply(quote, sent, resent=False):
         "deposit_now": _fmt(quote.deposit_eur),
         "valid_until": str(quote.valid_until) if quote.valid_until else None,
     }
+    if quote.programme:
+        from car_import.services import programme as rules
+        data["programme"] = rules.for_agent(quote.programme, quote.port, quote.customs_eur,
+                                            quote.initiative_deposits, model_year=quote.model_year)
     if resent:
         data["same_offer_resent"] = True
     if sent.get('sent'):
         data["next_step"] = (
-            ("The offer " + ("PDF" if as_pdf else "") + " is already in the chat with the deposit and the "
-             "bank details. Write ONE short line asking if they want to go ahead — no figures. When they "
-             "say yes, call ka_issue_proforma_invoice.")
-            + ("" if data["name_is_from_the_id_card"] else
-               " The offer carries the chat name; when the customer sends their ID card, read it with "
-               "ka_customer_sent_image kind=national_id and the documents will carry the ID's name."))
+            "The offer " + ("PDF" if as_pdf else "") + " is already in the chat with the deposit, the "
+            + ("customs figure, " if quote.programme == 'personal' else
+               "initiative value, " if quote.programme == 'initiative' else "")
+            + "the bank details and the contract term. Write ONE short line asking if they want to go ahead "
+              "— no figures. When they say yes, call ka_issue_proforma_invoice.")
     else:
         data["next_step"] = ("The offer could NOT be sent to the chat. Give the customer the total and "
                              "the deposit_now above in one short message, then ask if they want to go ahead.")
@@ -349,10 +411,13 @@ def ka_send_car_photos(context, reference: str, count: int = 3) -> Dict[str, Any
 def ka_price_car(context, listing_reference: Optional[str] = None,
                  gross_price_eur: Optional[float] = None, with_eur1: bool = False,
                  shipping_type: str = '', port: str = 'alexandria',
-                 collect_from_showroom: bool = False) -> Dict[str, Any]:
-    """The calculator's answer for one car. Read only."""
+                 collect_from_showroom: bool = False, car_description: str = '',
+                 condition: str = '', model_year: Optional[int] = None,
+                 initiative_tier: str = '', initiative_region: str = '') -> Dict[str, Any]:
+    """The calculator's answer for one car, with its programme. Read only."""
     try:
         from car_import.services import policy, pricing, sales_flow
+        from car_import.services import programme as rules
 
         if not policy.ai_first():
             return _refused_by_policy()
@@ -360,18 +425,32 @@ def ka_price_car(context, listing_reference: Optional[str] = None,
         if isinstance(resolved, dict):
             return resolved
         listing, gross, source_note = resolved
+        decision = _programme_for(listing, car_description, condition, model_year)
+        if isinstance(decision, dict):
+            return decision
+        decided, car_model, year, _is_new = decision
+        port = decided['port']
         try:
             result = sales_flow.price(gross, with_eur1=with_eur1, shipping_type=shipping_type,
                                       port=port, collect_from_showroom=collect_from_showroom)
         except pricing.PricingError as exc:
             return {"success": False, "error": str(exc), "error_type": "no_band", "must_escalate": True}
         data = _stack(result)
-        data["car"] = sales_flow.listing_label(listing) if listing is not None else None
+        data["car"] = sales_flow.listing_label(listing) if listing is not None else (car_description or None)
         data["advert_price_with_vat"] = _fmt(gross)
         if source_note:
             data["price_source"] = "customer_stated"
-        data["next_step"] = ("If the customer is interested, send the formal offer: call ka_quote_car again "
-                             "with send_offer=true and the same inputs.")
+        programme = decided['programme']
+        data["programme"] = rules.for_agent(
+            programme, port,
+            customs=rules.customs_eur(car_model, year) if programme == rules.PERSONAL else None,
+            deposits=(rules.initiative_deposits(car_model, year, initiative_tier, initiative_region)
+                      if programme == rules.INITIATIVE else None),
+            car_model=car_model, model_year=year)
+        data["next_step"] = ("Say the total, the deposit and the balance, AND the programme block (customs or "
+                             "the initiative value) — the owner counts a price without it as wrong. If the "
+                             "customer is interested, send the formal offer: ka_quote_car with send_offer=true "
+                             "and the same inputs.")
         return {"success": True, "data": data}
     except Exception as e:
         logger.exception("ka_price_car failed")
@@ -410,47 +489,62 @@ def ka_send_quotation(context, listing_reference: Optional[str] = None,
                       gross_price_eur: Optional[float] = None, car_description: str = '',
                       with_eur1: bool = False, shipping_type: str = '', port: str = 'alexandria',
                       collect_from_showroom: bool = False, initiative_tier: str = '',
-                      initiative_region: str = '') -> Dict[str, Any]:
+                      initiative_region: str = '', condition: str = '',
+                      model_year: Optional[int] = None) -> Dict[str, Any]:
     """Record the quotation and send the offer PDF to the customer.
 
-    With an initiative tier and region (from `ka_quote_car`), the offer's notes
-    carry the initiative deposit for this exact car from the owner's sheet.
+    The car's model year and condition decide the programme (`services/
+    programme.py`), which sets the port and puts the customs figure or the
+    initiative's deposit on the offer — narrowed to the tier and region when
+    the customer gave them. The offer carries the name on the ID card only.
     """
     try:
-        from car_import.services import initiative_values, policy, sales_flow
+        from car_import.services import identity, policy, sales_flow
+        from car_import.services import programme as rules
 
         if not policy.ai_first():
             return _refused_by_policy()
         partner = _partner(context)
         if partner is None:
             return {"success": False, "error": "No customer in context", "error_type": "no_partner"}
+        if not identity.full_id_name(partner):
+            return id_name_needed()
         resolved = _resolve_price(listing_reference, gross_price_eur)
         if isinstance(resolved, dict):
             return resolved
         listing, gross, source_note = resolved
+        decision = _programme_for(listing, car_description, condition, model_year)
+        if isinstance(decision, dict):
+            return decision
+        decided, _car_model, year, is_new = decision
         conversation = getattr(context, 'conversation', None)
         try:
             quote = sales_flow.make_quote(
                 partner, gross, car_label=car_description, listing=listing,
                 conversation=conversation, with_eur1=with_eur1, shipping_type=shipping_type,
-                port=port, collect_from_showroom=collect_from_showroom, price_source=source_note)
+                port=decided['port'], collect_from_showroom=collect_from_showroom, price_source=source_note,
+                programme=decided['programme'], model_year=year,
+                car_condition='new' if is_new else ('used' if is_new is False else ''),
+                initiative_filter=(initiative_tier or None, initiative_region or None))
         except ValidationError as exc:
             return {"success": False, "error": "; ".join(exc.messages), "error_type": "refused",
                     "must_escalate": True}
 
-        if initiative_tier or initiative_region:
-            car_model, year = initiative_values.car_of(quote.listing, quote.car_label)
-            note = initiative_values.quote_note(car_model, year, initiative_tier, initiative_region)
-            if note:
-                type(quote)._base_manager.filter(pk=quote.pk).update(notes=note)
-                quote.notes = note
         sent = sales_flow.send_quote(quote)
         url = sales_flow.form_url('car_import_menu_quotes', 'car_import.quote', quote.pk)
+        missing_figure = (
+            '\n⚠️ مفيش قيمة جمرك للعربية دي في جدول القيم الجمركية — العرض بيقول إنها بتتأكد؛ أكّدها للعميل.'
+            if quote.programme == rules.PERSONAL and quote.customs_eur is None else
+            '\n⚠️ مفيش قيمة مبادرة للعربية دي في شيت الودائع — العرض بيقول إنها بتتأكد؛ أكّدها للعميل.'
+            if quote.programme == rules.INITIATIVE and not quote.initiative_deposits else '')
         sales_flow.note(
             partner,
             f'🧮 المساعد عمل عرض سعر {quote.name}: {quote.car_label or "—"}\n'
+            f'البرنامج: {rules.PROGRAMME_AR.get(quote.programme, "—")} — '
+            f'{rules.PORT_AR.get(quote.port, quote.port)}\n'
             f'الإجمالي {quote.total_eur:,.2f} € — مقدم التعاقد {float(quote.deposit_pct):g}% '
             f'({quote.deposit_eur:,.2f} €)'
+            + missing_figure
             + (f'\n⚠️ {source_note}' if source_note else '')
             + ('' if sent.get('sent') else f'\n⚠️ العرض متبعتش: {sent.get("error")}'),
             recipients=sales_flow.owners(partner), conversation=conversation,
@@ -654,12 +748,13 @@ def ka_record_payment_receipt(context, amount: Optional[float] = None, currency:
     name="ka_save_contract_details",
     display_name="Save the customer's contract details",
     description=(
-        "Use this tool when the customer gives the details the contract needs: their full name exactly as "
-        "on their national ID, the 14-digit national ID number, their address, their email. Before calling "
-        "it you MUST have an open deal for the customer (ka_issue_proforma_invoice opens one). Pass only "
-        "what the customer actually wrote — never guess or complete a number. It saves them on the "
-        "contract draft and returns what is still missing. If the deposit was already confirmed, it "
-        "issues the contract and sends it to the customer by itself."
+        "Use this tool whenever the customer TYPES their details: their full name exactly as on their "
+        "national ID (four parts at least — first, father, grandfather, family), the 14-digit national ID "
+        "number, their address, their email. It works with or without a deal: the name and number go on the "
+        "customer, so the quotation, proforma and contract all carry them. Pass only what the customer "
+        "actually wrote — never guess, shorten or complete a name or a number. With an open deal it also "
+        "fills the contract draft and returns what is still missing; if the deposit was already confirmed "
+        "it issues the contract and sends it by itself."
     ),
     category="car_import",
     side_effect=True,
@@ -676,19 +771,47 @@ def ka_record_payment_receipt(context, amount: Optional[float] = None, currency:
 )
 def ka_save_contract_details(context, full_name: str = '', national_id: str = '',
                              address: str = '', email: str = '') -> Dict[str, Any]:
-    """Fill the contract draft; issue and send it when the deposit is confirmed."""
+    """Save the customer as their ID names them; fill the contract draft when
+    there is a deal, and issue and send it when the deposit is confirmed.
+
+    Until 2026-09-30 it refused without a deal, so a name typed before the
+    offer had nowhere to go and the offer kept the WhatsApp name."""
     try:
-        from car_import.services import policy, sales_flow
+        from car_import.services import identity, policy, sales_flow
         from car_import.tools.deal_tools import _deal_for
 
         if not policy.ai_first():
             return _refused_by_policy()
+        partner = _partner(context)
+        if partner is None:
+            return {"success": False, "error": "No customer in context", "error_type": "no_partner"}
+
+        name = ' '.join(str(full_name or '').split())
+        if name and identity.name_parts(name) < identity.MIN_NAME_PARTS:
+            return {"success": False, "error_type": "name_too_short",
+                    "error": f"The name has {identity.name_parts(name)} parts; the ID card has four or more.",
+                    "say_to_customer_ar": "محتاج الاسم رباعي زي ما هو مكتوب في البطاقة بالظبط، لو سمحت.",
+                    "do_now": "Ask for the full name as on the card, or a photo of the ID. Nothing was saved."}
+        saved, problems = identity.save_id_card(partner, full_name=name, national_id=national_id or '',
+                                                address=address or '')
+        if problems:
+            return {"success": False, "error_type": "invalid", "error": "; ".join(problems),
+                    "saved": saved,
+                    "say_to_customer_ar": "الرقم القومي مش مظبوط — ممكن حضرتك تكتبه تاني؟ هو 14 رقم."}
+
         deal = _deal_for(context)
         if deal is None:
-            return {"success": False, "error": "No open deal for this customer", "error_type": "not_found"}
+            return {"success": True, "data": {
+                "saved": saved,
+                "name_on_documents": identity.customer_name(partner),
+                "national_id_on_file": bool(getattr(partner, 'national_id', None)),
+                "next_step": ("Saved on the customer. Thank them in one line and never repeat the national ID "
+                              "number. If they were waiting for the written offer, send it now: ka_quote_car "
+                              "with send_offer=true and the same car (or quotation_reference)."),
+            }}
         try:
             contract, missing = sales_flow.save_contract_details(
-                deal, full_name=full_name or '', national_id=national_id or '',
+                deal, full_name=name, national_id=national_id or '',
                 address=address or '', email=email or '')
         except ValidationError as exc:
             reply = {"success": False, "error": "; ".join(exc.messages), "error_type": "invalid"}

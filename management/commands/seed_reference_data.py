@@ -16,6 +16,8 @@ from django.db import transaction
 CONFIRMED = date(2026, 9, 14)
 SOURCE = "owner's answers 2026-09-14/15"
 
+from car_import.services.contract_preview import DEFAULT_OFFICE_TEXT as CONTRACT_CHANGE_TEXT  # noqa: E402
+
 PROGRAMS = [
     {'code': 'initiative', 'name': 'مبادرة المصريين بالخارج', 'name_en': 'Expatriate initiative',
      'sequence': 10, 'min_model_year': 2023, 'instalments_allowed': True,
@@ -322,6 +324,15 @@ class Command(BaseCommand):
                 ('car_import.bank_details_text', '',
                  'بيانات التحويل البنكي زي ما المحاسب كاتبها بالظبط (اسم البنك، اسم الحساب، IBAN، SWIFT). '
                  'المساعد بيبعتها مع الفاتورة المبدئية حرفياً. فاضية = المساعد يقول للعميل إن الحسابات هتبعتها.'),
+                # The owner's rule of 2026-09-30: a customer who wants a change
+                # in their contract is invited to the office. The map pin is its
+                # own switch so nobody pastes it into the middle of the wording.
+                ('car_import.office_visit_text', CONTRACT_CHANGE_TEXT,
+                 'الرسالة اللي المساعد بيبعتها للعميل اللي عايز يعدّل في العقد: دعوة لمقر الشركة بالعنوان. '
+                 'اتبعتت زي ما هي حرفياً.'),
+                ('car_import.office_map_link', '',
+                 'لينك مكان مقر الشركة على الخريطة (Google Maps). بيتضاف تحت رسالة تعديل العقد كسطر '
+                 '«🗺️ اللوكيشن». فاضي = الرسالة بتتبعت بالعنوان بس.'),
             ):
                 row, made = ConfigParameter.objects.get_or_create(
                     key=key, defaults={'value': value, 'description': note})

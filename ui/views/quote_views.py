@@ -188,6 +188,11 @@ car_quote_form_view = {
                              "help": _("Standard RORO is included; VIP RORO and container are surcharges")},
                         ]},
                         {"fields": [
+                            {"name": "model_year", "string": _("Model year"), "widget": "number", "onChange": True},
+                            {"name": "car_condition", "string": _("Condition"), "widget": "select", "onChange": True},
+                            {"name": "programme", "string": _("Programme"), "widget": "select", "onChange": True},
+                            {"name": "customs_eur", "string": _("Customs value"), "widget": "number",
+                             "readonly": True},
                             {"name": "port", "string": _("Port of arrival"), "widget": "select", "onChange": True},
                             {"name": "collect_from_showroom", "string": _("Collected from the showroom"),
                              "widget": "switch", "onChange": True,

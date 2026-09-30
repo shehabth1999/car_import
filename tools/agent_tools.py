@@ -158,16 +158,21 @@ def ka_search_cars(context, source: str = 'both', brand: Optional[str] = None,
         "from ka_search_cars, the mobile.de LINK the customer sent (put the link in `listing_reference`), the "
         "advert price with VAT in EUR that the customer typed or that you read off their screenshot "
         "(`gross_price_eur` + `car_description`), or an earlier quotation number Q/… in "
-        "`quotation_reference`. NEVER pass a total from an earlier offer as `gross_price_eur`. With "
-        "`send_offer` false it only calculates: total, deposit percent and amount, balance, and what is due "
-        "in EGP on arrival — state them exactly as returned. With `send_offer` true it records a numbered "
-        "quotation and sends the customer the offer as a PDF by itself — with the name, national ID and "
-        "address of their ID card when you have read it, the deposit to transfer and the bank details; then "
-        "write ONE short line asking whether to go ahead, without figures. `quotation_reference` with "
-        "`send_offer` true resends that same offer (rebuilt with the ID data) while it is valid, and prices it "
-        "again from the same car when it expired. For an initiative customer pass `initiative_tier` and "
-        "`initiative_region` and the offer also states the initiative deposit for that car. Do NOT use it "
-        "for showroom cars (WC-…), and do not send the same offer twice."
+        "`quotation_reference`. NEVER pass a total from an earlier offer as `gross_price_eur`. The car's MODEL "
+        "YEAR and whether it is NEW or USED decide the programme, the port and what the price must state "
+        "(the tool decides — never ask the customer which programme): a new car of the current model year "
+        "is a personal import to Port Said and the answer carries its CUSTOMS; a used current-year car or a "
+        "car of the three model years before is an initiative car to Alexandria and the answer carries the "
+        "INITIATIVE VALUE (USD deposit). Pass `model_year` and `condition` when there is no advert reference "
+        "(read them off the screenshot). With `send_offer` false it only calculates: total, deposit percent "
+        "and amount, balance, what is due in EGP on arrival, and the `programme` block — state them exactly "
+        "as returned, the customs or initiative value included. With `send_offer` true it records a numbered "
+        "quotation and sends the offer as a PDF by itself; it needs the customer's name as on their national "
+        "ID (four parts) on file and refuses with `id_name_needed` otherwise — never with the WhatsApp name. "
+        "Then write ONE short line asking whether to go ahead, without figures. `quotation_reference` with "
+        "`send_offer` true resends that same offer while it is valid, and prices it again when it expired. "
+        "Pass `initiative_tier` / `initiative_region` only if the customer said them — otherwise every "
+        "variant is stated. Do NOT use it for showroom cars (WC-…), and do not send the same offer twice."
     ),
     category="car_import",
     side_effect=True,
@@ -186,15 +191,19 @@ def ka_search_cars(context, source: str = 'both', brand: Optional[str] = None,
                                                "the customer typed it or as shown on their screenshot"},
             "car_description": {"type": "string",
                                 "description": "Only when there is no reference: make, model, year, trim"},
+            "model_year": {"type": "integer",
+                           "description": "Only when there is no reference: the car's model year, e.g. 2024"},
+            "condition": {"type": "string", "enum": ["new", "used"],
+                          "description": "Only when there is no reference: new = zero km (under ~100 km), "
+                                         "used = anything else. Read the mileage off the screenshot"},
             "initiative_tier": {"type": "string", "enum": ["full", "medium"],
-                                "description": "Initiative customers: full (فئة كاملة) or medium trim"},
+                                "description": "Only if the customer said it: full (فئة كاملة) or medium"},
             "initiative_region": {"type": "string", "enum": ["europe", "outside"],
-                                  "description": "Initiative customers: where they live — europe or outside"},
+                                  "description": "Only if the customer said it: lives in the EU (europe) or not"},
             "with_eur1": {"type": "boolean",
                           "description": "True when the car is EU-built and the customer wants the EUR 1 certificate"},
             "shipping_type": {"type": "string",
                               "description": "Leave empty for standard shipping, or vip_roro, or container"},
-            "port": {"type": "string", "description": "alexandria (default) or port_said"},
             "collect_from_showroom": {"type": "boolean",
                                       "description": "True when the customer collects the car from the Cairo showroom instead of "
                                                      "door delivery. It LOWERS what is due in EGP on arrival"},
@@ -206,17 +215,20 @@ def ka_quote_car(context, send_offer: bool = False, listing_reference: Optional[
                  gross_price_eur: Optional[float] = None, car_description: str = '',
                  with_eur1: bool = False, shipping_type: str = '', port: str = 'alexandria',
                  collect_from_showroom: bool = False, quotation_reference: Optional[str] = None,
-                 initiative_tier: Optional[str] = None,
-                 initiative_region: Optional[str] = None) -> Dict[str, Any]:
-    """The calculator; and, when asked, the quotation."""
+                 initiative_tier: Optional[str] = None, initiative_region: Optional[str] = None,
+                 model_year: Optional[int] = None, condition: str = '') -> Dict[str, Any]:
+    """The calculator; and, when asked, the quotation.
+
+    `port` is no longer the model's to choose: the programme sets it
+    (owner, 2026-09-30). The argument stays for turns stored before."""
     try:
         import re
         from datetime import date
 
         from car_import.models import Quote
-        from car_import.services import initiative_values, sales_flow
+        from car_import.services import identity, sales_flow
 
-        from .sales_tools import _quote_sent_reply, ka_price_car, ka_send_quotation
+        from .sales_tools import _quote_sent_reply, id_name_needed, ka_price_car, ka_send_quotation
 
         partner = getattr(context, 'partner', None)
 
@@ -237,8 +249,12 @@ def ka_quote_car(context, send_offer: bool = False, listing_reference: Optional[
                         "data": {"their_quotations": theirs}}
             new_inputs = bool(gross_price_eur or listing_reference)
             valid = old.valid_until is None or old.valid_until >= date.today()
+            if send_offer and not identity.full_id_name(partner):
+                return id_name_needed()
+            # An offer made before programmes (2026-09-30) carries neither the
+            # customs nor the initiative value: it is priced again, not resent.
             if send_offer and valid and old.state in ('sent', 'accepted') and not new_inputs \
-                    and old.total_eur:
+                    and old.total_eur and old.programme:
                 # The same offer, rebuilt (the ID card may have been read since) and sent again.
                 sent = sales_flow.send_quote(old, rerender=True)
                 return {"success": True, "data": _quote_sent_reply(old, sent, resent=True)}
@@ -250,8 +266,8 @@ def ka_quote_car(context, send_offer: bool = False, listing_reference: Optional[
                     car_description = car_description or old.car_label
             with_eur1 = with_eur1 or old.with_eur1
             shipping_type = shipping_type or old.shipping_type
-            if not port or port == 'alexandria':
-                port = old.port or 'alexandria'
+            model_year = model_year or old.model_year
+            condition = condition or old.car_condition
             collect_from_showroom = collect_from_showroom or old.collect_from_showroom
 
         if str(listing_reference or '').strip().upper().startswith('WC-'):
@@ -262,25 +278,15 @@ def ka_quote_car(context, send_offer: bool = False, listing_reference: Optional[
                                "to buy it, call ka_escalate_conversation_to_staff with topic=showroom_purchase "
                                "and the reference in the reason.")}
 
-        options = dict(with_eur1=with_eur1, shipping_type=shipping_type, port=port,
-                       collect_from_showroom=collect_from_showroom)
+        options = dict(with_eur1=with_eur1, shipping_type=shipping_type,
+                       collect_from_showroom=collect_from_showroom, car_description=car_description,
+                       condition=condition or '', model_year=model_year,
+                       initiative_tier=initiative_tier or '', initiative_region=initiative_region or '')
         if send_offer:
             return ka_send_quotation(context, listing_reference=listing_reference,
-                                     gross_price_eur=gross_price_eur,
-                                     car_description=car_description,
-                                     initiative_tier=initiative_tier or '',
-                                     initiative_region=initiative_region or '', **options)
-        result = ka_price_car(context, listing_reference=listing_reference,
-                              gross_price_eur=gross_price_eur, **options)
-        if result.get('success') and (initiative_tier or initiative_region):
-            from car_import.services import mobile_de
-            ref = str(listing_reference or '').strip()
-            listing = sales_flow.find_listing(mobile_de.ad_id_from_link(ref) or ref) if ref else None
-            car_model, year = initiative_values.car_of(listing, car_description)
-            note = initiative_values.quote_note(car_model, year, initiative_tier, initiative_region)
-            if note:
-                result['data']['initiative_deposit'] = note
-        return result
+                                     gross_price_eur=gross_price_eur, **options)
+        return ka_price_car(context, listing_reference=listing_reference,
+                            gross_price_eur=gross_price_eur, **options)
     except Exception as e:
         return _failed("ka_quote_car", e)
 
@@ -378,16 +384,25 @@ def _read_id_card(context, full_name, national_id, address, note):
         return {"success": False, "error_type": "nothing_read",
                 "error": "Read the card first and pass full_name, national_id and address as printed."}
 
-    saved, problems = identity.save_id_card(partner, full_name=full_name, national_id=national_id,
-                                            address=address)
+    # The card prints the first name on one line and the father's, the
+    # grandfather's and the family's on the next. A name in fewer than four
+    # parts is a line that was not read — it never goes on a document.
+    short_name = bool(full_name) and identity.name_parts(full_name) < identity.MIN_NAME_PARTS
+    saved, problems = identity.save_id_card(partner, full_name='' if short_name else full_name,
+                                            national_id=national_id, address=address)
     filed = ka_file_customer_document(context, requirement_code='national_id_front_back', note=note)
     digits = identity.normalise_national_id(national_id)
     data = {
         "saved": saved,
-        "name_on_documents": identity.customer_name(partner),
+        "name_on_documents": identity.full_id_name(partner) or None,
         "national_id_on_file": identity.masked(partner.national_id or '') if partner.national_id else None,
         "photo_filed_on_deal": bool(filed.get('success')),
     }
+    if short_name:
+        data["name_problem"] = (f"The name passed has {identity.name_parts(full_name)} parts and was NOT saved. "
+                                "The card shows the first name on one line and the rest on the next: read both "
+                                "lines and call again with the whole name (four parts or more). If the photo "
+                                "is unreadable, ask for the full name as on the card.")
     if problems:
         data["national_id_problem"] = problems
         data["next_step"] = ("The number could not be taken from the card as read "
@@ -546,3 +561,87 @@ def ka_initiative_market(context, action: str, initiative_type: Optional[str] = 
                                              initiative_type=initiative_type, limit=limit)
     except Exception as e:
         return _failed("ka_initiative_market", e)
+
+
+# ── the contract document ────────────────────────────────────────────────────
+@tool(
+    name="ka_contract_request",
+    display_name="The contract: a blank copy, or a change",
+    description=(
+        "Use this tool when the customer asks about THE CONTRACT DOCUMENT itself. Set `request` to `blank_copy` "
+        "when they want to see or read the contract, its terms or its clauses — before paying or before "
+        "deciding: it sends the company's contract for their programme with every name, figure and date left "
+        "empty and no stamp or signature. NEVER tell a customer to pay first to see the contract, and send it "
+        "only when they ask. Set `request` to `change` when they already have a contract and want something "
+        "in it changed: it sends them the invitation to review it with us at the company's office (address "
+        "and map) — do NOT hand them over for that. Pass `programme` (initiative or personal, from the car "
+        "being discussed) when they have no deal yet. After it succeeds write ONE short line. The customer's "
+        "name and national ID for the contract go through ka_save_contract_details, not this tool."
+    ),
+    category="car_import",
+    side_effect=True,
+    parameters_schema={
+        "type": "object",
+        "properties": {
+            "request": {"type": "string", "enum": ["blank_copy", "change"],
+                        "description": "blank_copy = they want to read the contract. change = they want "
+                                       "something in their existing contract changed"},
+            "programme": {"type": "string", "enum": ["initiative", "personal"],
+                          "description": "blank_copy only: the programme of the car being discussed "
+                                         "(a new current-model-year car = personal, otherwise initiative)"},
+        },
+        "required": ["request"],
+    },
+)
+def ka_contract_request(context, request: str, programme: Optional[str] = None) -> Dict[str, Any]:
+    """The owner's two contract rules of 2026-09-30 (`services/contract_preview.py`)."""
+    try:
+        from car_import.services import contract_preview, sales_flow
+
+        partner = getattr(context, 'partner', None)
+        if partner is None:
+            return {"success": False, "error": "No customer in context", "error_type": "no_partner"}
+        conversation = getattr(context, 'conversation', None)
+
+        if (request or '').strip().lower() == 'change':
+            text = contract_preview.office_visit_text()
+            sent = sales_flow.send_text(partner, text)
+            sales_flow.note(partner, '📝 العميل طلب تعديل في العقد — اتبعتله دعوة يراجعه معانا في مقر الشركة.',
+                            recipients=sales_flow.owners(partner), conversation=conversation,
+                            subject='طلب تعديل في العقد')
+            if not sent.get('sent'):
+                return {"success": True, "data": {
+                    "invitation_sent": False, "say_to_customer_exactly": text,
+                    "next_step": "Send the text above exactly as written — the address and the map link unchanged."}}
+            return {"success": True, "data": {
+                "invitation_sent": True,
+                "next_step": "The office address is already in the chat. Write ONE short line, e.g. that we "
+                             "will be glad to see them. Do not repeat the address."}}
+
+        chosen = contract_preview.programme_of(partner, programme)
+        if chosen is None:
+            return {"success": False, "error_type": "programme_needed",
+                    "error": "The contract differs by programme and it is not known for this customer.",
+                    "do_now": "Call again with `programme`: personal for a new car of the current model year, "
+                              "initiative for anything else. Ask the customer only if the car is not known."}
+        document, why = contract_preview.blank_copy(chosen)
+        if document is None:
+            logger.warning("ka_contract_request: %s", why)
+            return {"success": False, "error_type": "no_template", "error": why, "must_escalate": True}
+        label = contract_preview.PROGRAMME_AR.get(chosen, chosen)
+        sent = sales_flow.send_document(
+            partner, document,
+            f'نسخة من عقد {label} للاطلاع على البنود — من غير بيانات ولا أختام ولا توقيعات')
+        sales_flow.note(partner, f'📄 اتبعت للعميل نسخة فاضية من عقد {label} للاطلاع (طلبها قبل الدفع).'
+                        + ('' if sent.get('sent') else f'\n⚠️ متبعتتش: {sent.get("error")}'),
+                        recipients=sales_flow.owners(partner), conversation=conversation,
+                        subject='نسخة العقد للاطلاع')
+        if not sent.get('sent'):
+            return {"success": False, "error_type": "send_failed", "error": sent.get('error') or 'send failed',
+                    "say_to_customer_ar": "مش قادرة أبعت الملف دلوقتي — زميلي هيبعتهولك حالاً."}
+        return {"success": True, "data": {
+            "blank_contract_sent": True, "programme": label,
+            "next_step": "The contract file is in the chat. Write ONE short line: it is for reading the terms, "
+                         "and the final copy carries their data once they contract. Do not ask for payment."}}
+    except Exception as e:
+        return _failed("ka_contract_request", e)

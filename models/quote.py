@@ -62,6 +62,17 @@ class Quote(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
         ('alexandria', _("Alexandria")),
         ('port_said', _("Port Said")),
     ]
+    #: The owner's rule of 2026-09-30 (`services/programme.py`): the car's model
+    #: year and condition decide the programme, the programme decides the port
+    #: and whether the offer states customs or the initiative's deposit.
+    PROGRAMME = [
+        ('initiative', _("Initiative")),
+        ('personal', _("Personal import")),
+    ]
+    CONDITION = [
+        ('new', _("Zero km")),
+        ('used', _("Used")),
+    ]
 
     # ── identity ────────────────────────────────────────────────────────────
     name = models.CharField(max_length=32, blank=True, verbose_name=_("Reference"))
@@ -101,6 +112,11 @@ class Quote(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
                             verbose_name=_("Port of arrival"))
     collect_from_showroom = models.BooleanField(default=False,
                                                 verbose_name=_("Collected from the showroom"))
+    programme = models.CharField(max_length=16, choices=PROGRAMME, blank=True, default='',
+                                 verbose_name=_("Programme"))
+    model_year = models.PositiveIntegerField(null=True, blank=True, verbose_name=_("Model year"))
+    car_condition = models.CharField(max_length=8, choices=CONDITION, blank=True, default='',
+                                     verbose_name=_("Condition"))
     admin_fee_discount_eur = models.DecimalField(
         max_digits=12, decimal_places=2, default=0, verbose_name=_("Discount on the admin fee (EUR)"),
         help_text=_("Never more than the fee itself"))
@@ -166,6 +182,13 @@ class Quote(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
                                                verbose_name=_("Indicative total (EGP)"), editable=False)
     calculated_at = models.DateTimeField(null=True, blank=True, verbose_name=_("Calculated at"), editable=False)
     pricing_error = models.CharField(max_length=255, blank=True, verbose_name=_("Why there is no price"), editable=False)
+    #: What the programme adds to the offer, outside the EUR total: the customs
+    #: figure of a personal import, or the initiative's USD deposit (every
+    #: variant the customer has not narrowed yet). Both from the owner's tables.
+    customs_eur = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True,
+                                      verbose_name=_("Customs value"), editable=False)
+    initiative_deposits = models.JSONField(default=list, blank=True, verbose_name=_("Deposit values"),
+                                           editable=False)
 
     # ── what the customer actually paid ─────────────────────────────────────
     # The owner's point, in their own words: "ساعات العميل بيجي يدفع فلوس أكثر
@@ -236,6 +259,7 @@ class Quote(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
         from car_import.services import pricing
 
         self.pricing_error = ''
+        self._apply_programme()
         if not self.gross_price_eur:
             # Not an error worth shouting about: a salesman opens the form
             # before they have the price. Everything simply stays at zero.
@@ -303,6 +327,38 @@ class Quote(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
         self.deposit_covered = False
         self.fully_paid = False
         self._pending_lines = []
+
+    def _apply_programme(self):
+        """The programme's port, and what it adds to the offer.
+
+        A quotation with no programme keeps its port and states neither block —
+        which is every quotation made before 2026-09-30, so re-saving an old
+        one never moves its numbers. The tables are read again on every
+        calculation; the tier and region the customer gave survive it
+        (`initiative_filter`, else whatever the stored rows were narrowed to).
+        """
+        from car_import.services import programme as rules
+
+        if self.programme not in rules.PORTS:
+            self.customs_eur, self.initiative_deposits = None, []
+            return
+        self.port = rules.PORTS[self.programme]
+        if not self.model_year:
+            self.model_year = (getattr(self.listing, 'model_year', None) if self.listing_id else None) \
+                or (getattr(self.vehicle, 'model_year', None) if self.vehicle_id else None)
+        car_model = rules.car_model_of(self.listing if self.listing_id else None,
+                                       self.vehicle if self.vehicle_id else None, self.car_label)
+        if self.programme == rules.PERSONAL:
+            self.customs_eur = rules.customs_eur(car_model, self.model_year)
+            self.initiative_deposits = []
+        else:
+            tier, region = getattr(self, 'initiative_filter', None) or rules.filter_of(self.initiative_deposits)
+            self.customs_eur = None
+            self.initiative_deposits = rules.initiative_deposits(car_model, self.model_year, tier, region)
+
+    #: Set by the assistant's quotation tool when the customer said their tier
+    #: or residence: (tier, region), either may be None.
+    initiative_filter = None
 
     #: Written by ``recalculate``, consumed by ``post_save``. Never touched in
     #: ``__init__`` — the serializer defers columns, so a partially loaded row
@@ -428,6 +484,7 @@ class Quote(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
         'total_eur', 'deposit_pct', 'deposit_eur', 'balance_eur', 'port_fee_egp',
         'showroom_fee_egp', 'egp_due_on_arrival', 'total_egp_indicative',
         'remaining_eur', 'overpaid_eur', 'deposit_covered', 'fully_paid', 'pricing_error',
+        'port', 'model_year', 'customs_eur',
     )
 
     def _live_values(self):
@@ -475,6 +532,23 @@ class Quote(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
     @onchange('paid_eur')
     def _onchange_paid(self):
         return self._live_values()
+
+    @onchange('programme')
+    def _onchange_programme(self):
+        return self._live_values()
+
+    @onchange('model_year', 'car_condition')
+    def _onchange_year_or_condition(self):
+        """Year and condition decide the programme (owner, 2026-09-30) — the
+        form proposes it; the salesman can still pick another one."""
+        from car_import.services import programme as rules
+        if self.model_year and self.car_condition:
+            decided = rules.decide(self.model_year, is_new=self.car_condition == 'new')
+            if decided['programme']:
+                self.programme = decided['programme']
+        result = self._live_values()
+        result['value']['programme'] = self.programme
+        return result
 
     @onchange('partner')
     def _onchange_partner(self):

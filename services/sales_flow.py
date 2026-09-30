@@ -210,9 +210,13 @@ def price(gross_price_eur, with_eur1=False, shipping_type='', port='alexandria',
 
 def make_quote(partner, gross_price_eur, car_label='', listing=None, conversation=None,
                with_eur1=False, shipping_type='', port='alexandria',
-               collect_from_showroom=False, admin_fee_discount_eur=None, price_source=''):
+               collect_from_showroom=False, admin_fee_discount_eur=None, price_source='',
+               programme='', model_year=None, car_condition='', initiative_filter=None):
     """A quotation, frozen and marked sent. Raises ValidationError (an
-    unapproved discount, no price) — the caller says why."""
+    unapproved discount, no price) — the caller says why.
+
+    With a `programme` the quote's own calculation sets the port and states
+    customs or the initiative's deposit (`Quote._apply_programme`)."""
     from car_import.models import Quote
     from car_import.services.chat_actions import open_deal_for
 
@@ -227,11 +231,14 @@ def make_quote(partner, gross_price_eur, car_label='', listing=None, conversatio
         shipping_type=shipping_type or '', port=port or 'alexandria',
         collect_from_showroom=bool(collect_from_showroom),
         admin_fee_discount_eur=admin_fee_discount_eur or 0,
+        programme=programme or '', model_year=model_year or None,
+        car_condition=car_condition or '',
         valid_until=timezone.localdate() + timedelta(days=7),
         # `price_source` is a note to STAFF ("the customer typed this price —
         # check it"). It goes to the staff note, never into `notes`, which the
         # customer's offer prints.
         notes='', state='sent', sent_at=timezone.now())
+    quote.initiative_filter = initiative_filter
     quote.save()
     if quote.pricing_error or not quote.total_eur:
         raise ValidationError(quote.pricing_error or _("There is no price for this car."))

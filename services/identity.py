@@ -49,6 +49,23 @@ def customer_name(partner):
     return str(getattr(partner, 'id_full_name', None) or getattr(partner, 'name', '') or '').strip()
 
 
+#: An Egyptian ID prints at least four names: the person's, the father's, the
+#: grandfather's and the family's. The owner (2026-09-30): «المهم الاسم رباعي
+#: كما مسجل ف البطاقة» — a shorter name is a name the customer shortened.
+MIN_NAME_PARTS = 4
+
+
+def name_parts(name):
+    return len(str(name or '').split())
+
+
+def full_id_name(partner):
+    """The ID card's name when it is on file in four parts or more, else ''.
+    The written offer waits for it — never the WhatsApp display name."""
+    name = str(getattr(partner, 'id_full_name', None) or '').strip()
+    return name if name_parts(name) >= MIN_NAME_PARTS else ''
+
+
 def id_details(partner):
     return {
         'name': customer_name(partner),

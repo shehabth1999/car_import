@@ -62,8 +62,9 @@ BACKUP_LLM_PROVIDER_NAME = BACKUP_LLM_MODEL_CANDIDATES[0][1]
 #: decided, which is a human's job, and handing it to a chat agent invites it to
 #: write minutes for a conversation that never happened.
 TOOL_NAMES = [
-    # Thirteen: twelve, down from 21 (tools/agent_tools.py says why), plus the
-    # initiative deposit lookup the owner asked for on 2026-09-29. What was knowledge —
+    # Fourteen: twelve, down from 21 (tools/agent_tools.py says why), plus the
+    # initiative deposit lookup the owner asked for on 2026-09-29 and the
+    # contract document (blank copy / change → the office) of 2026-09-30. What was knowledge —
     # published fees, instalment terms, eligibility — lives in the approved-answers
     # collection now; the five merged tools are thin fronts over the originals,
     # which stay registered and can be bound again from here.
@@ -74,6 +75,7 @@ TOOL_NAMES = [
     'ka_share_bank_details',
     'ka_customer_sent_image',             # a transfer for the accountant, or a paper
     'ka_save_contract_details',
+    'ka_contract_request',                # a blank copy to read, or a change → the office
     'ka_request_discount',
     'ka_deal_status',                     # status + missing papers + the written update
     'ka_initiative_deposit',              # «قيمة المبادرة/الوديعة» from the owner's sheet

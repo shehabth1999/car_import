@@ -41,6 +41,8 @@ from .agent_tools import (  # noqa: F401 — the five the agent holds in place o
     ka_customer_sent_image,
     ka_deal_status,
     ka_initiative_market,
+    ka_initiative_deposit,
+    ka_contract_request,
 )
 from .sales_tools import (  # noqa: F401
     ka_search_showroom_cars,
