@@ -192,6 +192,36 @@ def _programme_block(quote):
     return None
 
 
+def _programme_html(quote):
+    """The programme block for the PDF, kept to a few lines: the offer is one A4
+    page (91747f8) and it has to stay one with this block in it. The four
+    initiative figures are a 2×2 grid — tier by residence — not four rows."""
+    from car_import.services import programme as rules
+    from car_import.services.initiative_values import REGION_AR, TIER_AR
+
+    block = _programme_block(quote)
+    if not block:
+        return ''
+    title, rows, footnote = block
+    head = f'<h2>{_escape(title)} <span class="meta">— {_escape(footnote)}</span></h2>'
+    deposits = quote.initiative_deposits or []
+    tiers = [t for t in TIER_AR if any(r.get('tier') == t for r in deposits)]
+    regions = [g for g in REGION_AR if any(r.get('region') == g for r in deposits)]
+    if quote.programme == rules.INITIATIVE and len(tiers) * len(regions) > 1:
+        value = {(r.get('tier'), r.get('region')): rules.usd(r['usd']) for r in deposits}
+        header = ''.join(f'<td class="n">{_escape(REGION_AR[g])}</td>' for g in regions)
+        body = ''.join(
+            f'<tr><td>{_escape(TIER_AR[t])}</td>'
+            + ''.join(f'<td class="n">{_escape(value.get((t, g), "—"))}</td>' for g in regions) + '</tr>'
+            for t in tiers)
+        return f'{head}<table class="grid"><tr class="head"><td></td>{header}</tr>{body}</table>'
+    if rows:
+        table = ''.join(f'<tr><td>{_escape(label)}</td><td class="n">{_escape(value)}</td></tr>'
+                        for label, value in rows)
+        return f'{head}<table>{table}</table>'
+    return head
+
+
 def as_text(quote):
     """The offer as a WhatsApp message, in Arabic — the fallback when no PDF
     could be made."""
@@ -253,8 +283,9 @@ def _notes(quote):
     """The client's own five notes, corrected where the owner corrected them."""
     notes = [
         'السيارة فابريكة من الداخل والخارج.',
-        'التحويل لحساب الشركة من الخارج.',
-        'طرق الدفع: نقداً أو تحويل بنكي.',
+        # Two of the sheet's notes on one line — same words, one line less, so
+        # the offer with its programme block stays on one page.
+        'التحويل لحساب الشركة من الخارج. طرق الدفع: نقداً أو تحويل بنكي.',
     ]
     # The sheet says "about 50,000 EGP" for every port. The owner's message of
     # 2026-09-16 gives two different figures, and the difference between them
@@ -327,16 +358,10 @@ def as_html(quote):
 
     notes = ''.join(f'<li>{_escape(note)}</li>' for note in _notes(quote))
     car = _escape(car_label(quote) or '—')
-    programme_row = (f'<tr><td>البرنامج</td><td class="v">{_escape(_programme_line(quote))}</td></tr>'
-                     if _programme_line(quote) else '')
-    block = _programme_block(quote)
-    block_programme = ''
-    if block:
-        title, rows, footnote = block
-        table = ''.join(f'<tr><td>{_escape(label)}</td><td class="n">{_escape(value)}</td></tr>'
-                        for label, value in rows)
-        block_programme = (f'<h2>{_escape(title)}</h2>' + (f'<table>{table}</table>' if table else '')
-                           + f'<p class="meta">{_escape(footnote)}</p>')
+    if _programme_line(quote):
+        # One row, not two: the car and the programme it goes by.
+        car += f'<br><span class="meta">{_escape(_programme_line(quote))}</span>'
+    block_programme = _programme_html(quote)
     valid = (f'<tr><td>العرض ساري لحد</td><td class="n">{quote.valid_until:%Y-%m-%d}</td></tr>'
              if quote.valid_until else '')
 
@@ -345,16 +370,17 @@ def as_html(quote):
 <title>عرض سعر {_escape(quote.name or '')}</title>
 <style>
  {proforma_document._font_face()}
- /* One A4 page: the customer forwards it to a bank or a brother, not a printer. */
+ /* One A4 page: the customer forwards it to a bank or a brother, not a printer. The spacing
+    is tight on purpose: the programme block (2026-09-30) has to fit on the same page. */
  @page {{ size: A4; margin: 12mm 14mm; }}
  body {{ font-family: 'Cairo', 'Noto Naskh Arabic', 'Noto Sans Arabic', 'DejaVu Sans', sans-serif;
-        color: #16324f; font-size: 10pt; line-height: 1.45; }}
+        color: #16324f; font-size: 10pt; line-height: 1.35; }}
  h1 {{ font-size: 17pt; margin: 0 0 1mm; }}
- h2 {{ font-size: 11pt; margin: 4mm 0 1.5mm; color: #55708c; }}
+ h2 {{ font-size: 11pt; margin: 3mm 0 1mm; color: #55708c; }}
  .head {{ border-bottom: 2px solid #16324f; padding-bottom: 2mm; margin-bottom: 3mm; }}
  .meta {{ color: #55708c; font-size: 9pt; }}
  table {{ width: 100%; border-collapse: collapse; }}
- td {{ padding: 1.1mm 1mm; border-bottom: 1px solid #dfe6ee; }}
+ td {{ padding: 0.8mm 1mm; border-bottom: 1px solid #dfe6ee; }}
  td.n {{ text-align: left; direction: ltr; white-space: nowrap; }}
  td.v {{ text-align: left; }}
  /* A date or a reference is a left-to-right run inside Arabic text. Without
@@ -364,6 +390,8 @@ def as_html(quote):
  table.options tr.head td {{ font-weight: 700; color: #55708c; font-size: 9pt; }}
  table.options tr.chosen td {{ background: #eef6f1; font-weight: 600; }}
  table.options a {{ color: #55708c; font-size: 8pt; text-decoration: none; }}
+ table.grid tr.head td {{ color: #55708c; font-size: 8.5pt; }}
+ h2 span.meta {{ font-weight: 400; font-size: 8pt; }}
  .due {{ margin: 3mm 0 1.5mm; padding: 2.5mm 4mm; background: #eef6f1; border-right: 4px solid #1f7a4d;
          font-size: 12pt; font-weight: 700; }}
  p {{ margin: 1.5mm 0; }}
@@ -371,7 +399,7 @@ def as_html(quote):
  pre {{ font-family: inherit; white-space: pre-wrap; margin: 0; padding: 2mm 3mm; line-height: 1.35;
         background: #f6f8fb; unicode-bidi: plaintext; text-align: start; font-size: 9pt;
         page-break-inside: avoid; }}
- ol {{ color: #55708c; font-size: 8.5pt; line-height: 1.5; padding-right: 5mm; margin: 0; }}
+ ol {{ color: #55708c; font-size: 8.5pt; line-height: 1.4; padding-right: 5mm; margin: 0; }}
 </style></head><body>
 <div class="head">
   <h1>عرض سعر — Quotation</h1>
@@ -383,7 +411,6 @@ def as_html(quote):
   {valid}
   {customer_rows}
   <tr><td>العربية</td><td class="v">{car}</td></tr>
-  {programme_row}
 </table>
 {_options_html(quote)}
 <h2>السعر</h2>
