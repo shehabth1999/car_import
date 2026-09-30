@@ -97,9 +97,15 @@ def _programme_problem(decided, year):
                            "what the offer states. Read it off the advert or screenshot; if it is not there, ask "
                            "ONE short question for the model year. Then call again with `model_year`.")
     elif problem == 'condition_needed':
-        reply["do_now"] = (f"A {year} car goes by personal import when it is NEW (zero km) and by the initiative "
-                           f"when it is USED. Read the mileage off the advert or screenshot; if it is not shown, "
-                           f"ask ONE short question: new or used? Then call again with `condition`.")
+        reply["do_now"] = (f"Whether a {year} car is NEW (zero km) or USED decides its programme. Read the mileage "
+                           f"off the advert or screenshot; if it is not shown, ask ONE short question: new or "
+                           f"used? Then call again with `condition`.")
+    elif problem == 'initiative_holder_needed':
+        reply["do_now"] = ("A new current-year car comes on the customer's OWN initiative if they hold one, else "
+                           "as a personal import (the better route without one). If the chat does not say, ask ONE "
+                           "short question: does the customer have an initiative? Then call again with "
+                           "`has_own_initiative`.")
+        reply["say_to_customer_ar"] = "حضرتك معاك مبادرة؟ لو معاك تقدر تجيبها عليها، ولو لأ بنجيبها استيراد شخصي."
     else:
         oldest = decided.get('oldest_year') or rules.current_year() - rules.INITIATIVE_YEARS_BACK
         reply["do_now"] = "Say it politely in one line and offer to look for a newer model year. Do not escalate."
@@ -108,7 +114,7 @@ def _programme_problem(decided, year):
     return reply
 
 
-def _programme_for(listing, car_description='', condition='', model_year=None):
+def _programme_for(listing, car_description='', condition='', model_year=None, has_own_initiative=None):
     """(decision, car model, model year, is_new) for the car being priced, or
     the error dict telling the assistant what it still needs.
 
@@ -122,7 +128,7 @@ def _programme_for(listing, car_description='', condition='', model_year=None):
     is_new = rules.is_new_listing(listing)
     if is_new is None:
         is_new = rules.normalise_condition(condition)
-    decided = rules.decide(year, is_new)
+    decided = rules.decide(year, is_new, has_own_initiative)
     if decided['problem']:
         return _programme_problem(decided, year)
     vehicle = getattr(listing, 'vehicle', None) if listing is not None and listing.vehicle_id else None
@@ -224,7 +230,8 @@ def _quote_sent_reply(quote, sent, resent=False):
     if quote.programme:
         from car_import.services import programme as rules
         data["programme"] = rules.for_agent(quote.programme, quote.port, quote.customs_eur,
-                                            quote.initiative_deposits, model_year=quote.model_year)
+                                            quote.initiative_deposits, model_year=quote.model_year,
+                                            poa=quote.poa_usd)
     if resent:
         data["same_offer_resent"] = True
     if sent.get('sent'):
@@ -413,7 +420,8 @@ def ka_price_car(context, listing_reference: Optional[str] = None,
                  shipping_type: str = '', port: str = 'alexandria',
                  collect_from_showroom: bool = False, car_description: str = '',
                  condition: str = '', model_year: Optional[int] = None,
-                 initiative_tier: str = '', initiative_region: str = '') -> Dict[str, Any]:
+                 initiative_tier: str = '', initiative_region: str = '',
+                 has_own_initiative: Optional[bool] = None) -> Dict[str, Any]:
     """The calculator's answer for one car, with its programme. Read only."""
     try:
         from car_import.services import policy, pricing, sales_flow
@@ -425,7 +433,7 @@ def ka_price_car(context, listing_reference: Optional[str] = None,
         if isinstance(resolved, dict):
             return resolved
         listing, gross, source_note = resolved
-        decision = _programme_for(listing, car_description, condition, model_year)
+        decision = _programme_for(listing, car_description, condition, model_year, has_own_initiative)
         if isinstance(decision, dict):
             return decision
         decided, car_model, year, _is_new = decision
@@ -446,9 +454,10 @@ def ka_price_car(context, listing_reference: Optional[str] = None,
             customs=rules.customs_eur(car_model, year) if programme == rules.PERSONAL else None,
             deposits=(rules.initiative_deposits(car_model, year, initiative_tier, initiative_region)
                       if programme == rules.INITIATIVE else None),
-            car_model=car_model, model_year=year)
-        data["next_step"] = ("Say the total, the deposit and the balance, AND the programme block (customs or "
-                             "the initiative value) — the owner counts a price without it as wrong. If the "
+            car_model=car_model, model_year=year, poa=rules.poa_usd(programme, has_own_initiative))
+        data["next_step"] = ("Say the total, the deposit and the balance, AND the programme block (customs, or "
+                             "the initiative value and the powers of attorney) — the owner counts a price "
+                             "without it as wrong. If the "
                              "customer is interested, send the formal offer: ka_quote_car with send_offer=true "
                              "and the same inputs.")
         return {"success": True, "data": data}
@@ -490,7 +499,8 @@ def ka_send_quotation(context, listing_reference: Optional[str] = None,
                       with_eur1: bool = False, shipping_type: str = '', port: str = 'alexandria',
                       collect_from_showroom: bool = False, initiative_tier: str = '',
                       initiative_region: str = '', condition: str = '',
-                      model_year: Optional[int] = None) -> Dict[str, Any]:
+                      model_year: Optional[int] = None,
+                      has_own_initiative: Optional[bool] = None) -> Dict[str, Any]:
     """Record the quotation and send the offer PDF to the customer.
 
     The car's model year and condition decide the programme (`services/
@@ -513,7 +523,7 @@ def ka_send_quotation(context, listing_reference: Optional[str] = None,
         if isinstance(resolved, dict):
             return resolved
         listing, gross, source_note = resolved
-        decision = _programme_for(listing, car_description, condition, model_year)
+        decision = _programme_for(listing, car_description, condition, model_year, has_own_initiative)
         if isinstance(decision, dict):
             return decision
         decided, _car_model, year, is_new = decision
@@ -525,7 +535,8 @@ def ka_send_quotation(context, listing_reference: Optional[str] = None,
                 port=decided['port'], collect_from_showroom=collect_from_showroom, price_source=source_note,
                 programme=decided['programme'], model_year=year,
                 car_condition='new' if is_new else ('used' if is_new is False else ''),
-                initiative_filter=(initiative_tier or None, initiative_region or None))
+                initiative_filter=(initiative_tier or None, initiative_region or None),
+                own_initiative=has_own_initiative)
         except ValidationError as exc:
             return {"success": False, "error": "; ".join(exc.messages), "error_type": "refused",
                     "must_escalate": True}

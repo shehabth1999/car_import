@@ -583,6 +583,7 @@ CATALOG = {
     "Personal import": "استيراد شخصي",
     "Photos": "الصور",
     "Photos and documents": "الصور والمستندات",
+    "Powers of attorney (USD)": "التوكيلات (دولار)",
     "Pipeline by stage": "المسار حسب المرحلة",
     "Plan": "الخطة",
     "Policy": "السياسة",

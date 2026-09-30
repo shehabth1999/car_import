@@ -160,13 +160,16 @@ def ka_search_cars(context, source: str = 'both', brand: Optional[str] = None,
         "(`gross_price_eur` + `car_description`), or an earlier quotation number Q/… in "
         "`quotation_reference`. NEVER pass a total from an earlier offer as `gross_price_eur`. The car's MODEL "
         "YEAR and whether it is NEW or USED decide the programme, the port and what the price must state "
-        "(the tool decides — never ask the customer which programme): a new car of the current model year "
-        "is a personal import to Port Said and the answer carries its CUSTOMS; a used current-year car or a "
-        "car of the three model years before is an initiative car to Alexandria and the answer carries the "
-        "INITIATIVE VALUE (USD deposit). Pass `model_year` and `condition` when there is no advert reference "
-        "(read them off the screenshot). With `send_offer` false it only calculates: total, deposit percent "
-        "and amount, balance, what is due in EGP on arrival, and the `programme` block — state them exactly "
-        "as returned, the customs or initiative value included. With `send_offer` true it records a numbered "
+        "(the tool decides — never ask the customer which programme): a used current-year car or a car of "
+        "the three model years before is an initiative car to Alexandria and the answer carries the "
+        "INITIATIVE VALUE (USD deposit) — plus the POWERS OF ATTORNEY when the company provides the "
+        "initiative; a NEW current-year car goes to Port Said, on the customer's own initiative if they hold "
+        "one, else as a personal import whose answer carries its CUSTOMS. Pass `has_own_initiative` true / "
+        "false when the customer said whether they hold an initiative; for a new current-year car the tool "
+        "asks you to find out. Pass `model_year` and `condition` when there is no advert reference (read them "
+        "off the screenshot). With `send_offer` false it only calculates: total, deposit percent and amount, "
+        "balance, what is due in EGP on arrival, and the `programme` block — state them exactly as returned, "
+        "the customs or the initiative value and powers of attorney included. With `send_offer` true it records a numbered "
         "quotation and sends the offer as a PDF by itself; it needs the customer's name as on their national "
         "ID (four parts) on file and refuses with `id_name_needed` otherwise — never with the WhatsApp name. "
         "Then write ONE short line asking whether to go ahead, without figures. `quotation_reference` with "
@@ -196,6 +199,9 @@ def ka_search_cars(context, source: str = 'both', brand: Optional[str] = None,
             "condition": {"type": "string", "enum": ["new", "used"],
                           "description": "Only when there is no reference: new = zero km (under ~100 km), "
                                          "used = anything else. Read the mileage off the screenshot"},
+            "has_own_initiative": {"type": "boolean",
+                                   "description": "true = the customer said they hold their own initiative; false "
+                                                  "= they said they don't. Leave it out when not known"},
             "initiative_tier": {"type": "string", "enum": ["full", "medium"],
                                 "description": "Only if the customer said it: full (فئة كاملة) or medium"},
             "initiative_region": {"type": "string", "enum": ["europe", "outside"],
@@ -216,7 +222,8 @@ def ka_quote_car(context, send_offer: bool = False, listing_reference: Optional[
                  with_eur1: bool = False, shipping_type: str = '', port: str = 'alexandria',
                  collect_from_showroom: bool = False, quotation_reference: Optional[str] = None,
                  initiative_tier: Optional[str] = None, initiative_region: Optional[str] = None,
-                 model_year: Optional[int] = None, condition: str = '') -> Dict[str, Any]:
+                 model_year: Optional[int] = None, condition: str = '',
+                 has_own_initiative: Optional[bool] = None) -> Dict[str, Any]:
     """The calculator; and, when asked, the quotation.
 
     `port` is no longer the model's to choose: the programme sets it
@@ -268,6 +275,8 @@ def ka_quote_car(context, send_offer: bool = False, listing_reference: Optional[
             shipping_type = shipping_type or old.shipping_type
             model_year = model_year or old.model_year
             condition = condition or old.car_condition
+            if has_own_initiative is None:
+                has_own_initiative = old.own_initiative
             collect_from_showroom = collect_from_showroom or old.collect_from_showroom
 
         if str(listing_reference or '').strip().upper().startswith('WC-'):
@@ -280,7 +289,7 @@ def ka_quote_car(context, send_offer: bool = False, listing_reference: Optional[
 
         options = dict(with_eur1=with_eur1, shipping_type=shipping_type,
                        collect_from_showroom=collect_from_showroom, car_description=car_description,
-                       condition=condition or '', model_year=model_year,
+                       condition=condition or '', model_year=model_year, has_own_initiative=has_own_initiative,
                        initiative_tier=initiative_tier or '', initiative_region=initiative_region or '')
         if send_offer:
             return ka_send_quotation(context, listing_reference=listing_reference,

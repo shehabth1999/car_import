@@ -117,6 +117,10 @@ class Quote(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
     model_year = models.PositiveIntegerField(null=True, blank=True, verbose_name=_("Model year"))
     car_condition = models.CharField(max_length=8, choices=CONDITION, blank=True, default='',
                                      verbose_name=_("Condition"))
+    #: True: the customer brings their own initiative. Otherwise an initiative
+    #: car's initiative is the company's, and the powers of attorney are charged.
+    own_initiative = models.BooleanField(null=True, blank=True,
+                                         verbose_name=_("The customer holds the initiative"))
     admin_fee_discount_eur = models.DecimalField(
         max_digits=12, decimal_places=2, default=0, verbose_name=_("Discount on the admin fee (EUR)"),
         help_text=_("Never more than the fee itself"))
@@ -189,6 +193,8 @@ class Quote(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
                                       verbose_name=_("Customs value"), editable=False)
     initiative_deposits = models.JSONField(default=list, blank=True, verbose_name=_("Deposit values"),
                                            editable=False)
+    poa_usd = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True,
+                                  verbose_name=_("Powers of attorney (USD)"), editable=False)
 
     # ── what the customer actually paid ─────────────────────────────────────
     # The owner's point, in their own words: "ساعات العميل بيجي يدفع فلوس أكثر
@@ -340,12 +346,14 @@ class Quote(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
         from car_import.services import programme as rules
 
         if self.programme not in rules.PORTS:
-            self.customs_eur, self.initiative_deposits = None, []
+            self.customs_eur, self.initiative_deposits, self.poa_usd = None, [], None
             return
-        self.port = rules.PORTS[self.programme]
         if not self.model_year:
             self.model_year = (getattr(self.listing, 'model_year', None) if self.listing_id else None) \
                 or (getattr(self.vehicle, 'model_year', None) if self.vehicle_id else None)
+        self.port = rules.port_for(self.programme, self.model_year, self.car_condition == 'new',
+                                   on=self.quote_date)
+        self.poa_usd = rules.poa_usd(self.programme, self.own_initiative)
         car_model = rules.car_model_of(self.listing if self.listing_id else None,
                                        self.vehicle if self.vehicle_id else None, self.car_label)
         if self.programme == rules.PERSONAL:
@@ -484,7 +492,7 @@ class Quote(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
         'total_eur', 'deposit_pct', 'deposit_eur', 'balance_eur', 'port_fee_egp',
         'showroom_fee_egp', 'egp_due_on_arrival', 'total_egp_indicative',
         'remaining_eur', 'overpaid_eur', 'deposit_covered', 'fully_paid', 'pricing_error',
-        'port', 'model_year', 'customs_eur',
+        'port', 'model_year', 'customs_eur', 'poa_usd',
     )
 
     def _live_values(self):
@@ -537,13 +545,15 @@ class Quote(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
     def _onchange_programme(self):
         return self._live_values()
 
-    @onchange('model_year', 'car_condition')
+    @onchange('model_year', 'car_condition', 'own_initiative')
     def _onchange_year_or_condition(self):
-        """Year and condition decide the programme (owner, 2026-09-30) — the
-        form proposes it; the salesman can still pick another one."""
+        """Year, condition and (for a new current-year car) whether the
+        customer holds an initiative decide the programme (owner, 2026-09-30) —
+        the form proposes it; the salesman can still pick another one."""
         from car_import.services import programme as rules
         if self.model_year and self.car_condition:
-            decided = rules.decide(self.model_year, is_new=self.car_condition == 'new')
+            decided = rules.decide(self.model_year, is_new=self.car_condition == 'new',
+                                   has_own_initiative=self.own_initiative)
             if decided['programme']:
                 self.programme = decided['programme']
         result = self._live_values()

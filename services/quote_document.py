@@ -184,12 +184,18 @@ def _programme_block(quote):
                 'مش داخلة في إجمالي سعر البيع.')
     if quote.programme == rules.INITIATIVE:
         rows = [(rules.deposit_label(r), rules.usd(r['usd'])) for r in (quote.initiative_deposits or [])]
+        # The company provides the initiative: its price is the car + the
+        # initiative + the powers of attorney + the port fees (owner, 2026-09-30).
+        poa = [(POA_LABEL, rules.usd(quote.poa_usd))] if quote.poa_usd is not None else []
         if rows:
-            return ('قيمة المبادرة (الوديعة الدولارية)', rows,
+            return ('قيمة المبادرة (الوديعة الدولارية)', rows + poa,
                     'بتتدفع بالدولار وبترجع بعد 5 سنين، ومش داخلة في إجمالي سعر البيع.')
-        return ('قيمة المبادرة (الوديعة الدولارية)', [],
+        return ('قيمة المبادرة (الوديعة الدولارية)', poa,
                 'قيمة المبادرة للعربية دي بتتأكد من الشركة قبل التعاقد، وبتتدفع بالدولار وبترجع بعد 5 سنين.')
     return None
+
+
+POA_LABEL = 'ثمن التوكيلات'
 
 
 def _programme_html(quote):
@@ -214,6 +220,9 @@ def _programme_html(quote):
             f'<tr><td>{_escape(TIER_AR[t])}</td>'
             + ''.join(f'<td class="n">{_escape(value.get((t, g), "—"))}</td>' for g in regions) + '</tr>'
             for t in tiers)
+        if quote.poa_usd is not None:
+            body += (f'<tr><td>{_escape(POA_LABEL)}</td>'
+                     f'<td class="n" colspan="{len(regions)}">{_escape(rules.usd(quote.poa_usd))}</td></tr>')
         return f'{head}<table class="grid"><tr class="head"><td></td>{header}</tr>{body}</table>'
     if rows:
         table = ''.join(f'<tr><td>{_escape(label)}</td><td class="n">{_escape(value)}</td></tr>'

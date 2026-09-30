@@ -211,7 +211,8 @@ def price(gross_price_eur, with_eur1=False, shipping_type='', port='alexandria',
 def make_quote(partner, gross_price_eur, car_label='', listing=None, conversation=None,
                with_eur1=False, shipping_type='', port='alexandria',
                collect_from_showroom=False, admin_fee_discount_eur=None, price_source='',
-               programme='', model_year=None, car_condition='', initiative_filter=None):
+               programme='', model_year=None, car_condition='', initiative_filter=None,
+               own_initiative=None):
     """A quotation, frozen and marked sent. Raises ValidationError (an
     unapproved discount, no price) — the caller says why.
 
@@ -232,7 +233,7 @@ def make_quote(partner, gross_price_eur, car_label='', listing=None, conversatio
         collect_from_showroom=bool(collect_from_showroom),
         admin_fee_discount_eur=admin_fee_discount_eur or 0,
         programme=programme or '', model_year=model_year or None,
-        car_condition=car_condition or '',
+        car_condition=car_condition or '', own_initiative=own_initiative,
         valid_until=timezone.localdate() + timedelta(days=7),
         # `price_source` is a note to STAFF ("the customer typed this price —
         # check it"). It goes to the staff note, never into `notes`, which the

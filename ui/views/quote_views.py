@@ -190,6 +190,8 @@ car_quote_form_view = {
                         {"fields": [
                             {"name": "model_year", "string": _("Model year"), "widget": "number", "onChange": True},
                             {"name": "car_condition", "string": _("Condition"), "widget": "select", "onChange": True},
+                            {"name": "own_initiative", "string": _("The customer holds the initiative"),
+                             "widget": "switch", "onChange": True},
                             {"name": "programme", "string": _("Programme"), "widget": "select", "onChange": True},
                             {"name": "customs_eur", "string": _("Customs value"), "widget": "number",
                              "readonly": True},

@@ -1,20 +1,27 @@
 # -*- coding: utf-8 -*-
 """Which programme a car goes by — decided by its model year and whether it is new.
 
-The owner's rule of 2026-09-30, and it replaces «المبادرة بتسمح بزيرو موديل السنة»:
+The owner's rules of 2026-09-30 (two messages the same day):
 
-    current model year, NEW (zero km)  → personal import only → Port Said (105,000 EGP)
-                                          → customs duties, stated on the offer
+    current model year, NEW (zero km)  → the customer's OWN initiative if they hold one,
+                                          else personal import (the better route without
+                                          one) → Port Said (105,000 EGP); a personal import
+                                          states its customs on the offer
     current model year, USED            → the initiative → Alexandria (55,000 EGP)
     the three model years before it     → the initiative — the company provides one,
       (in 2026: 2023, 2024, 2025)          or the customer brings their own → Alexandria
     older                               → not importable
 
-So the programme is not a question for the customer and not a choice for the
-model: it is read off the car. The port follows it, and so does the block the
-offer must carry — the customs figure for a personal import, the initiative's
-USD deposit for an initiative car. On 2026-09-30 a quote priced from a
-screenshot carried neither, and the owner called the quote wrong.
+For a new current-year car whether the customer holds an initiative is the one
+question worth asking («بنسأل العميل لو عنده مبادرة»); everything else is read
+off the car. The port follows, and so does the block the offer must carry — the
+customs figure for a personal import; for an initiative car the USD deposit,
+plus the powers-of-attorney fee when the company provides the initiative («سعر
+العربية + المبادرة + ثمن التوكيلات + مصاريف الميناء»). On 2026-09-30 a quote
+priced from a screenshot carried none of it, and the owner called it wrong.
+
+A new current-year car lands at Port Said whichever programme it goes by — the
+owner's «الزيرو موديل السنة مينا بورسعيد».
 
 The contract runs three months from the second payment on both programmes; the
 initiative also needs its prior import approval (الموافقة الاستيرادية المسبقة).
@@ -25,8 +32,12 @@ from decimal import Decimal
 PERSONAL = 'personal'
 INITIATIVE = 'initiative'
 
-#: The port each programme lands at, and so the port fee on the offer.
+#: The port each programme lands at, and so the port fee on the offer — except
+#: a new current-year car, which lands at Port Said on either (`port_for`).
 PORTS = {PERSONAL: 'port_said', INITIATIVE: 'alexandria'}
+#: FeeSchedule code of the powers of attorney, charged in USD when the company
+#: provides the initiative.
+POA_FEE = 'powers_of_attorney'
 
 PROGRAMME_AR = {PERSONAL: 'استيراد شخصي', INITIATIVE: 'مبادرة'}
 PORT_AR = {'port_said': 'ميناء بورسعيد', 'alexandria': 'ميناء الإسكندرية'}
@@ -46,8 +57,11 @@ def contract_term_ar(programme):
 
 
 def current_year(on=None):
+    """The year of `on` (a date), else this year. A form's onchange hands dates
+    over as text, which counts as not given."""
     from django.utils import timezone
-    return (on or timezone.localdate()).year
+    year = getattr(on, 'year', None)
+    return year if isinstance(year, int) else timezone.localdate().year
 
 
 def is_new_listing(listing):
@@ -71,12 +85,28 @@ def normalise_condition(value):
     return None
 
 
-def decide(model_year, is_new=None, on=None):
+def port_for(programme, model_year=None, is_new=None, on=None):
+    """Port Said for a personal import and for any new current-year car;
+    Alexandria for every other initiative car. `on` pins "current year" to the
+    quotation's date, so an old quotation keeps its port."""
+    if programme == PERSONAL:
+        return 'port_said'
+    try:
+        year = int(model_year) if model_year else None
+    except (TypeError, ValueError):
+        year = None
+    if is_new and year and year >= current_year(on):
+        return 'port_said'
+    return PORTS.get(programme)
+
+
+def decide(model_year, is_new=None, has_own_initiative=None, on=None):
     """{'programme', 'port', 'problem', 'why'} for a car.
 
     `problem` is None when a programme was decided, else one of `year_needed`,
-    `condition_needed` (a current-model-year car: new or used decides it) and
-    `too_old`.
+    `condition_needed` (a current-model-year car: new or used decides it),
+    `initiative_holder_needed` (a new current-year car: the customer's own
+    initiative decides it) and `too_old`.
     """
     now = current_year(on)
     try:
@@ -89,9 +119,16 @@ def decide(model_year, is_new=None, on=None):
     if year >= now:
         if is_new is None:
             return {'programme': None, 'port': None, 'problem': 'condition_needed',
-                    'why': (f'A {year} car goes by personal import when it is new (zero km) and by the '
-                            f'initiative when it is used — which one is it?')}
-        programme = PERSONAL if is_new else INITIATIVE
+                    'why': (f'A {year} car goes by the initiative when it is used; a new one (zero km) by the '
+                            f'customer\'s own initiative or by personal import — which one is it?')}
+        if not is_new:
+            programme = INITIATIVE
+        elif has_own_initiative is None:
+            return {'programme': None, 'port': None, 'problem': 'initiative_holder_needed',
+                    'why': (f'A new {year} car can come on the customer\'s OWN initiative; without one it is a '
+                            f'personal import. Whether they hold an initiative is not known.')}
+        else:
+            programme = INITIATIVE if has_own_initiative else PERSONAL
     elif year >= now - INITIATIVE_YEARS_BACK:
         programme = INITIATIVE
     else:
@@ -99,7 +136,17 @@ def decide(model_year, is_new=None, on=None):
                 'why': (f'Model {year} is older than the initiative allows: model '
                         f'{now - INITIATIVE_YEARS_BACK} or newer.'),
                 'oldest_year': now - INITIATIVE_YEARS_BACK}
-    return {'programme': programme, 'port': PORTS[programme], 'problem': None, 'why': ''}
+    return {'programme': programme, 'port': port_for(programme, year, is_new, on), 'problem': None, 'why': ''}
+
+
+def poa_usd(programme, own_initiative):
+    """The powers-of-attorney fee (USD) when the COMPANY provides the
+    initiative — i.e. an initiative car whose customer did not say they bring
+    their own. None otherwise, or when the fee table has no row."""
+    if programme != INITIATIVE or own_initiative:
+        return None
+    from car_import.services.pricing import _fee
+    return _fee(POA_FEE, None)
 
 
 def car_model_of(listing=None, vehicle=None, text=''):
@@ -161,7 +208,7 @@ def eur(value):
     return f'{text[:-3] if text.endswith(".00") else text} €'
 
 
-def for_agent(programme, port, customs=None, deposits=None, car_model=None, model_year=None):
+def for_agent(programme, port, customs=None, deposits=None, car_model=None, model_year=None, poa=None):
     """What the assistant is told to say about the programme, in one block."""
     data = {
         'programme': PROGRAMME_AR.get(programme, programme),
@@ -191,4 +238,9 @@ def for_agent(programme, port, customs=None, deposits=None, car_model=None, mode
             data['initiative_value'] = None
             data['initiative_note'] = (f'The initiative deposit sheet has no value for {car}. Say the initiative '
                                        f'value for this car is confirmed by a colleague — never guess a number.')
+        if poa is not None:
+            data['powers_of_attorney'] = usd(poa)
+            data['price_is'] = ('The company provides the initiative, so the price is: the car (EUR total) + the '
+                                'initiative value + the powers of attorney + the port fees. Say all four. If the '
+                                'customer brings their OWN initiative, call again with has_own_initiative=true.')
     return data
