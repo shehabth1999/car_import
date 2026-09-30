@@ -298,18 +298,12 @@ def _notes(quote):
     ]
     # The sheet says "about 50,000 EGP" for every port. The owner's message of
     # 2026-09-16 gives two different figures, and the difference between them
-    # is 50,000 EGP — too much to leave inside the word "about".
-    if quote.port_fee_egp:
-        port = 'ميناء الإسكندرية' if quote.port == 'alexandria' else 'ميناء بورسعيد'
-        notes.append(
-            f'الأسعار باليورو مش شاملة مصاريف {port}، وهي '
-            f'{quote.port_fee_egp:,.0f} جنيه بتتدفع عند الوصول.')
-    else:
+    # is 50,000 EGP — too much to leave inside the word "about". The port's own
+    # line in the "due on arrival" block states it — and the showroom saving
+    # and the total under it; the notes only repeated them, and the one-page
+    # offer needs those lines back.
+    if not quote.port_fee_egp:
         notes.append('الأسعار باليورو مش شاملة مصاريف الميناء في مصر.')
-    if quote.showroom_fee_egp:
-        notes.append(
-            f'الاستلام من المعرض بيخصم {abs(quote.showroom_fee_egp):,.0f} جنيه من مصاريف الميناء، '
-            f'فالمستحق عند الوصول {quote.egp_due_on_arrival:,.0f} جنيه.')
     notes.append(f'نسبة مقدم التعاقد من إجمالي سعر البيع: {_pct(quote.deposit_pct)}%.')
     if quote.programme:
         from car_import.services import programme as rules
@@ -346,11 +340,11 @@ def as_html(quote):
         rows_egp = ''.join(
             f'<tr><td>{_escape(label)}</td><td class="n">{_amount(amount, EGP)}</td></tr>'
             for label, amount, _code in egp_lines)
-        block_egp = (
-            '<h2>مصاريف بتتحصّل في مصر عند الوصول</h2>'
-            f'<table>{rows_egp}'
-            f'<tr class="total"><td>الإجمالي بالجنيه</td>'
-            f'<td class="n">{_amount(quote.egp_due_on_arrival, EGP)}</td></tr></table>')
+        # A total under a single line is the same number twice.
+        total_egp = (f'<tr class="total"><td>الإجمالي بالجنيه</td>'
+                     f'<td class="n">{_amount(quote.egp_due_on_arrival, EGP)}</td></tr>'
+                     if len(egp_lines) > 1 else '')
+        block_egp = f'<h2>مصاريف بتتحصّل في مصر عند الوصول</h2><table>{rows_egp}{total_egp}</table>'
 
     customer_rows = (f'<tr><td>الاسم{" (زي البطاقة)" if who["from_id"] else ""}</td>'
                      f'<td class="v">{_escape(who["name"] or "—")}</td></tr>')
@@ -384,9 +378,9 @@ def as_html(quote):
  @page {{ size: A4; margin: 12mm 14mm; }}
  body {{ font-family: 'Cairo', 'Noto Naskh Arabic', 'Noto Sans Arabic', 'DejaVu Sans', sans-serif;
         color: #16324f; font-size: 10pt; line-height: 1.35; }}
- h1 {{ font-size: 17pt; margin: 0 0 1mm; }}
+ h1 {{ font-size: 15pt; margin: 0 0 0.5mm; }}
  h2 {{ font-size: 11pt; margin: 3mm 0 1mm; color: #55708c; }}
- .head {{ border-bottom: 2px solid #16324f; padding-bottom: 2mm; margin-bottom: 3mm; }}
+ .head {{ border-bottom: 2px solid #16324f; padding-bottom: 1.5mm; margin-bottom: 2mm; }}
  .meta {{ color: #55708c; font-size: 9pt; }}
  table {{ width: 100%; border-collapse: collapse; }}
  td {{ padding: 0.8mm 1mm; border-bottom: 1px solid #dfe6ee; }}
@@ -401,12 +395,12 @@ def as_html(quote):
  table.options a {{ color: #55708c; font-size: 8pt; text-decoration: none; }}
  table.grid tr.head td {{ color: #55708c; font-size: 8.5pt; }}
  h2 span.meta {{ font-weight: 400; font-size: 8pt; }}
- .due {{ margin: 3mm 0 1.5mm; padding: 2.5mm 4mm; background: #eef6f1; border-right: 4px solid #1f7a4d;
+ .due {{ margin: 2.5mm 0 1mm; padding: 1.8mm 4mm; background: #eef6f1; border-right: 4px solid #1f7a4d;
          font-size: 12pt; font-weight: 700; }}
  p {{ margin: 1.5mm 0; }}
  /* Each line finds its own direction: the IBAN left to right, a name right to left. */
- pre {{ font-family: inherit; white-space: pre-wrap; margin: 0; padding: 2mm 3mm; line-height: 1.35;
-        background: #f6f8fb; unicode-bidi: plaintext; text-align: start; font-size: 9pt;
+ pre {{ font-family: inherit; white-space: pre-wrap; margin: 0; padding: 1.5mm 3mm; line-height: 1.25;
+        background: #f6f8fb; unicode-bidi: plaintext; text-align: start; font-size: 8.5pt;
         page-break-inside: avoid; }}
  ol {{ color: #55708c; font-size: 8.5pt; line-height: 1.4; padding-right: 5mm; margin: 0; }}
 </style></head><body>
