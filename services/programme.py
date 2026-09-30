@@ -3,10 +3,10 @@
 
 The owner's rules of 2026-09-30 (two messages the same day):
 
-    current model year, NEW (zero km)  → the customer's OWN initiative if they hold one,
-                                          else personal import (the better route without
-                                          one) → Port Said (105,000 EGP); a personal import
-                                          states its customs on the offer
+    current model year, NEW (zero km)  → the customer's OWN initiative if they hold one
+                                          (→ Alexandria), else personal import (the better
+                                          route without one) → Port Said (105,000 EGP),
+                                          its customs stated on the offer
     current model year, USED            → the initiative → Alexandria (55,000 EGP)
     the three model years before it     → the initiative — the company provides one,
       (in 2026: 2023, 2024, 2025)          or the customer brings their own → Alexandria
@@ -20,8 +20,8 @@ plus the powers-of-attorney fee when the company provides the initiative («سع
 العربية + المبادرة + ثمن التوكيلات + مصاريف الميناء»). On 2026-09-30 a quote
 priced from a screenshot carried none of it, and the owner called it wrong.
 
-A new current-year car lands at Port Said whichever programme it goes by — the
-owner's «الزيرو موديل السنة مينا بورسعيد».
+Every initiative car lands at Alexandria, a new one included («المبادرات بتتبعت
+كلها على اسكندرية»); only a personal import goes to Port Said.
 
 The contract runs three months from the second payment on both programmes; the
 initiative also needs its prior import approval (الموافقة الاستيرادية المسبقة).
@@ -32,8 +32,7 @@ from decimal import Decimal
 PERSONAL = 'personal'
 INITIATIVE = 'initiative'
 
-#: The port each programme lands at, and so the port fee on the offer — except
-#: a new current-year car, which lands at Port Said on either (`port_for`).
+#: The port each programme lands at, and so the port fee on the offer.
 PORTS = {PERSONAL: 'port_said', INITIATIVE: 'alexandria'}
 #: FeeSchedule code of the powers of attorney, charged in USD when the company
 #: provides the initiative.
@@ -86,17 +85,10 @@ def normalise_condition(value):
 
 
 def port_for(programme, model_year=None, is_new=None, on=None):
-    """Port Said for a personal import and for any new current-year car;
-    Alexandria for every other initiative car. `on` pins "current year" to the
-    quotation's date, so an old quotation keeps its port."""
-    if programme == PERSONAL:
-        return 'port_said'
-    try:
-        year = int(model_year) if model_year else None
-    except (TypeError, ValueError):
-        year = None
-    if is_new and year and year >= current_year(on):
-        return 'port_said'
+    """Port Said for a personal import; Alexandria for EVERY initiative car,
+    a new one on the customer's own initiative included (owner, 2026-09-30:
+    «المبادرات بتتبعت كلها على اسكندرية»). The other arguments are kept for
+    the callers; the programme alone decides."""
     return PORTS.get(programme)
 
 

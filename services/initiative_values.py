@@ -72,15 +72,22 @@ def find_model(text):
     brand, car_model = catalogue.parse(text)
     if car_model is not None:
         return car_model
-    # "C 180" / "c180": try the words glued together, then a loose match.
     words = [w for w in re.split(r'[\s,/|،]+', str(text or '')) if w and not year_in(w)]
-    glued = ''.join(words)
-    if glued:
-        brand, car_model = catalogue.parse(glued)
+    # "GLC 300 موديل 2026 زيرو": the Arabic around a Latin model name hid it
+    # (live 2026-09-30 — the offer said the sheet had no value). Model names
+    # are Latin letters and digits, so try those alone before gluing.
+    latin = [w for w in words if re.search(r'[A-Za-z0-9]', w)]
+    candidates = ([' '.join(latin), ''.join(latin)] if latin and len(latin) < len(words) else []) \
+        + [''.join(words)]
+    for candidate in candidates:
+        if not candidate:
+            continue
+        # "C 180" / "c180": the words glued together, then a loose match.
+        brand, car_model = catalogue.parse(candidate)
         if car_model is not None:
             return car_model
         hits = [m for m in CarModel.objects.all()
-                if catalogue.norm(glued) in {catalogue.norm(n) for n in m.names()}]
+                if catalogue.norm(candidate) in {catalogue.norm(n) for n in m.names()}]
         if len(hits) == 1:
             return hits[0]
     return None
