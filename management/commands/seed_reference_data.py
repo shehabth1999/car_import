@@ -330,7 +330,7 @@ class Command(BaseCommand):
                 ('car_import.office_visit_text', CONTRACT_CHANGE_TEXT,
                  'الرسالة اللي المساعد بيبعتها للعميل اللي عايز يعدّل في العقد: دعوة لمقر الشركة بالعنوان. '
                  'اتبعتت زي ما هي حرفياً.'),
-                ('car_import.office_map_link', '',
+                ('car_import.office_map_link', 'https://maps.app.goo.gl/tREoajEJNPsKTcRv5',
                  'لينك مكان مقر الشركة على الخريطة (Google Maps). بيتضاف تحت رسالة تعديل العقد كسطر '
                  '«🗺️ اللوكيشن». فاضي = الرسالة بتتبعت بالعنوان بس.'),
             ):
