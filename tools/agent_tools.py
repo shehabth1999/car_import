@@ -38,6 +38,57 @@ def _failed(name, exc):
     return {"success": False, "error": str(exc), "error_type": "unknown"}
 
 
+def _model_class(model):
+    """'C' for «C-Class», «سي كلاس», «c class» — a class, not a model. None for
+    a model name. A customer who said "سي كلاس" was told nothing matched, then
+    shown GLCs because "C" is inside "GLC" (live, 2026-10-01)."""
+    import re
+
+    from car_import.services.initiative_values import _latin_classes
+    text = _latin_classes(' '.join(str(model or '').replace('-', ' ').split()))
+    match = re.fullmatch(r'([A-Za-z]{1,3})\s*(?:class|klasse|كلاس)', text.strip(), re.IGNORECASE)
+    return match.group(1).upper() if match else None
+
+
+def _eur_egp_rate():
+    """EGP per EUR as management published it, or None."""
+    try:
+        from car_import.models import FxReference
+        row = (FxReference.in_force(currency_from__code='EUR', currency_to__code='EGP')
+               .order_by('-effective_from', '-id').first())
+        if row is not None and row.rate:
+            return float(row.rate)
+        row = (FxReference.in_force(currency_from__code='EGP', currency_to__code='EUR')
+               .order_by('-effective_from', '-id').first())
+        return (1 / float(row.rate)) if row is not None and row.rate else None
+    except Exception:
+        logger.exception("car_import: could not read the exchange rate")
+        return None
+
+
+def _import_budget_eur(price_max, currency):
+    """(ceiling on the German advert price in EUR or None, what to tell the model).
+
+    The budget is converted HERE, at the company's rate — never by the model,
+    which turned 3,000,000 EGP into 30,000 € on 2026-10-01."""
+    if not price_max:
+        return None, ''
+    amount = float(price_max)
+    code = (currency or '').strip().upper() or ('EGP' if amount >= 500000 else 'EUR')
+    if code == 'EUR':
+        return amount, f"Adverts at or under {amount:,.0f} € (the German advert price, not the customer's total)."
+    rate = _eur_egp_rate()
+    if not rate:
+        return None, ("The budget is in EGP and no EUR/EGP rate is published, so the import search was NOT "
+                      "narrowed by budget. Do not say these cars fit the budget and never convert it yourself: "
+                      "show them as options and ask ONE question for the budget in euros.")
+    ceiling = round(amount / rate)
+    return ceiling, (f"The budget of {amount:,.0f} EGP is about {ceiling:,.0f} € at the company's rate "
+                     f"({rate:g} EGP per EUR); adverts at or under that German advert price are shown. It is "
+                     f"indicative — the customer's total cost is the price from ka_quote_car. Do not state the "
+                     f"rate or the converted figure to the customer.")
+
+
 # ── find a car ───────────────────────────────────────────────────────────────
 @tool(
     name="ka_search_cars",
@@ -51,7 +102,10 @@ def _failed(name, exc):
         "browse and come back with the car they like. Set `source` to `our_cars` for the cars the company "
         "has NOW (Egypt showroom with immediate delivery, and cars in Germany), `import` to search cars to "
         "import from Europe, or `both` when the customer did not choose. A budget goes in `price_min` / "
-        "`price_max` with `currency` EGP (showroom cars in Egypt) or EUR (cars in Germany). Returns at most "
+        "`price_max` EXACTLY as the customer said it, with `currency` = the currency THEY used (EGP or EUR) — "
+        "NEVER convert a budget yourself; the tool converts it at the company's rate and tells you what it "
+        "did. `model` may be a model (C200) or a class (C-Class, سي كلاس). Put the references the customer "
+        "already turned down in `exclude_references` so they are not offered again. Returns at most "
         "a few cars, each with a `reference` (use it for photos), year, mileage, price, where it is and its "
         "`link`; `matching` is how many match in all and `see_all_on_website` links to all of them — share "
         "that link instead of listing more cars. Import cars carry the German advert price, NOT the "
@@ -67,11 +121,15 @@ def _failed(name, exc):
                       "description": "our_cars only: egypt = ready in the showroom now; default any"},
             "brand": {"type": "string", "description": "The brand the customer named, as they wrote it, "
                                                        "e.g. Mercedes, مرسيدس, BMW"},
-            "model": {"type": "string", "description": "The model if they named one, e.g. C200, GLA 180, X1"},
+            "model": {"type": "string", "description": "The model or class if they named one, e.g. C200, "
+                                                       "GLA 180, X1, C-Class, سي كلاس"},
             "price_min": {"type": "number", "description": "Lowest price the customer mentioned"},
-            "price_max": {"type": "number", "description": "The customer's budget ceiling"},
+            "price_max": {"type": "number", "description": "The customer's budget ceiling, as they said it — "
+                                                           "3 million EGP is 3000000 with currency EGP"},
             "currency": {"type": "string", "enum": ["EGP", "EUR"],
-                         "description": "The budget's currency: EGP for the Egypt showroom, EUR for Germany"},
+                         "description": "The currency the CUSTOMER used for the budget. Never convert"},
+            "exclude_references": {"type": "array", "items": {"type": "string"},
+                                   "description": "References already shown that the customer turned down"},
             "year_min": {"type": "integer", "description": "Oldest acceptable model year"},
             "year_max": {"type": "integer", "description": "Newest acceptable model year"},
             "max_mileage": {"type": "integer", "description": "Highest acceptable odometer in km (import only)"},
@@ -85,7 +143,8 @@ def ka_search_cars(context, source: str = 'both', brand: Optional[str] = None,
                    price_max: Optional[float] = None, currency: Optional[str] = None,
                    year_min: Optional[int] = None, year_max: Optional[int] = None,
                    max_mileage: Optional[int] = None, limit: int = 3,
-                   where: str = 'any', make: Optional[str] = None) -> Dict[str, Any]:
+                   where: str = 'any', make: Optional[str] = None,
+                   exclude_references=None) -> Dict[str, Any]:
     """The company's own cars, and the market to import from — always narrowed first."""
     try:
         from car_import.services import website_catalog
@@ -127,15 +186,29 @@ def ka_search_cars(context, source: str = 'both', brand: Optional[str] = None,
             # The marketplace wants its own spelling ("Mercedes-Benz"), not the
             # customer's ("مرسيدس"): the catalogue translates, once.
             from car_import.services import catalogue
-            brand_row, model_row = catalogue.resolve(brand, model) if brand else (None, None)
-            if brand_row is None and (brand or model):
-                brand_row, model_row = catalogue.parse(' '.join(x for x in [brand, model] if x))
+            model_class = _model_class(model)
+            named_model = None if model_class else model
+            brand_row, model_row = catalogue.resolve(brand, named_model) if brand else (None, None)
+            if brand_row is None and (brand or named_model):
+                brand_row, model_row = catalogue.parse(' '.join(x for x in [brand, named_model] if x))
+            ceiling_eur, budget_note = _import_budget_eur(price_max, currency)
             found = ka_search_vehicle_listings(
                 context, make=brand_row.name if brand_row else brand,
-                model=model_row.name if model_row else model, year_min=year_min,
-                max_mileage=max_mileage, limit=max(1, min(int(limit or 3), 5)))
+                model=model_row.name if model_row else named_model, year_min=year_min, year_max=year_max,
+                max_mileage=max_mileage, limit=max(1, min(int(limit or 3), 5)),
+                price_max_eur=ceiling_eur, model_class=model_class,
+                exclude_references=exclude_references)
             if found.get('success'):
                 data['import'] = found['data']
+                if budget_note:
+                    data['import']['budget'] = budget_note
+                if ceiling_eur and not found['data'].get('count'):
+                    data['import']['do_now'] = (
+                        f"Nothing is advertised at or under {ceiling_eur:,.0f} € for this search. Say so "
+                        f"plainly — do NOT show a dearer car as if it fits. Offer ONE of: a higher budget, "
+                        f"another model, or an older model year.")
+                if model_class:
+                    data['import']['class_searched'] = f"{model_class}-Class: models named {model_class} + a number"
             else:
                 errors.append(f"import: {found.get('error')}")
         if not data:
@@ -176,7 +249,11 @@ def ka_search_cars(context, source: str = 'both', brand: Optional[str] = None,
         "Then write ONE short line asking whether to go ahead, without figures. `quotation_reference` with "
         "`send_offer` true resends that same offer while it is valid, and prices it again when it expired. "
         "Pass `initiative_tier` / `initiative_region` only if the customer said them — otherwise every "
-        "variant is stated. Do NOT use it for showroom cars (WC-…), and do not send the same offer twice."
+        "variant is stated. To send the offer for the car you just priced, call it with `send_offer` true and "
+        "NOTHING else — it reuses that car and its inputs; never ask for the screenshot again and NEVER make "
+        "up a link (`listing_reference` takes only a reference from ka_search_cars or a link the customer "
+        "sent). A personal import always includes the EUR 1 certificate. Do NOT use it for showroom cars "
+        "(WC-…), and do not send the same offer twice."
     ),
     category="car_import",
     side_effect=True,
@@ -279,6 +356,40 @@ def ka_quote_car(context, send_offer: bool = False, listing_reference: Optional[
             if has_own_initiative is None:
                 has_own_initiative = old.own_initiative
             collect_from_showroom = collect_from_showroom or old.collect_from_showroom
+
+        # A link the customer never sent is a link the model made up (live,
+        # 2026-10-01: asked for the offer, it passed an invented mobile.de URL,
+        # failed, and asked for the screenshot it already had). Drop it.
+        from car_import.services import agent_help
+        link = str(listing_reference or '').strip()
+        if link.lower().startswith(('http', 'www.')) and not agent_help.customer_sent_link(
+                getattr(context, 'conversation', None), link):
+            logger.warning("ka_quote_car: dropped a link the customer never sent: %s", link[:120])
+            listing_reference = None
+
+        # The offer, or a re-price, with nothing to price from: it is the car
+        # that was just priced, with the inputs it was priced with.
+        if not (listing_reference or gross_price_eur or qref):
+            last = agent_help.last_pricing(partner)
+            if not last:
+                return {"success": False, "error_type": "no_price_source",
+                        "error": "There is no car to price: no advert reference, no advert price, and no car "
+                                 "priced earlier in this chat.",
+                        "do_now": "Use the price and car you already read off the customer's screenshot "
+                                  "(gross_price_eur, car_description, model_year, condition). Ask for a "
+                                  "screenshot only if the customer never sent one. NEVER invent a link."}
+            listing_reference = last.get('listing_reference')
+            gross_price_eur = last.get('gross_price_eur')
+            car_description = car_description or last.get('car_description', '')
+            model_year = model_year or last.get('model_year')
+            condition = condition or last.get('condition', '')
+            with_eur1 = with_eur1 or bool(last.get('with_eur1'))
+            shipping_type = shipping_type or last.get('shipping_type', '')
+            collect_from_showroom = collect_from_showroom or bool(last.get('collect_from_showroom'))
+            initiative_tier = initiative_tier or last.get('initiative_tier')
+            initiative_region = initiative_region or last.get('initiative_region')
+            if has_own_initiative is None:
+                has_own_initiative = last.get('has_own_initiative')
 
         if str(listing_reference or '').strip().upper().startswith('WC-'):
             return {"success": False, "error_type": "our_own_car",
@@ -465,8 +576,13 @@ def ka_initiative_deposit(context, model: str, year: Optional[int] = None, tier:
 
         found = initiative_values.lookup(model, year=year, tier=tier, region=region)
         if not found.get('found'):
-            found["do_now"] = ("Say plainly that this model/year is not in the initiative table and offer the "
-                               "closest model or year listed — do not guess a figure, and do not escalate.")
+            from car_import.services import agent_help
+            found["colleague_tagged"] = agent_help.ask_staff(
+                getattr(context, 'partner', None), getattr(context, 'conversation', None), 'initiative',
+                found.get('car') or model, year or initiative_values.year_in(model))
+            found["do_now"] = ("Say plainly that this model/year is not in the initiative table, that a colleague "
+                               "is confirming the value now, and offer the closest year listed (labelled with its "
+                               "year) — do not guess a figure, and do not escalate.")
             return {"success": True, "data": found}
         found["rules"] = ("State these USD figures exactly. It is paid in dollars and returned after 5 years; "
                           "it is not part of the car's EUR price. One short message, no questions about "
@@ -474,6 +590,66 @@ def ka_initiative_deposit(context, model: str, year: Optional[int] = None, tier:
         return {"success": True, "data": found}
     except Exception as e:
         return _failed("ka_initiative_deposit", e)
+
+
+# ── the customs of a new car ─────────────────────────────────────────────────
+@tool(
+    name="ka_customs_value",
+    display_name="Customs for a new car (personal import)",
+    description=(
+        "Use this tool whenever the customer asks what the customs are — «الجمارك», «الجمرك», «الجمارك والضرايب» "
+        "— for a model. A NEW current-year car imported personally pays customs instead of the initiative "
+        "deposit. Call it at once with the model as the customer wrote it (e.g. «GLB 200», «سي 200») and the "
+        "model year if they gave one. Do NOT answer customs from the knowledge search, do not explain engine "
+        "sizes or countries of origin, and never guess. It returns the figure from the company's customs table "
+        "in EUR — state it exactly and say it is paid on top of the car's price and the port fees. When the "
+        "table has no figure, a colleague is tagged in the chat by the tool: tell the customer a colleague is "
+        "confirming it now, and carry on."
+    ),
+    category="car_import",
+    parameters_schema={
+        "type": "object",
+        "properties": {
+            "model": {"type": "string", "description": "The model as the customer wrote it, e.g. GLB 200, C200"},
+            "year": {"type": "integer", "description": "The model year, when the customer gave one"},
+        },
+        "required": ["model"],
+    },
+)
+def ka_customs_value(context, model: str, year: Optional[int] = None) -> Dict[str, Any]:
+    """Straight from the customs table (CustomsValuation) — the owner's list.
+
+    Until 2026-10-01 the figure existed only inside a priced quotation, so
+    "what are the customs for the GLB 200?" got a lecture about engine sizes
+    and no number, three times, to the client's GM."""
+    try:
+        from car_import.services import agent_help, initiative_values
+        from car_import.services import programme as rules
+
+        car_model = initiative_values.find_model(model)
+        wanted = int(year) if str(year or '').strip().isdigit() else (
+            initiative_values.year_in(model) or rules.current_year())
+        row = rules.customs_row(car_model, wanted) if car_model is not None else None
+        if row is None:
+            tagged = agent_help.ask_staff(getattr(context, 'partner', None),
+                                          getattr(context, 'conversation', None), 'customs',
+                                          car_model or model, wanted)
+            return {"success": True, "data": {
+                "found": False, "car": str(car_model) if car_model is not None else model, "year": wanted,
+                "colleague_tagged": tagged,
+                "say_to_customer_ar": "قيمة الجمارك للعربية دي زميلي بيأكدها لحضرتك دلوقتي وهرجعلك بيها.",
+                "do_now": ("Say that line and carry on. Do not guess a figure, an engine size or a country of "
+                           "origin, and do not advise buying the car in Egypt."),
+            }}
+        return {"success": True, "data": {
+            "found": True, "car": str(car_model), "model_year_in_table": row.model_year,
+            "customs_eur": rules.eur(row.value_eur),
+            "rules": ("State this figure exactly, in euros. It is the customs of a NEW car imported personally: "
+                      "paid on top of the car's price and the port fees (Port Said). A used car goes by the "
+                      "initiative instead — a deposit, not customs."),
+        }}
+    except Exception as e:
+        return _failed("ka_customs_value", e)
 
 
 # ── an existing deal ─────────────────────────────────────────────────────────

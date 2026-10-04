@@ -42,14 +42,21 @@ def partner_facts(partner):
         lines.append('الاسم في البطاقة (اتقرت ومتسجّلة، وده اللي بيتكتب في العرض والفاتورة): %s'
                      % partner.id_full_name)
     else:
-        lines.append('البطاقة: لسه متقرتش — العرض بيطلع بالاسم اللي في الشات لحد ما العميل يبعت البطاقة.')
+        lines.append('البطاقة: لسه متقرتش — العرض المكتوب محتاج الاسم رباعي زي البطاقة والرقم القومي '
+                     '(صورة البطاقة أحسن). الأرقام نفسها بتتقال من غير ما تستنى.')
     if getattr(partner, 'phone', None):
         lines.append('الرقم: %s' % partner.phone)
     if getattr(partner, 'residence_country', None):
         lines.append('بلد الإقامة: %s%s' % (
             partner.residence_country, ' (مصري بالخارج)' if getattr(partner, 'is_expat', False) else ''))
     if getattr(partner, 'initiative_status', None):
-        lines.append('حالة المبادرة: %s' % partner.initiative_status)
+        # The answer to «معاك مبادرة؟», kept so it is asked once (`agent_help`).
+        from car_import.services import agent_help
+        holds = agent_help.known_initiative(partner)
+        lines.append('المبادرة: %s' % (
+            'العميل قال إنه معندوش مبادرة — متسألوش تاني، ومرّر has_own_initiative=false' if holds is False
+            else 'العميل معاه مبادرة (%s) — متسألوش تاني، ومرّر has_own_initiative=true'
+                 % partner.initiative_status))
     if getattr(partner, 'budget_band', None):
         lines.append('الميزانية: %s' % partner.budget_band)
     if getattr(partner, 'kyc_complete', False):
@@ -153,7 +160,9 @@ def sales_facts(partner, deal):
                 invoice.name, invoice.get_state_display(), f'{invoice.remaining_due:,.2f}'))
         waiting = PaymentReceipt.all_objects.filter(partner_id=partner.pk, state='pending').count()
         if waiting:
-            lines.append('فيه %d تحويل مستني تأكيد المحاسب — متأكدش للعميل إن الفلوس وصلت.' % waiting)
+            lines.append('فيه %d صورة تحويل مستنية تأكيد المحاسب. لو العميل سأل عنها قول «استلمنا صورة التحويل '
+                         'والحسابات بتراجعها» بس — عمرك ما تقول «وصلنا تحويل» ولا «الفلوس وصلت»، ومتفتحش '
+                         'الموضوع من نفسك.' % waiting)
         if deal is not None:
             from car_import.models import Contract
             from car_import.services import sales_flow
@@ -275,6 +284,9 @@ HUMAN_TOPIC_WORDS = (
     ('complaint', ('شكوى', 'شكوي', 'مش راضي', 'زعلان من', 'عيب في العربية', 'اتخدعت')),
     ('legal', ('محامي', 'قضية', 'محضر', 'قانوني')),
     ('instalment_amount', ('القسط كام', 'قيمة القسط', 'القسط هيبقى', 'هدفع كام في الشهر')),
+    # «عايز ادفع على 3 دفعات» is a payment schedule, not the instalment plan.
+    ('payment_schedule', ('على دفعات', '3 دفعات', '٣ دفعات', 'تلات دفعات', 'ثلاث دفعات', 'دفعتين',
+                          'على دفعتين', '4 دفعات', 'اربع دفعات', 'أربع دفعات')),
 )
 
 

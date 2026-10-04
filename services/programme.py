@@ -151,14 +151,25 @@ def car_model_of(listing=None, vehicle=None, text=''):
     return initiative_values.find_model(text) if text else None
 
 
-def customs_eur(car_model, model_year):
-    """The customs figure for a personal import — the amount payable (client,
-    2026-09-16) — or None when the table has no row for this car."""
+def customs_row(car_model, model_year):
+    """The customs table's row for a car: its own model year, else the year
+    before it — a new car is sold as next year's model from the autumn, and
+    the 2027 car IS the 2026 one («موديل 2026 هي هي موديل 2027», the client's
+    GM, 2026-10-01, after the assistant refused him a figure three times).
+    None when neither year is in the table."""
     if car_model is None or not model_year:
         return None
     from car_import.models import CustomsValuation
-    row = CustomsValuation.in_force(car_model=car_model, model_year=int(model_year)).first()
-    return Decimal(row.value_eur) if row is not None and row.value_eur is not None else None
+    year = int(model_year)
+    return (CustomsValuation.in_force(car_model=car_model, model_year__in=[year, year - 1])
+            .exclude(value_eur__isnull=True).order_by('-model_year').first())
+
+
+def customs_eur(car_model, model_year):
+    """The customs figure for a personal import — the amount payable (client,
+    2026-09-16) — or None when the table has no row for this car."""
+    row = customs_row(car_model, model_year)
+    return Decimal(row.value_eur) if row is not None else None
 
 
 def initiative_deposits(car_model, model_year, tier=None, region=None):
@@ -212,12 +223,14 @@ def for_agent(programme, port, customs=None, deposits=None, car_model=None, mode
         if customs is not None:
             data['customs'] = eur(customs)
             data['customs_note'] = ('Personal import: this customs figure is on the offer and is NOT part of '
-                                    'the EUR total. State it exactly.')
+                                    'the EUR total. State it exactly. The price is the car + this customs '
+                                    'figure + the port fees — say all three.')
         else:
             data['customs'] = None
             data['customs_note'] = (f'Personal import pays customs, but the customs table has no figure for '
-                                    f'{car}. Say the car carries customs duties and a colleague confirms the '
-                                    f'amount before contracting — never guess a number.')
+                                    f'{car}. A colleague was tagged in the chat to supply it. Say the car '
+                                    f'carries customs duties and a colleague is confirming the amount now — '
+                                    f'never guess a number, an engine size or a country of origin.')
     elif programme == INITIATIVE:
         if deposits:
             data['initiative_value'] = [{'variant': deposit_label(r), 'year': r['year'],
@@ -228,8 +241,9 @@ def for_agent(programme, port, customs=None, deposits=None, car_model=None, mode
                                        'them all in one line, do not interrogate.')
         else:
             data['initiative_value'] = None
-            data['initiative_note'] = (f'The initiative deposit sheet has no value for {car}. Say the initiative '
-                                       f'value for this car is confirmed by a colleague — never guess a number.')
+            data['initiative_note'] = (f'The initiative deposit sheet has no value for {car}. A colleague was '
+                                       f'tagged in the chat to supply it. Say a colleague is confirming the '
+                                       f'initiative value for this car now — never guess a number.')
         if poa is not None:
             data['powers_of_attorney'] = usd(poa)
             data['price_is'] = ('The company provides the initiative, so the price is: the car (EUR total) + the '

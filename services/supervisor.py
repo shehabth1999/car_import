@@ -35,7 +35,9 @@ PROMISE_PATTERNS = [
     # "The money arrived" is the accountant's sentence, and the system sends it
     # when they press Accept. These catch the assistant AFFIRMING it — not
     # "لما التحويل يوصل" or "استلمنا صورة التحويل", which it now says all day.
-    (re.compile(r'(?<![يتهن])(وصل|وصلنا|وصلتنا|وصلت)\s+(التحويل|الفلوس|المبلغ)'), 'confirming money arrived'),
+    # With or without «ال»: "وصلنا تحويل من حضرتك" went out to the client's GM
+    # as the first line of a greeting (2026-10-01) because only «التحويل» was caught.
+    (re.compile(r'(?<![يتهن])(وصل|وصلنا|وصلتنا|وصلت)\s+(ال)?(تحويل|فلوس|مبلغ)'), 'confirming money arrived'),
     (re.compile(r'(التحويل|الفلوس|المبلغ)\s+(وصل|وصلت|وصلنا|اتأكد|اتأكدت)(?!\w)'), 'confirming money arrived'),
     (re.compile(r'(تم|اتأكدنا\s+من)\s+(تأكيد\s+)?(استلام|وصول)\s+(ال)?(تحويل|فلوس|مبلغ|مقدم)'), 'confirming money arrived'),
     # The mandated name of the booking payment is «مقدم التعاقد», so the
@@ -241,6 +243,43 @@ def figures_from_tool_messages(conversation, since):
     return figures
 
 
+def figures_from_customer(conversation, since):
+    """Numbers the customer gave us: what they typed, and what their advert
+    screenshots show (the channel stores a description of every image). A price
+    read off the customer's own screenshot is not an invented figure — it was
+    flagged as one twice on 2026-10-01."""
+    if conversation is None or since is None:
+        return []
+    try:
+        from modules.chat.models import Message
+        rows = (Message.objects.filter(conversation=conversation, direction='inbound',
+                                       created_at__gte=since).values_list('content', flat=True))
+        return [m.group(0) for content in rows
+                for m in re.finditer(r'\d[\d.,]{1,}', str(content or '').translate(_ARABIC_DIGITS))]
+    except Exception:
+        logger.exception("car_import: could not read the customer's own figures")
+        return []
+
+
+def figures_on_file(conversation):
+    """The customer's own quotations and proforma invoices: the assistant is
+    briefed with them every turn (`turn_context.sales_facts`) and may say them."""
+    partner = getattr(conversation, 'social_partner', None) if conversation is not None else None
+    if partner is None:
+        return []
+    figures = []
+    try:
+        from car_import.models import ProformaInvoice, Quote
+        for row in Quote.all_objects.filter(partner_id=partner.pk).order_by('-id')[:5]:
+            figures += [row.total_eur, row.deposit_eur, row.balance_eur, row.remaining_eur, row.paid_eur,
+                        row.deposit_pct, row.customs_eur, row.poa_usd, row.egp_due_on_arrival]
+        for row in ProformaInvoice.all_objects.filter(partner_id=partner.pk).order_by('-id')[:5]:
+            figures += [row.total_amount, row.amount_due, row.remaining_due]
+    except Exception:
+        logger.exception("car_import: could not read the customer's quotations for the gate")
+    return [f'{value:,.2f}' for value in figures if value]
+
+
 FIGURE_WINDOW_HOURS = 72
 
 #: Under the selling policy, the only replies worth stopping are the two that
@@ -322,7 +361,8 @@ def gate(text, conversation=None, since=None, workflow_name=''):
     # no tool ever returned.
     from datetime import timedelta
     window = (since - timedelta(hours=FIGURE_WINDOW_HOURS)) if since is not None else None
-    allowed = figures_from_tool_messages(conversation, window) + _prompt_figures()
+    allowed = (figures_from_tool_messages(conversation, window) + _prompt_figures()
+               + figures_from_customer(conversation, window) + figures_on_file(conversation))
     problems = check_reply(text, allowed_figures=allowed,
                            allowed_text=tool_text(conversation, window))
     problems = _apply_policy(problems)

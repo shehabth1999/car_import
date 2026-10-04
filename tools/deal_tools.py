@@ -521,9 +521,13 @@ def _file_discount_request(partner, context, reason):
 #: may take the customer back, so a free-text topic ("استرداد", "refund_request")
 #: must never slip past it.
 ESCALATION_TOPICS = ('refund', 'cancellation', 'complaint', 'legal', 'instalment_amount',
-                     'commercial_import', 'showroom_purchase', 'foreign_destination', 'tool_refused',
-                     'discount', 'money', 'other')
+                     'commercial_import', 'showroom_purchase', 'foreign_destination', 'payment_schedule',
+                     'tool_refused', 'discount', 'money', 'other')
 _TOPIC_WORDS = (
+    # Paying the price in two or three payments is a schedule management
+    # agrees to — not the 27% instalment product (the client's GM asked for
+    # «3 دفعات» and was pitched the cheques, 2026-10-01).
+    ('payment_schedule', ('payment_schedule', 'على دفعات', '3 دفعات', 'دفعتين', 'جدول سداد')),
     # A car that is to go to a country other than Egypt (owner, 2026-09-30) —
     # a colleague takes it. Only the explicit words: a customer who LIVES in
     # Saudi Arabia and imports to Egypt is the initiative, not this.
@@ -559,7 +563,9 @@ def _escalation_topic(topic, reason=''):
         "Use this tool ONLY for what a colleague must handle: a refund or cancellation, a complaint, anything "
         "legal, the exact amount of an instalment, a commercial-import request, a customer who wants to BUY "
         "one of our own cars (a `WC-` reference from ka_search_cars), a customer who wants the car delivered "
-        "to a country OTHER than Egypt (topic foreign_destination), or when another tool returned "
+        "to a country OTHER than Egypt (topic foreign_destination), a customer who wants to split the price "
+        "into payments other than the standard deposit + balance (topic payment_schedule — that is not the "
+        "instalment plan), or when another tool returned "
         "`must_escalate`. Do NOT use it for prices, quotations, the proforma invoice, bank details "
         "(ka_share_bank_details sends them), transfer screenshots (ka_customer_sent_image), discounts "
         "(ka_request_discount), or a customer who wants to read or change the contract (ka_contract_request) "
@@ -580,10 +586,11 @@ def _escalation_topic(topic, reason=''):
             "topic": {
                 "type": "string",
                 "enum": ["refund", "cancellation", "complaint", "legal", "instalment_amount",
-                         "commercial_import", "showroom_purchase", "foreign_destination", "tool_refused",
-                         "other"],
+                         "commercial_import", "showroom_purchase", "foreign_destination", "payment_schedule",
+                         "tool_refused", "other"],
                 "description": "Why a person is needed. showroom_purchase = buying one of our own (WC-) cars. "
-                               "foreign_destination = the car is to be delivered outside Egypt",
+                               "foreign_destination = the car is to be delivered outside Egypt. "
+                               "payment_schedule = paying in 2 or 3 payments instead of deposit + balance",
             },
         },
         "required": ["reason"],

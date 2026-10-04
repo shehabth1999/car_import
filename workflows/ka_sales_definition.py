@@ -79,6 +79,7 @@ TOOL_NAMES = [
     'ka_request_discount',
     'ka_deal_status',                     # status + missing papers + the written update
     'ka_initiative_deposit',              # «قيمة المبادرة/الوديعة» from the owner's sheet
+    'ka_customs_value',                   # «الجمارك» of a new car, from the customs table
     'ka_initiative_market',
     'ka_schedule_followup',
     'ka_escalate_conversation_to_staff',

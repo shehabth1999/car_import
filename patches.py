@@ -112,8 +112,41 @@ _HEADING = re.compile(r'^[ \t]{0,3}#{1,6}[ \t]+', re.MULTILINE)
 def _chat_formatting(text):
     """WhatsApp bolds with ONE star. Sonnet writes Markdown — `**28,628 $**`
     reaches the customer with its asterisks showing, `## السعر` with its
-    hashes. The chat's own bold is kept; Markdown's is translated to it."""
-    return _HEADING.sub('', _DOUBLE_STARS.sub(r'*\1*', text))
+    hashes. The chat's own bold is kept; Markdown's is translated to it. And
+    the reply is one message, not one per paragraph (`_one_message`)."""
+    return _one_message(_HEADING.sub('', _DOUBLE_STARS.sub(r'*\1*', text)))
+
+
+_BLANK_LINES = re.compile(r'\n[ \t]*\n+')
+_RULE_LINE = re.compile(r'^[ \t]*-{3,}[ \t]*$', re.MULTILINE)
+#: Between paragraphs of one message: a line holding a single space. It reads
+#: as a blank line in the chat, and the bridge — which sends every "\n\n"
+#: separated paragraph as its own message — does not split on it.
+_SOFT_BREAK = '\n \n'
+#: WhatsApp takes 4096 characters; leave room for the bridge's own trimming.
+MESSAGE_LIMIT = 3500
+
+
+def _one_message(text, limit=MESSAGE_LIMIT):
+    """One reply, one message.
+
+    The channel bridge splits a reply on blank lines and sends each paragraph
+    separately. On 2026-10-01 the client's GM got 98 messages for his 28: one
+    price was eight, the steps of a purchase ten. The paragraphs stay — they
+    are what makes a price readable — but inside one message. Only a reply too
+    long for one message is cut, and then at a paragraph, into as few as fit.
+    Markdown rules (`---`) go: the bridge deletes them and leaves the blank
+    line that would split the message again."""
+    paragraphs = [p.strip() for p in _BLANK_LINES.split(_RULE_LINE.sub('', text)) if p.strip()]
+    if len(paragraphs) <= 1:
+        return paragraphs[0] if paragraphs else text
+    messages = []
+    for paragraph in paragraphs:
+        if messages and len(messages[-1]) + len(_SOFT_BREAK) + len(paragraph) <= limit:
+            messages[-1] += _SOFT_BREAK + paragraph
+        else:
+            messages.append(paragraph)
+    return '\n\n'.join(messages)
 
 
 def _escalated_during(conversation, started):

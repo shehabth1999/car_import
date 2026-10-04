@@ -136,6 +136,29 @@ def _programme_for(listing, car_description='', condition='', model_year=None, h
     return decided, car_model, int(year), is_new
 
 
+def _initiative_answer(partner, has_own_initiative):
+    """Whether the customer holds an initiative: what the assistant passed —
+    kept on the contact — else what the contact already says. So «معاك
+    مبادرة؟» is asked once per customer, not once per car."""
+    from car_import.services import agent_help
+    if has_own_initiative is None:
+        return agent_help.known_initiative(partner)
+    agent_help.remember_initiative(partner, has_own_initiative)
+    return has_own_initiative
+
+
+def _ask_for_missing_figure(context, programme, customs, deposits, car, year):
+    """Tag a colleague when the tables have no customs / initiative value for
+    this car — the assistant says "a colleague is confirming" and now one is."""
+    from car_import.services import agent_help
+    from car_import.services import programme as rules
+    kind = ('customs' if programme == rules.PERSONAL and customs is None else
+            'initiative' if programme == rules.INITIATIVE and not deposits else None)
+    if kind is None:
+        return False
+    return agent_help.ask_staff(_partner(context), getattr(context, 'conversation', None), kind, car, year)
+
+
 def _resolve_price(listing_reference, gross_price_eur):
     """(listing, gross, source_note) or an error dict."""
     from car_import.services import mobile_de, policy, sales_flow
@@ -237,8 +260,9 @@ def _quote_sent_reply(quote, sent, resent=False):
     if sent.get('sent'):
         data["next_step"] = (
             "The offer " + ("PDF" if as_pdf else "") + " is already in the chat with the deposit, the "
-            + ("customs figure, " if quote.programme == 'personal' else
-               "initiative value, " if quote.programme == 'initiative' else "")
+            + ("customs figure, " if quote.programme == 'personal' and quote.customs_eur is not None else
+               "a line saying a colleague confirms the customs, " if quote.programme == 'personal' else
+               "initiative value, " if quote.programme == 'initiative' and quote.initiative_deposits else "")
             + "the bank details and the contract term. Write ONE short line asking if they want to go ahead "
               "— no figures. When they say yes, call ka_issue_proforma_invoice.")
     else:
@@ -433,11 +457,16 @@ def ka_price_car(context, listing_reference: Optional[str] = None,
         if isinstance(resolved, dict):
             return resolved
         listing, gross, source_note = resolved
+        partner = _partner(context)
+        has_own_initiative = _initiative_answer(partner, has_own_initiative)
         decision = _programme_for(listing, car_description, condition, model_year, has_own_initiative)
         if isinstance(decision, dict):
             return decision
-        decided, car_model, year, _is_new = decision
-        port = decided['port']
+        decided, car_model, year, is_new = decision
+        port, programme = decided['port'], decided['programme']
+        # A personal import is a European-built car and travels with its EUR 1
+        # certificate — the client's GM had to ask for it (2026-10-01).
+        with_eur1 = bool(with_eur1) or programme == rules.PERSONAL
         try:
             result = sales_flow.price(gross, with_eur1=with_eur1, shipping_type=shipping_type,
                                       port=port, collect_from_showroom=collect_from_showroom)
@@ -448,18 +477,30 @@ def ka_price_car(context, listing_reference: Optional[str] = None,
         data["advert_price_with_vat"] = _fmt(gross)
         if source_note:
             data["price_source"] = "customer_stated"
-        programme = decided['programme']
+        customs = rules.customs_eur(car_model, year) if programme == rules.PERSONAL else None
+        deposits = (rules.initiative_deposits(car_model, year, initiative_tier, initiative_region)
+                    if programme == rules.INITIATIVE else None)
         data["programme"] = rules.for_agent(
-            programme, port,
-            customs=rules.customs_eur(car_model, year) if programme == rules.PERSONAL else None,
-            deposits=(rules.initiative_deposits(car_model, year, initiative_tier, initiative_region)
-                      if programme == rules.INITIATIVE else None),
+            programme, port, customs=customs, deposits=deposits,
             car_model=car_model, model_year=year, poa=rules.poa_usd(programme, has_own_initiative))
+        if programme == rules.PERSONAL:
+            data["programme"]["eur1"] = "The EUR 1 certificate is included in this price."
+        if _ask_for_missing_figure(context, programme, customs, deposits, car_model or car_description, year):
+            data["programme"]["colleague_tagged"] = True
+        # The offer, when asked for, is for THIS car with THESE inputs.
+        from car_import.services import agent_help
+        agent_help.remember_pricing(
+            partner, listing_reference=getattr(listing, 'ad_id', None),
+            gross_price_eur=None if listing is not None else float(gross), car_description=car_description,
+            model_year=year, condition='new' if is_new else ('used' if is_new is False else ''),
+            with_eur1=with_eur1, shipping_type=shipping_type, collect_from_showroom=collect_from_showroom,
+            has_own_initiative=has_own_initiative, initiative_tier=initiative_tier,
+            initiative_region=initiative_region)
         data["next_step"] = ("Say the total, the deposit and the balance, AND the programme block (customs, or "
                              "the initiative value and the powers of attorney) — the owner counts a price "
-                             "without it as wrong. If the "
-                             "customer is interested, send the formal offer: ka_quote_car with send_offer=true "
-                             "and the same inputs.")
+                             "without it as wrong. ONE message. If the customer wants the written offer: "
+                             "ka_quote_car with send_offer=true and NOTHING else — it reuses this car and "
+                             "these inputs. Never invent a link or ask for the screenshot again.")
         return {"success": True, "data": data}
     except Exception as e:
         logger.exception("ka_price_car failed")
@@ -523,10 +564,12 @@ def ka_send_quotation(context, listing_reference: Optional[str] = None,
         if isinstance(resolved, dict):
             return resolved
         listing, gross, source_note = resolved
+        has_own_initiative = _initiative_answer(partner, has_own_initiative)
         decision = _programme_for(listing, car_description, condition, model_year, has_own_initiative)
         if isinstance(decision, dict):
             return decision
-        decided, _car_model, year, is_new = decision
+        decided, car_model, year, is_new = decision
+        with_eur1 = bool(with_eur1) or decided['programme'] == rules.PERSONAL
         conversation = getattr(context, 'conversation', None)
         try:
             quote = sales_flow.make_quote(
@@ -560,6 +603,8 @@ def ka_send_quotation(context, listing_reference: Optional[str] = None,
             + ('' if sent.get('sent') else f'\n⚠️ العرض متبعتش: {sent.get("error")}'),
             recipients=sales_flow.owners(partner), conversation=conversation,
             subject=f'عرض سعر من المساعد — {quote.name}', url=url)
+        _ask_for_missing_figure(context, quote.programme, quote.customs_eur, quote.initiative_deposits,
+                                car_model or quote.car_label, year)
         return {"success": True, "data": _quote_sent_reply(quote, sent)}
     except Exception as e:
         logger.exception("ka_send_quotation failed")

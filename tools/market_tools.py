@@ -40,14 +40,36 @@ logger = logging.getLogger(__name__)
 )
 def ka_search_vehicle_listings(context, make: Optional[str] = None, model: Optional[str] = None,
                                year_min: Optional[int] = None, max_mileage: Optional[int] = None,
-                               limit: int = 5) -> Dict[str, Any]:
-    """Cars on the marketplace, without a price."""
+                               limit: int = 5, price_max_eur: Optional[float] = None,
+                               year_max: Optional[int] = None, model_class: Optional[str] = None,
+                               exclude_references=None) -> Dict[str, Any]:
+    """Cars on the marketplace, without a price.
+
+    `price_max_eur` caps the German advert price — until 2026-10-01 a budget
+    never reached the search, and a customer with 30,000 € was shown 46,900 €
+    cars "in his range". `model_class` is a Mercedes-style class letter ("C"
+    for C-Class): the models that are that letter and a number (C180, C200),
+    not every model containing it (GLC). `exclude_references` drops adverts
+    the customer already turned down.
+    """
     try:
+        import re
+
         from car_import.services import mobile_de
 
+        wanted = max(1, min(int(limit or 5), 20))
+        narrowed = bool(model_class or exclude_references)
         listings, meta = mobile_de.search(
-            make=make, model=model, year_min=year_min, mileage_max=max_mileage,
-            vatable=True, page_size=max(1, min(int(limit or 5), 20)))
+            make=make, model=None if model_class else model, year_min=year_min, year_max=year_max,
+            mileage_max=max_mileage, price_max=price_max_eur or None,
+            vatable=True, page_size=20 if narrowed else wanted)
+        if model_class:
+            in_class = re.compile(r'^%s[\s-]?\d' % re.escape(str(model_class).strip()), re.IGNORECASE)
+            listings = [row for row in listings if in_class.match(str(row.get('model') or '').strip())]
+        if exclude_references:
+            skip = {str(ref).strip() for ref in exclude_references}
+            listings = [row for row in listings if str(row.get('ad_id')) not in skip]
+        listings = listings[:wanted]
 
         from car_import.services import policy
         ai_first = policy.ai_first()

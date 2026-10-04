@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 #: Topics a person must handle, however long it takes.
 HUMAN_ONLY_TOPICS = {'refund', 'cancellation', 'complaint', 'legal', 'instalment_amount',
-                     'commercial_import', 'showroom_purchase', 'foreign_destination'}
+                     'commercial_import', 'showroom_purchase', 'foreign_destination', 'payment_schedule'}
 RESUME_AFTER_KEY = 'car_import.ai_resume_after_minutes'
 DEFAULT_RESUME_AFTER = 10
 MAX_RESUMES_PER_DAY = 3
