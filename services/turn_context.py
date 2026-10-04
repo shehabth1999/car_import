@@ -39,8 +39,12 @@ def partner_facts(partner):
     lines.append('الاسم: %s' % (getattr(partner, 'name', None) or '-'))
     # Whether the ID card was read — the name, never the number (see above).
     if getattr(partner, 'id_full_name', None):
-        lines.append('الاسم في البطاقة (اتقرت ومتسجّلة، وده اللي بيتكتب في العرض والفاتورة): %s'
-                     % partner.id_full_name)
+        from car_import.services import identity
+        lines.append('الاسم في البطاقة: %s — %s' % (
+            partner.id_full_name,
+            'متسجّل، والعرض والفاتورة بيطلعوا بيه. متطلبش البطاقة ولا الاسم تاني.'
+            if identity.full_id_name(partner) else
+            'أقل من رباعي: العرض المكتوب محتاج الاسم رباعي زي البطاقة.'))
     else:
         lines.append('البطاقة: لسه متقرتش — العرض المكتوب محتاج الاسم رباعي زي البطاقة والرقم القومي '
                      '(صورة البطاقة أحسن). الأرقام نفسها بتتقال من غير ما تستنى.')

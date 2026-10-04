@@ -225,6 +225,8 @@ def _stack(result):
         "band": result['band'],
         "rules": ("State these figures exactly as written — do not round, convert or add to them. "
                   "The balance is due within 5 working days of contracting with the supplier. "
+                  "The EGP amount due on arrival is a FIXED fee in pounds — never call it approximate or "
+                  "'at today's rate'. "
                   "Licensing is not included. NEVER mention VAT, «الضريبة» or a tax refund: the "
                   "customer's price is «سعر العربية» as listed here. If asked why it is below the "
                   "advert, say the advert includes a German tax that is not charged on exported cars."),

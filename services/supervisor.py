@@ -280,6 +280,36 @@ def figures_on_file(conversation):
     return [f'{value:,.2f}' for value in figures if value]
 
 
+def say_from_tools(conversation, since):
+    """The sentence the last tool of this turn asked to be said to the customer
+    (`say_to_customer_ar`), or ''.
+
+    A tool that needs one answer first — «حضرتك معاك مبادرة؟», the ID card —
+    returns the sentence to say. The model usually says it; now and then it
+    returns nothing at all (seen 2026-10-04, same input, one run in two), and
+    the bridge reads silence as a failed run. The gate sends this instead."""
+    if conversation is None or since is None:
+        return ''
+    try:
+        import json
+
+        from modules.chat.models import Message
+        rows = list(Message.objects_all.filter(conversation=conversation, type='tool', created_at__gte=since)
+                    .order_by('-created_at').values_list('content', flat=True)[:1])
+        if not rows:
+            return ''
+        content = rows[0] if isinstance(rows[0], dict) else {}
+        output = content.get('tool_output')
+        payload = json.loads(output) if isinstance(output, str) else (output or {})
+        if not isinstance(payload, dict):
+            return ''
+        data = payload.get('data') if isinstance(payload.get('data'), dict) else {}
+        return str(payload.get('say_to_customer_ar') or data.get('say_to_customer_ar') or '').strip()
+    except Exception:
+        logger.exception("car_import: could not read the tool's sentence for the customer")
+        return ''
+
+
 FIGURE_WINDOW_HOURS = 72
 
 #: Under the selling policy, the only replies worth stopping are the two that

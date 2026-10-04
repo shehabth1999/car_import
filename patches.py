@@ -89,6 +89,13 @@ def _gate(result, workflow_id, kwargs, started):
             logger.info("car_import: dropping the agent's text after a hand-over: %r", text[:200])
         return dataclasses.replace(result, output=supervisor.HOLDING_TEXT, escalated_this_run=True)
 
+    if isinstance(text, str) and not text.strip():
+        # Silence, and no hand-over: when this turn's last tool gave a sentence
+        # for the customer (a question it needs answered), that is the reply.
+        spoken = supervisor.say_from_tools(conversation, started)
+        if spoken:
+            logger.info('car_import: empty reply replaced by the tool\'s sentence: %r', spoken[:120])
+            return dataclasses.replace(result, output=spoken)
     if not isinstance(text, str) or not text.strip():
         return result                       # nothing to inspect: empty or a dict
     formatted = _chat_formatting(text)
