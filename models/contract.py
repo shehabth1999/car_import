@@ -153,6 +153,23 @@ class Contract(BaseModel, BranchMixin, FullChatterMixin):
         ('cancelled', _("Cancelled")),
     ]
 
+    # The chatter mixin names these reverse relations by class name alone, and
+    # hr has a Contract of its own: with both installed the two collide
+    # (fields.E304/E305) and every migrate stops. Same fields, names of our own.
+    message_main_attachment_id = models.ForeignKey(
+        'base.Attachment', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='car_import_contract_main_attachment',
+        help_text="Main attachment for this record")
+    activity_user_id = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='car_import_contract_next_activities')
+    activity_type_id = models.ForeignKey(
+        'notifications.ActivityType', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='car_import_contract_next_activities')
+    alias_id = models.OneToOneField(
+        'notifications.Alias', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='car_import_contract_alias')
+
     deal = models.ForeignKey('car_import.CarDeal', on_delete=models.CASCADE,
                              related_name='contracts', verbose_name=_("Deal"))
     template = models.ForeignKey(ContractTemplate, null=True, blank=True,
