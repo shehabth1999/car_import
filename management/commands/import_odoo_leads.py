@@ -33,6 +33,7 @@ import json
 import re
 from collections import defaultdict
 from datetime import datetime, timezone as dt_timezone
+from html import escape
 from pathlib import Path
 
 from django.core.management.base import BaseCommand, CommandError
@@ -130,6 +131,8 @@ class Command(BaseCommand):
         parser.add_argument('--no-contacts', action='store_true',
                             help="Do not create a contact for a lead whose phone matches nobody here")
         parser.add_argument('--no-chatter', action='store_true', help="Leads only")
+        parser.add_argument('--rewrite-chatter', action='store_true',
+                            help="Also rewrite the text of messages loaded by an earlier run")
 
     # ------------------------------------------------------------------
     def handle(self, *args, **options):
@@ -137,6 +140,7 @@ class Command(BaseCommand):
         if not self.folder.is_dir():
             raise CommandError(f'{self.folder} is not a folder')
         self.report = defaultdict(int)
+        self.rewrite = options['rewrite_chatter']
         with transaction.atomic():
             self._run(options)
             if options['dry_run']:
@@ -415,10 +419,13 @@ class Command(BaseCommand):
         wanted_leads = {lead['id']: clean_label(lead.get('name'))[:255] for lead in leads}
         content_type = ContentType.objects.get_for_model(self.Lead)
         subtypes = {s.name: s.pk for s in Subtype.objects.all()}
-        files = {row['id']: row.get('name') or '' for row in self._load('chatter.attachments', required=False)}
+        self._files = {row['id']: row.get('name') or '' for row in self._load('chatter.attachments', required=False)}
+        self._field_info = {row['id']: row for row in self._load('chatter.fields', required=False)}
+        tracking = self._load('chatter.tracking', required=False)
+        self._changes = self._change_lines(tracking)
         have = set(Message._base_manager.filter(key__startswith='odoo_mail_message_').values_list('key', flat=True))
 
-        new, tracked_by_message = [], {}
+        new, tracked_by_message, stale = [], {}, {}
         for row in self._load('chatter.messages'):
             lead_pk = lead_pks.get(row.get('res_id'))
             if row.get('res_id') not in wanted_leads or lead_pk is None:
@@ -426,23 +433,13 @@ class Command(BaseCommand):
             key = f"odoo_mail_message_{row['id']}"
             if key in have:
                 self.report['messages already loaded'] += 1
+                if self.rewrite:
+                    stale[key] = self.message_body(row, authors)
                 continue
-            odoo_subtype = label_of(row.get('subtype_id'))
-            kind, subtype, internal = MESSAGE_KINDS.get(
-                (row.get('message_type'), odoo_subtype), ('notification', 'System Notification', True))
-            author_pk, author_name = authors.get(id_of(row.get('author_id')), (None, clean_label(label_of(row.get('author_id')))))
-            body = (row.get('body') or '').strip()
-            if body in EMPTY_BODIES:
-                body = ''
+            kind, subtype, internal = self._kind(row)
+            author_pk = authors.get(id_of(row.get('author_id')), (None, ''))[0]
+            body = self.message_body(row, authors)
             attached = row.get('attachment_ids') or []
-            if attached:
-                names = '، '.join(name for name in (files.get(a, '') for a in attached[:5]) if name)
-                body += f'<p>📎 مرفقات في Odoo ({len(attached)}){": " + names if names else ""}</p>'
-            if not body:
-                body = f'<p>{odoo_subtype or "Odoo"}</p>'
-            if kind == 'comment' and not author_pk and author_name:
-                # Somebody with no account here wrote this; without the name it would read as the system's.
-                body = f'<p><b>{author_name}</b></p>' + body
             date = when(row.get('date'))
             new.append(Message(
                 key=key, content_type=content_type, object_id=str(lead_pk), res_model='crm.lead', res_id=str(lead_pk),
@@ -456,26 +453,35 @@ class Command(BaseCommand):
         for batch in chunks(new, 2000):
             Message._base_manager.bulk_create(batch)
         self.report['messages created'] = len(new)
+        if stale:
+            changed = []
+            loaded = Message._base_manager.filter(key__startswith='odoo_mail_message_').only('id', 'key', 'body')
+            for message in loaded.iterator(chunk_size=5000):
+                body = stale.get(message.key)
+                if body is not None and body != message.body:
+                    message.body = body
+                    changed.append(message)
+            for batch in chunks(changed, 2000):
+                Message._base_manager.bulk_update(batch, ['body'])
+            self.report['messages whose text was rewritten'] = len(changed)
         if not tracked_by_message:
             return
 
-        fields = {row['id']: row for row in self._load('chatter.fields', required=False)}
+        # The same changes as rows, for anything that reads them as data; the
+        # chatter itself only draws a message's text, which already has them.
         message_pks = dict(Message._base_manager.filter(key__in=list(tracked_by_message)).values_list('key', 'pk')) \
             if len(tracked_by_message) < 5000 else self._keyed(Message, 'odoo_mail_message_')
         pk_of = {odoo_id: message_pks.get(key) for key, odoo_id in tracked_by_message.items()}
         have = set(Tracking._base_manager.filter(key__startswith='odoo_tracking_').values_list('key', flat=True))
         new, owner = [], {}
-        for row in self._load('chatter.tracking'):
+        for row in tracking:
             message_pk = pk_of.get(id_of(row.get('mail_message_id')))
             key = f"odoo_tracking_{row['id']}"
             if message_pk is None or key in have:
                 continue
-            info = fields.get(id_of(row.get('field_id')), {})
-            odoo_name = info.get('name') or ''
-            old, new_value = self._shown(row, 'old', info), self._shown(row, 'new', info)
+            odoo_name, label, old, new_value = self._change(row)
             new.append(Tracking(
-                key=key, field=TRACKED_FIELDS.get(odoo_name, odoo_name)[:255] or 'field',
-                field_desc=clean_label(info.get('field_description') or label_of(row.get('field_id')))[:255],
+                key=key, field=TRACKED_FIELDS.get(odoo_name, odoo_name)[:255] or 'field', field_desc=label,
                 field_type='char', old_value_char=old, new_value_char=new_value,
                 old_value_display=old, new_value_display=new_value))
             owner[key] = message_pk
@@ -487,6 +493,48 @@ class Command(BaseCommand):
         for batch in chunks(rows, 5000):
             through.objects.bulk_create(batch, ignore_conflicts=True)
         self.report['change-history rows created'] = len(new)
+
+    @staticmethod
+    def _kind(row):
+        return MESSAGE_KINDS.get((row.get('message_type'), label_of(row.get('subtype_id'))),
+                                 ('notification', 'System Notification', True))
+
+    def _change(self, row):
+        """One tracked change: (Odoo field name, label, old, new)."""
+        info = self._field_info.get(id_of(row.get('field_id')), {})
+        label = clean_label(info.get('field_description') or label_of(row.get('field_id')).split(' (')[0])[:255]
+        return info.get('name') or '', label, self._shown(row, 'old', info), self._shown(row, 'new', info)
+
+    def _change_lines(self, tracking):
+        """Odoo message id -> its changes as text. The chatter here draws a
+        message's text and nothing else, so "Stage: New Lead → Cold" has to be
+        IN the text or the history reads as a list of empty "Stage Changed"."""
+        lines = defaultdict(list)
+        for row in tracking:
+            _name, label, old, new_value = self._change(row)
+            lines[id_of(row.get('mail_message_id'))].append(
+                f'<p><b>{escape(label)}</b>: {escape(old) or "—"} → {escape(new_value) or "—"}</p>')
+        return lines
+
+    def message_body(self, row, authors):
+        """The text of one Odoo message as it is shown here."""
+        kind = self._kind(row)[0]
+        author_pk, author_name = authors.get(id_of(row.get('author_id')),
+                                             (None, clean_label(label_of(row.get('author_id')))))
+        body = (row.get('body') or '').strip()
+        if body in EMPTY_BODIES:
+            body = ''
+        body += ''.join(self._changes.get(row['id'], ()))
+        attached = row.get('attachment_ids') or []
+        if attached:
+            names = '، '.join(name for name in (self._files.get(a, '') for a in attached[:5]) if name)
+            body += f'<p>📎 مرفقات في Odoo ({len(attached)}){": " + escape(names) if names else ""}</p>'
+        if not body:
+            body = f'<p>{escape(label_of(row.get("subtype_id")) or "Odoo")}</p>'
+        if kind == 'comment' and not author_pk and author_name:
+            # Somebody with no account here wrote this; without the name it would read as the system's.
+            body = f'<p><b>{escape(author_name)}</b></p>' + body
+        return body
 
     @staticmethod
     def _shown(row, side, info):
