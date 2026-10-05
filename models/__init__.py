@@ -10,6 +10,7 @@ from .documents import DocumentRequirement, DealDocument
 from .initiative import Initiative
 from .listings import ShowroomListing, InitiativeListing
 from .pricing import PricingBand
+from .lead_assignment import LeadAssignmentGroup, LeadAssignmentLog
 from .quote import Quote, QuoteLine, QuoteOption
 from .contract import Contract, ContractTemplate
 from .approval import ApprovalPolicy, ApprovalRequest
@@ -28,7 +29,7 @@ from .reference_data import (
 __all__ = [
     'ImportStage', 'CarBrand', 'CarModel', 'Vehicle', 'CarDeal', 'StageChangeLog', 'SupplierListing',
     'DocumentRequirement', 'DealDocument', 'Initiative', 'CallRecording',
-    'ShowroomListing', 'InitiativeListing', 'PricingBand', 'Quote', 'QuoteLine', 'QuoteOption', 'Contract', 'ContractTemplate', 'ApprovalPolicy', 'ApprovalRequest', 'ContractIssuer', 'ContractSignatory', 'SetStage', 'QualifyCustomer', 'ConsignmentMandate', 'ProformaInvoice', 'PaymentReceipt', 'WebsiteConnection', 'WebsiteLookup', 'WebsiteCar', 'WebsiteSubmission', 'WebsiteApiLog',
+    'ShowroomListing', 'InitiativeListing', 'PricingBand', 'LeadAssignmentGroup', 'LeadAssignmentLog', 'Quote', 'QuoteLine', 'QuoteOption', 'Contract', 'ContractTemplate', 'ApprovalPolicy', 'ApprovalRequest', 'ContractIssuer', 'ContractSignatory', 'SetStage', 'QualifyCustomer', 'ConsignmentMandate', 'ProformaInvoice', 'PaymentReceipt', 'WebsiteConnection', 'WebsiteLookup', 'WebsiteCar', 'WebsiteSubmission', 'WebsiteApiLog',
     'ImportProgram', 'TaxRule', 'Eur1Rule',
     'DepositTier', 'CustomsValuation', 'ModelPriceRange',
     'FeeSchedule', 'FinancingPlan', 'FirstOwnerDiscount', 'FxReference',

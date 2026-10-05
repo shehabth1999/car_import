@@ -311,6 +311,16 @@ menu_dict = {
                         "sequence": 20,
                         "allowed_groups": ["car_import.management"],
                     },
+                    "car_import_menu_lead_assignment": {
+                        "name": _("Lead assignment"),
+                        "icon": "Shuffle",
+                        "module": "car_import",
+                        "model": "car_import.leadassignmentgroup",
+                        "view_types": "list,form",
+                        "sequence": 22,
+                        # Who gets which customers is management's call.
+                        "allowed_groups": ["car_import.management"],
+                    },
                     "car_import_menu_approval_policies": {
                         "name": _("Approval rules"),
                         "icon": "ShieldAlert",

@@ -91,6 +91,13 @@ msgstr "في شرط مانع الانتقال للمرحلة اللي بعدها
 msgid "A group's technical name, e.g. car_import.management"
 msgstr "الاسم التقني للمجموعة، مثال: car_import.management"
 
+msgid "A lead that carries any of these tags belongs to this group. Leave empty to make this a catch-all group: it is tried last and takes the leads no tagged group matched."
+msgstr "أي عميل محتمل عليه وسم من دول بيبقى تبع المجموعة دي. سيبها فاضية عشان تبقى مجموعة عامة: بتتجرّب في الآخر وبتاخد العملاء المحتملين اللي مفيش مجموعة بوسوم خدتهم."
+
+msgctxt "ui/views/lead_assignment_views.py"
+msgid "A lead that carries any of these tags belongs to this group. Leave empty to make this a catch-all group: it is tried last and takes the leads no tagged group matched."
+msgstr "أي عميل محتمل عليه وسم من دول بيبقى تبع المجموعة دي. سيبها فاضية عشان تبقى مجموعة عامة: بتتجرّب في الآخر وبتاخد العملاء المحتملين اللي مفيش مجموعة بوسوم خدتهم."
+
 msgctxt "ui/views/quote_views.py"
 msgid "A minus: it comes off the port fee. The port fee line itself does not change"
 msgstr "بالسالب: بيتخصم من مصاريف الميناء. سطر مصاريف الميناء نفسه ما بيتغيّرش"
@@ -219,6 +226,10 @@ msgid "Active"
 msgstr "نشط"
 
 msgctxt "ui/views/consignment_views.py"
+msgid "Active"
+msgstr "نشط"
+
+msgctxt "ui/views/lead_assignment_views.py"
 msgid "Active"
 msgstr "نشط"
 
@@ -1439,6 +1450,10 @@ msgstr "محسوبة: داخل مدة التوكيل أو ذيلها، بالن�
 msgid "Condition"
 msgstr "الحالة"
 
+msgctxt "ui/views/quote_views.py"
+msgid "Condition"
+msgstr "الحالة"
+
 msgctxt "ui/views/vehicle_views.py"
 msgid "Condition"
 msgstr "الحالة"
@@ -1806,8 +1821,19 @@ msgstr "تاريخ الإفراج الجمركي"
 msgid "Customs value"
 msgstr "القيمة الجمركية"
 
+msgctxt "ui/views/quote_views.py"
+msgid "Customs value"
+msgstr "القيمة الجمركية"
+
 msgid "Customs values"
 msgstr "القيم الجمركية"
+
+msgid "Daily limit"
+msgstr "الحد اليومي"
+
+msgctxt "ui/views/lead_assignment_views.py"
+msgid "Daily limit"
+msgstr "الحد اليومي"
 
 msgid "Dashboard"
 msgstr "لوحة المتابعة"
@@ -2857,6 +2883,9 @@ msgstr "الإجمالي ÷ 1.19 لو الضريبة مستردة؛ غير كد�
 msgid "Gross — VAT shown and recoverable"
 msgstr "إجمالي — الضريبة ظاهرة وقابلة للاسترداد"
 
+msgid "Group"
+msgstr "المجموعة"
+
 msgid "Gulf"
 msgstr "خليجية"
 
@@ -3225,6 +3254,13 @@ msgctxt "ui/views/website_views.py"
 msgid "Last synced"
 msgstr "آخر مزامنة"
 
+msgid "Last turn"
+msgstr "آخر دور"
+
+msgctxt "ui/views/lead_assignment_views.py"
+msgid "Last turn"
+msgstr "آخر دور"
+
 msgid "Lead"
 msgstr "العميل المحتمل"
 
@@ -3240,6 +3276,33 @@ msgctxt "ui/views/website_views.py"
 msgid "Lead"
 msgstr "العميل المحتمل"
 
+msgid "Lead assignment"
+msgstr "توزيع العملاء المحتملين"
+
+msgid "Lead assignment group"
+msgstr "مجموعة توزيع العملاء المحتملين"
+
+msgctxt "ui/views/lead_assignment_views.py"
+msgid "Lead assignment group"
+msgstr "مجموعة توزيع العملاء المحتملين"
+
+msgid "Lead assignment groups"
+msgstr "مجموعات توزيع العملاء المحتملين"
+
+msgctxt "ui/views/lead_assignment_views.py"
+msgid "Lead assignment groups"
+msgstr "مجموعات توزيع العملاء المحتملين"
+
+msgid "Lead assignment log"
+msgstr "سجل توزيع العملاء المحتملين"
+
+msgid "Lead tags"
+msgstr "وسوم العميل المحتمل"
+
+msgctxt "ui/views/lead_assignment_views.py"
+msgid "Lead tags"
+msgstr "وسوم العميل المحتمل"
+
 msgctxt "ui/views/crm_dashboard_patch.py"
 msgid "Leads by campaign"
 msgstr "العملاء المحتملون حسب الحملة"
@@ -3251,6 +3314,10 @@ msgstr "العملاء المحتملون حسب البرنامج"
 msgctxt "ui/views/crm_dashboard_patch.py"
 msgid "Leads by stage"
 msgstr "العملاء المحتملون حسب المرحلة"
+
+msgctxt "ui/views/lead_assignment_views.py"
+msgid "Leads go to these people one at a time, in turn. Anyone on approved time off, or already at the daily limit, is skipped automatically; when nobody is free the lead waits."
+msgstr "العملاء المحتملون بيتوزّعوا على دول واحد واحد بالدور. اللي في إجازة معتمدة أو وصل للحد اليومي بيتخطّاه النظام تلقائياً، ولو مفيش حد متاح العميل المحتمل بيستنى."
 
 msgctxt "ui/views/vehicle_views.py"
 msgid "Leather seats"
@@ -3667,6 +3734,10 @@ msgctxt "ui/views/contract_views.py"
 msgid "Model year"
 msgstr "سنة الموديل"
 
+msgctxt "ui/views/quote_views.py"
+msgid "Model year"
+msgstr "سنة الموديل"
+
 msgctxt "ui/views/supplier_listing_views.py"
 msgid "Model year"
 msgstr "سنة الموديل"
@@ -3773,6 +3844,10 @@ msgid "Name"
 msgstr "الاسم"
 
 msgctxt "ui/views/document_views.py"
+msgid "Name"
+msgstr "الاسم"
+
+msgctxt "ui/views/lead_assignment_views.py"
 msgid "Name"
 msgstr "الاسم"
 
@@ -4142,6 +4217,9 @@ msgstr "مقفول للمراحل الداخلية. الإلغاء عمره ما
 msgctxt "ui/views/contract_views.py"
 msgid "Off for the documents the lawyer has not delivered in a fillable form yet"
 msgstr "مقفول للمستندات اللي المحامي لسه ما سلّمهاش بصيغة قابلة للتعبئة"
+
+msgid "Offer file"
+msgstr "ملف العرض"
 
 msgid "Offered for sale"
 msgstr "معروضة للبيع"
@@ -4668,6 +4746,9 @@ msgstr "القوة (حصان)"
 msgid "Power (kW)"
 msgstr "القوة (كيلوواط)"
 
+msgid "Powers of attorney (USD)"
+msgstr "التوكيلات (دولار)"
+
 msgid "Previous stage"
 msgstr "المرحلة السابقة"
 
@@ -4786,6 +4867,10 @@ msgid "Programme"
 msgstr "البرنامج"
 
 msgctxt "ui/views/qualify_views.py"
+msgid "Programme"
+msgstr "البرنامج"
+
+msgctxt "ui/views/quote_views.py"
 msgid "Programme"
 msgstr "البرنامج"
 
@@ -5231,6 +5316,16 @@ msgctxt "ui/views/quote_views.py"
 msgid "Sales agent"
 msgstr "مندوب المبيعات"
 
+msgid "Salespeople"
+msgstr "مندوبو المبيعات"
+
+msgctxt "ui/views/lead_assignment_views.py"
+msgid "Salespeople"
+msgstr "مندوبو المبيعات"
+
+msgid "Salesperson"
+msgstr "مندوب المبيعات"
+
 msgid "Saloon"
 msgstr "سيدان"
 
@@ -5395,6 +5490,10 @@ msgstr "من الفئة، ما تتكتبش يدوي"
 
 msgid "Set by the location: Egypt is Egyptian pounds, anywhere else euros"
 msgstr "بيتحدد من المكان: مصر بالجنيه، وأي مكان تاني باليورو"
+
+msgctxt "ui/views/lead_assignment_views.py"
+msgid "Set by the system. It remembers who received the last lead, so the next one goes to the person after them."
+msgstr "النظام هو اللي بيحدده. بيفتكر مين آخر واحد خد عميل محتمل، عشان العميل الجاي يروح للي بعده."
 
 msgid "Set only when the deposit sheet disagrees with the option count"
 msgstr "حدده بس لو شيت الودائع مختلف عن عدد المواصفات"
@@ -5867,6 +5966,10 @@ msgctxt "ui/views/switch_views.py"
 msgid "Switch"
 msgstr "المفتاح"
 
+msgctxt "ui/views/lead_assignment_views.py"
+msgid "Switch off to stop handing out leads through this group."
+msgstr "اقفله عشان توقّف توزيع العملاء المحتملين عن طريق المجموعة دي."
+
 msgid "Switched the AI on or off for %(count)d conversation(s)"
 msgstr "تم تشغيل/إيقاف المساعد لـ %(count)d محادثة"
 
@@ -6064,6 +6167,10 @@ msgid "The customer holds the initiative"
 msgstr "العميل هو صاحب المبادرة"
 
 msgctxt "ui/views/quote_views.py"
+msgid "The customer holds the initiative"
+msgstr "العميل هو صاحب المبادرة"
+
+msgctxt "ui/views/quote_views.py"
 msgid "The customer sent more than the total — do not ask for money already paid"
 msgstr "العميل حوّل أكتر من الإجمالي — ما تطلبش فلوس اتدفعت خلاص"
 
@@ -6187,6 +6294,13 @@ msgstr "رقم الموديل على موقع الشركة. فاضي لو الم
 msgctxt "ui/views/contract_views.py"
 msgid "The money"
 msgstr "الفلوس"
+
+msgid "The most leads one salesperson receives from this group in a day. 0 means no limit."
+msgstr "أقصى عدد عملاء محتملين ياخده المندوب الواحد من المجموعة دي في اليوم. 0 معناها من غير حد."
+
+msgctxt "ui/views/lead_assignment_views.py"
+msgid "The most leads one salesperson receives from this group in a day. 0 means no limit."
+msgstr "أقصى عدد عملاء محتملين ياخده المندوب الواحد من المجموعة دي في اليوم. 0 معناها من غير حد."
 
 msgctxt "ui/views/switch_views.py"
 msgid "The name the code reads. Never changes"
@@ -7202,6 +7316,10 @@ msgctxt "ui/views/contract_views.py"
 msgid "Which deals it is offered to. 'Any programme' is the fallback"
 msgstr "بيتعرض على أنهي صفقات. «أي برنامج» هو الاحتياطي"
 
+msgctxt "ui/views/lead_assignment_views.py"
+msgid "Which leads"
+msgstr "أنهي عملاء محتملين"
+
 msgctxt "ui/views/car_deal_views.py"
 msgid "Which of the six revenue lines this is. Commercial import asks management before the deal exists"
 msgstr "أنهي خط من خطوط الإيراد الستة. الاستيراد التجاري بيسأل الإدارة قبل ما الصفقة تتفتح"
@@ -7228,6 +7346,10 @@ msgstr "مين بيحسب المبلغ"
 
 msgid "Who computes the instalment"
 msgstr "مين بيحسب القسط"
+
+msgctxt "ui/views/lead_assignment_views.py"
+msgid "Who gets them"
+msgstr "مين بياخدهم"
 
 msgctxt "ui/views/call_views.py"
 msgid "Who it was with"
@@ -7361,6 +7483,9 @@ msgstr "زيرو"
 
 msgid "Zero (under 50 km)"
 msgstr "زيرو (أقل من 50 كم)"
+
+msgid "Zero km"
+msgstr "زيرو كم"
 
 msgctxt "ui/views/reference_views.py"
 msgid "Zero km"

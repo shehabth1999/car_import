@@ -25,6 +25,12 @@ SCHEDULES = [
         'every': 15, 'period': 'minutes',
     },
     {
+        # The interval the client's Odoo ran the same job at.
+        'name': 'car_import: assign new leads to the sales team',
+        'task': 'car_import.tasks.assign_new_leads',
+        'every': 10, 'period': 'minutes',
+    },
+    {
         'name': 'car_import: import call recordings from Dropbox',
         'task': 'car_import.tasks.sync_dropbox_calls',
         'every': 6, 'period': 'hours',

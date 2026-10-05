@@ -154,6 +154,16 @@ def purge_website_logs():
 
 
 @shared_task
+def assign_new_leads():
+    """Every ten minutes: the leads nobody owns go to the sales team, in turn.
+
+    The rule and its safeguards live in services/lead_assignment.py.
+    """
+    from car_import.services import lead_assignment
+    return lead_assignment.assign_new_leads()
+
+
+@shared_task
 def chase_abandoned_escalations():
     """Find customers the assistant handed over and nobody answered.
 

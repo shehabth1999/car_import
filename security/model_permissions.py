@@ -165,6 +165,14 @@ MODEL_PERMISSIONS = [
      'permissions': VIEW_ONLY},
     {'model': 'car_import.approvalrequest', 'group': 'car_import.management', 'permissions': FULL},
 
+    # ── lead assignment ─────────────────────────────────────────────────────
+    # Who gets which leads is management's to set. The log is what the job
+    # counts a salesperson's day from: read, never edited.
+    {'model': 'car_import.leadassignmentgroup', 'group': 'car_import.management',
+     'permissions': FULL},
+    {'model': 'car_import.leadassignmentlog', 'group': 'car_import.management',
+     'permissions': VIEW_ONLY},
+
     # ── the company's own legal identity ────────────────────────────────────
     {'model': 'car_import.contractissuer', 'group': 'car_import.management', 'permissions': FULL},
     {'model': 'car_import.contractissuer', 'group': 'car_import.sales_manager',
