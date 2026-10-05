@@ -22,6 +22,23 @@ lead_form_car_import_batch = {
     # The module that owns the BASE view, not the one that owns this patch.
     "module": "crm",
     "inheritance_operations": [
+        # The stage ribbon and the form's buttons share one row, and past about
+        # eight stages the buttons are pushed off it. With the client's sixteen
+        # Odoo stages beside our six, the ribbon goes and the stage becomes the
+        # form's first field; the kanban carries the pipeline.
+        {
+            "operation": "remove",
+            "target": "header.status",
+        },
+        {
+            "operation": "prepend",
+            "target": "sheet.sections.0.groups.0.fields",
+            "content": {
+                "name": "stage",
+                "string": {"en": "Stage", "ar": "المرحلة"},
+                "widget": "relation", "displayField": "name", "multiSelect": False,
+            },
+        },
         {
             "operation": "append",
             "target": "header.actions",
