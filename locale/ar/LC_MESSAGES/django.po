@@ -243,6 +243,10 @@ msgctxt "ui/views/contract_views.py"
 msgid "Address"
 msgstr "العنوان"
 
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Address"
+msgstr "العنوان"
+
 msgid "Address on the ID"
 msgstr "العنوان كما في البطاقة"
 
@@ -368,6 +372,10 @@ msgid "Also matches"
 msgstr "بيطابق كمان"
 
 msgctxt "ui/views/catalogue_views.py"
+msgid "Also matches"
+msgstr "بيطابق كمان"
+
+msgctxt "ui/views/link_tracker_views.py"
 msgid "Also matches"
 msgstr "بيطابق كمان"
 
@@ -530,6 +538,27 @@ msgctxt "ui/views/approval_views.py"
 msgid "Approved by (group)"
 msgstr "الموافقة من (مجموعة)"
 
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Arrival Port Name"
+msgstr "اسم ميناء الوصول"
+
+msgid "Arrival Ports"
+msgstr "مواني الوصول"
+
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Arrival Ports"
+msgstr "مواني الوصول"
+
+msgid "Arrival port"
+msgstr "ميناء وصول"
+
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Arrival port"
+msgstr "ميناء وصول"
+
+msgid "Arrival ports"
+msgstr "مواني الوصول"
+
 msgid "Arrived on"
 msgstr "تاريخ الوصول"
 
@@ -542,6 +571,10 @@ msgid "Article 4 — the price and how it is paid"
 msgstr "البند الرابع — السعر وطريقة السداد"
 
 msgctxt "ui/views/catalogue_views.py"
+msgid "As it prints on a contract, e.g. Mercedes-Benz"
+msgstr "زي ما بتتكتب في العقد، مثلاً Mercedes-Benz"
+
+msgctxt "ui/views/link_tracker_views.py"
 msgid "As it prints on a contract, e.g. Mercedes-Benz"
 msgstr "زي ما بتتكتب في العقد، مثلاً Mercedes-Benz"
 
@@ -562,6 +595,10 @@ msgid "As the assistant read it. Correct it if the picture says otherwise"
 msgstr "زي ما المساعد قراه. صحّحه لو الصورة بتقول غير كده"
 
 msgctxt "ui/views/catalogue_views.py"
+msgid "As the company writes it, e.g. C200 or GLA 180"
+msgstr "زي ما الشركة بتكتبه، مثلاً C200 أو GLA 180"
+
+msgctxt "ui/views/link_tracker_views.py"
 msgid "As the company writes it, e.g. C200 or GLA 180"
 msgstr "زي ما الشركة بتكتبه، مثلاً C200 أو GLA 180"
 
@@ -727,6 +764,19 @@ msgctxt "ui/views/car_deal_views.py"
 msgid "Bill of lading"
 msgstr "بوليصة الشحن"
 
+msgid "Blacklist"
+msgstr "القايمة السودا"
+
+msgid "Blacklisted customer"
+msgstr "عميل في القايمة السودا"
+
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Blacklisted customer"
+msgstr "عميل في القايمة السودا"
+
+msgid "Blacklisted customers"
+msgstr "عملاء القايمة السودا"
+
 msgid "Blocked"
 msgstr "متوقف"
 
@@ -782,6 +832,10 @@ msgid "Brand"
 msgstr "الماركة"
 
 msgctxt "ui/views/catalogue_views.py"
+msgid "Brand"
+msgstr "الماركة"
+
+msgctxt "ui/views/link_tracker_views.py"
 msgid "Brand"
 msgstr "الماركة"
 
@@ -1053,6 +1107,27 @@ msgctxt "ui/views/quote_views.py"
 msgid "Car (as quoted)"
 msgstr "العربية (زي ما اتسعّرت)"
 
+msgid "Car Brands"
+msgstr "ماركات العربيات"
+
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Car Brands"
+msgstr "ماركات العربيات"
+
+msgid "Car Buyer"
+msgstr "مشتري العربية"
+
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Car Buyer"
+msgstr "مشتري العربية"
+
+msgid "Car Color"
+msgstr "لون العربية"
+
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Car Color"
+msgstr "لون العربية"
+
 msgid "Car Deal"
 msgstr "صفقة عربية"
 
@@ -1061,6 +1136,27 @@ msgstr "صفقات العربيات"
 
 msgid "Car Import"
 msgstr "استيراد العربيات"
+
+msgid "Car Model Year"
+msgstr "سنة موديل العربية"
+
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Car Model Year"
+msgstr "سنة موديل العربية"
+
+msgid "Car Models"
+msgstr "موديلات العربيات"
+
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Car Models"
+msgstr "موديلات العربيات"
+
+msgid "Car Trim Level"
+msgstr "فئة العربية"
+
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Car Trim Level"
+msgstr "فئة العربية"
 
 msgid "Car asked about"
 msgstr "العربية المطلوبة"
@@ -1076,6 +1172,10 @@ msgctxt "ui/views/catalogue_views.py"
 msgid "Car brand"
 msgstr "ماركة"
 
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Car brand"
+msgstr "ماركة"
+
 msgid "Car brands"
 msgstr "الماركات"
 
@@ -1087,12 +1187,32 @@ msgctxt "ui/views/catalogue_views.py"
 msgid "Car brands search"
 msgstr "بحث الماركات"
 
+msgid "Car buyer"
+msgstr "مشتري عربية"
+
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Car buyer"
+msgstr "مشتري عربية"
+
+msgid "Car buyers"
+msgstr "مشترين العربيات"
+
 msgid "Car card"
 msgstr "بطاقة العربية"
 
 msgctxt "ui/views/vehicle_views.py"
 msgid "Car card"
 msgstr "بطاقة العربية"
+
+msgid "Car colour"
+msgstr "لون عربية"
+
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Car colour"
+msgstr "لون عربية"
+
+msgid "Car colours"
+msgstr "ألوان العربيات"
 
 msgid "Car deal"
 msgstr "صفقة عربية"
@@ -1138,6 +1258,20 @@ msgctxt "ui/views/catalogue_views.py"
 msgid "Car model"
 msgstr "موديل"
 
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Car model"
+msgstr "موديل"
+
+msgid "Car model year"
+msgstr "سنة موديل"
+
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Car model year"
+msgstr "سنة موديل"
+
+msgid "Car model years"
+msgstr "سنين الموديلات"
+
 msgid "Car models"
 msgstr "الموديلات"
 
@@ -1159,6 +1293,16 @@ msgstr "سجل العربية"
 msgctxt "ui/views/supplier_listing_views.py"
 msgid "Car record"
 msgstr "سجل العربية"
+
+msgid "Car trim level"
+msgstr "فئة عربية"
+
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Car trim level"
+msgstr "فئة عربية"
+
+msgid "Car trim levels"
+msgstr "فئات العربيات"
 
 msgid "Car-import deals for Khaled Automobile / K&T: shipping stages, automatic customer messages, documents"
 msgstr "صفقات استيراد العربيات لخالد أوتوموبيل / K&T: مراحل الشحن، رسائل العملاء التلقائية، المستندات"
@@ -1333,6 +1477,10 @@ msgctxt "ui/views/import_stage_views.py"
 msgid "Colour"
 msgstr "اللون"
 
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Colour"
+msgstr "اللون"
+
 msgctxt "ui/views/supplier_listing_views.py"
 msgid "Colour"
 msgstr "اللون"
@@ -1433,6 +1581,10 @@ msgid "Company name"
 msgstr "اسم الشركة"
 
 msgctxt "ui/views/contract_views.py"
+msgid "Company name"
+msgstr "اسم الشركة"
+
+msgctxt "ui/views/link_tracker_views.py"
 msgid "Company name"
 msgstr "اسم الشركة"
 
@@ -1731,6 +1883,13 @@ msgstr "المرحلة الحالية"
 msgid "Current token"
 msgstr "التوكن الحالي"
 
+msgid "Custom Clearance Person/Employee"
+msgstr "شخص/موظف التخليص الجمركي"
+
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Custom Clearance Person/Employee"
+msgstr "شخص/موظف التخليص الجمركي"
+
 msgid "Customer"
 msgstr "العميل"
 
@@ -1770,6 +1929,10 @@ msgctxt "ui/views/website_views.py"
 msgid "Customer"
 msgstr "العميل"
 
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Customer Name"
+msgstr "اسم العميل"
+
 msgctxt "ui/views/quote_views.py"
 msgid "Customer accepted"
 msgstr "العميل وافق"
@@ -1806,6 +1969,23 @@ msgstr "الحالة كما يراها العميل"
 msgctxt "ui/views/car_deal_views.py"
 msgid "Customer-facing status"
 msgstr "الحالة كما يراها العميل"
+
+msgid "Customers Blacklist"
+msgstr "القايمة السودا للعملاء"
+
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Customers Blacklist"
+msgstr "القايمة السودا للعملاء"
+
+msgid "Customs clearance people"
+msgstr "المخلّصين الجمركيين"
+
+msgid "Customs clearance person"
+msgstr "مخلّص جمركي"
+
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Customs clearance person"
+msgstr "مخلّص جمركي"
 
 msgctxt "ui/views/car_deal_views.py"
 msgid "Customs clears in the customer's own name, so the company has no lien — instalments are refused"
@@ -1994,9 +2174,12 @@ msgctxt "ui/views/car_deal_views.py"
 msgid "Delivered on"
 msgstr "تاريخ التسليم"
 
+msgid "Delivery"
+msgstr "الشحن"
+
 msgctxt "ui/views/car_deal_views.py"
 msgid "Delivery"
-msgstr "التسليم"
+msgstr "الشحن"
 
 msgctxt "ui/views/car_deal_views.py"
 msgid "Delivery and after-sales"
@@ -2089,6 +2272,10 @@ msgstr "مقدم التعاقد €"
 msgid "Description"
 msgstr "الوصف"
 
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Description"
+msgstr "الوصف"
+
 msgctxt "ui/views/listing_views.py"
 msgid "Description"
 msgstr "الوصف"
@@ -2114,6 +2301,10 @@ msgstr "الوصف (إنجليزي)"
 msgctxt "ui/views/website_views.py"
 msgid "Description (English)"
 msgstr "الوصف (إنجليزي)"
+
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Destination"
+msgstr "الوجهة"
 
 msgctxt "ui/views/dashboard_views.py"
 msgid "Did the customer hear from us?"
@@ -2917,6 +3108,13 @@ msgctxt "ui/views/consignment_views.py"
 msgid "Held for the owner, not the company's money"
 msgstr "محفوظ لصالح المالك، مش فلوس الشركة"
 
+msgid "Hidden"
+msgstr "مخفية"
+
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Hidden"
+msgstr "مخفية"
+
 msgctxt "ui/views/website_views.py"
 msgid "Hidden"
 msgstr "مخفية"
@@ -3144,6 +3342,30 @@ msgctxt "ui/views/quote_views.py"
 msgid "Internal. Nothing here reaches the offer document"
 msgstr "داخلي. مفيش حاجة هنا بتوصل لمستند العرض"
 
+msgid "International Shippers"
+msgstr "شركات الشحن الدولي"
+
+msgctxt "ui/views/link_tracker_views.py"
+msgid "International Shippers"
+msgstr "شركات الشحن الدولي"
+
+msgid "International Shipping"
+msgstr "الشحن الدولي"
+
+msgctxt "ui/views/link_tracker_views.py"
+msgid "International Shipping"
+msgstr "الشحن الدولي"
+
+msgid "International shipper"
+msgstr "شركة شحن دولي"
+
+msgctxt "ui/views/link_tracker_views.py"
+msgid "International shipper"
+msgstr "شركة شحن دولي"
+
+msgid "International shippers"
+msgstr "شركات الشحن الدولي"
+
 msgid "Invoice file"
 msgstr "ملف الفاتورة"
 
@@ -3185,6 +3407,13 @@ msgstr "K&T بتتعاقد كوكيل تسويقي للشركة الألماني
 msgctxt "ui/views/contract_views.py"
 msgid "Kept as generated, never rebuilt from today's data — it is what the customer holds"
 msgstr "بيتحفظ زي ما اتولّد، وما يتعملش من جديد ببيانات النهارده — ده اللي في إيد العميل"
+
+msgid "Kept as it was in Odoo. It has no effect here."
+msgstr "زي ما كانت في Odoo. مالهاش أي تأثير هنا."
+
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Kept as it was in Odoo. It has no effect here."
+msgstr "زي ما كانت في Odoo. مالهاش أي تأثير هنا."
 
 msgid "Key the website sends to Genie"
 msgstr "المفتاح اللي الموقع بيبعته لـ Genie"
@@ -3367,6 +3596,9 @@ msgctxt "ui/views/supplier_listing_views.py"
 msgid "Link"
 msgstr "الرابط"
 
+msgid "Link Tracker"
+msgstr "Link Tracker"
+
 msgctxt "ui/views/website_views.py"
 msgid "Link to a Genie car record"
 msgstr "ربطها بعربية في Genie"
@@ -3413,6 +3645,16 @@ msgstr "آخر مزامنة للقوايم"
 msgctxt "ui/views/website_views.py"
 msgid "Lists synced at"
 msgstr "آخر مزامنة للقوايم"
+
+msgid "Loading port"
+msgstr "ميناء الشحن"
+
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Loading port"
+msgstr "ميناء الشحن"
+
+msgid "Loading ports"
+msgstr "مواني الشحن"
 
 msgctxt "ui/views/website_views.py"
 msgid "Location"
@@ -3607,6 +3849,17 @@ msgstr "قابلة للتحويل"
 msgid "Medium"
 msgstr "متوسطة"
 
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Medium Name"
+msgstr "اسم الوسيط"
+
+msgid "Mediums"
+msgstr "الوسايط"
+
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Mediums"
+msgstr "الوسايط"
+
 msgid "Message"
 msgstr "الرسالة"
 
@@ -3694,6 +3947,10 @@ msgctxt "ui/views/contract_views.py"
 msgid "Model"
 msgstr "الموديل"
 
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Model"
+msgstr "الموديل"
+
 msgctxt "ui/views/quote_views.py"
 msgid "Model"
 msgstr "الموديل"
@@ -3731,6 +3988,10 @@ msgid "Model year"
 msgstr "سنة الموديل"
 
 msgctxt "ui/views/contract_views.py"
+msgid "Model year"
+msgstr "سنة الموديل"
+
+msgctxt "ui/views/link_tracker_views.py"
 msgid "Model year"
 msgstr "سنة الموديل"
 
@@ -3863,6 +4124,10 @@ msgid "Name (Arabic)"
 msgstr "الاسم (عربي)"
 
 msgctxt "ui/views/catalogue_views.py"
+msgid "Name (Arabic)"
+msgstr "الاسم (عربي)"
+
+msgctxt "ui/views/link_tracker_views.py"
 msgid "Name (Arabic)"
 msgstr "الاسم (عربي)"
 
@@ -4294,6 +4559,23 @@ msgstr "على الموقع"
 msgid "On while migrating or bulk-loading, so nobody is messaged by accident"
 msgstr "شغّله أثناء الترحيل أو التحميل الجماعي، عشان محدش يتبعتله بالغلط"
 
+msgid "On-Hold Salespersons"
+msgstr "البياعين المعلّقين"
+
+msgctxt "ui/views/link_tracker_views.py"
+msgid "On-Hold Salespersons"
+msgstr "البياعين المعلّقين"
+
+msgid "On-hold salespeople"
+msgstr "البياعين المعلّقين"
+
+msgid "On-hold salesperson"
+msgstr "بياع معلّق"
+
+msgctxt "ui/views/link_tracker_views.py"
+msgid "On-hold salesperson"
+msgstr "بياع معلّق"
+
 msgid "One is the maximum. The second request is refused."
 msgstr "الحد الأقصى واحد. الطلب الثاني مرفوض."
 
@@ -4356,6 +4638,9 @@ msgstr "مفاتيح التشغيل"
 msgid "Operations"
 msgstr "العمليات"
 
+msgid "Opportunities"
+msgstr "الفرص"
+
 msgid "Optional extra"
 msgstr "إضافة اختيارية"
 
@@ -4376,6 +4661,13 @@ msgstr "الإضافات والفئة"
 msgctxt "ui/views/vehicle_views.py"
 msgid "Options that decide the deposit tier"
 msgstr "المواصفات اللي بتحدد فئة الوديعة"
+
+msgid "Options/Features"
+msgstr "المواصفات/الكماليات"
+
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Options/Features"
+msgstr "المواصفات/الكماليات"
 
 msgid "Order"
 msgstr "الترتيب"
@@ -4421,10 +4713,18 @@ msgctxt "ui/views/catalogue_views.py"
 msgid "Other spellings customers and adverts use, comma separated — they all find this brand"
 msgstr "طرق الكتابة التانية اللي العملاء والإعلانات بيستخدموها، بينهم فاصلة — كلها بتوصل للماركة دي"
 
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Other spellings customers and adverts use, comma separated — they all find this brand"
+msgstr "طرق الكتابة التانية اللي العملاء والإعلانات بيستخدموها، بينهم فاصلة — كلها بتوصل للماركة دي"
+
 msgid "Other spellings that mean this one, comma separated — e.g. Mercedes-Benz, مرسيدس بنز"
 msgstr "طرق كتابة تانية لنفس الاسم، بينهم فاصلة — زي Mercedes-Benz، مرسيدس بنز"
 
 msgctxt "ui/views/catalogue_views.py"
+msgid "Other spellings, comma separated — e.g. C 200, C-200"
+msgstr "طرق كتابة تانية، بينهم فاصلة — زي C 200، C-200"
+
+msgctxt "ui/views/link_tracker_views.py"
 msgid "Other spellings, comma separated — e.g. C 200, C-200"
 msgstr "طرق كتابة تانية، بينهم فاصلة — زي C 200، C-200"
 
@@ -4467,6 +4767,10 @@ msgstr "المالك"
 msgctxt "ui/views/consignment_views.py"
 msgid "Owner"
 msgstr "المالك"
+
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Owner Name"
+msgstr "اسم المالك"
 
 msgctxt "ui/views/website_views.py"
 msgid "POST https://<this Genie address>/api/website/leads"
@@ -4636,9 +4940,17 @@ msgstr "تحويلات محتاجة تأكيد"
 msgid "Pending"
 msgstr "قيد الانتظار"
 
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Person/Employee"
+msgstr "الشخص/الموظف"
+
 msgid "Personal import"
 msgstr "استيراد شخصي"
 
+msgid "Phone"
+msgstr "التليفون"
+
+msgctxt "ui/views/link_tracker_views.py"
 msgid "Phone"
 msgstr "التليفون"
 
@@ -4825,6 +5137,27 @@ msgstr "جاري المعالجة"
 msgctxt "ui/views/call_views.py"
 msgid "Processing"
 msgstr "جاري المعالجة"
+
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Product Type Name"
+msgstr "اسم نوع الطلب"
+
+msgid "Product Types"
+msgstr "أنواع الطلب"
+
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Product Types"
+msgstr "أنواع الطلب"
+
+msgid "Product type"
+msgstr "نوع الطلب"
+
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Product type"
+msgstr "نوع الطلب"
+
+msgid "Product types"
+msgstr "أنواع الطلب"
 
 msgid "Production month"
 msgstr "شهر الإنتاج"
@@ -5326,6 +5659,13 @@ msgstr "مندوبو المبيعات"
 msgid "Salesperson"
 msgstr "مندوب المبيعات"
 
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Salesperson"
+msgstr "مندوب المبيعات"
+
+msgid "Salespersons"
+msgstr "البياعين"
+
 msgid "Saloon"
 msgstr "سيدان"
 
@@ -5518,6 +5858,10 @@ msgstr "حدده بس لو مش موافق على العدّ"
 msgid "Several customers match"
 msgstr "أكثر من عميل مطابق"
 
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Shipper Name"
+msgstr "اسم شركة الشحن"
+
 msgid "Shipping"
 msgstr "الشحن"
 
@@ -5531,6 +5875,27 @@ msgstr "الشحن (يورو)"
 msgctxt "ui/views/quote_views.py"
 msgid "Shipping (€)"
 msgstr "الشحن (€)"
+
+msgid "Shipping Destination"
+msgstr "وجهة الشحن"
+
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Shipping Destination"
+msgstr "وجهة الشحن"
+
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Shipping Name"
+msgstr "اسم ميناء الشحن"
+
+msgid "Shipping destination"
+msgstr "وجهة شحن"
+
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Shipping destination"
+msgstr "وجهة شحن"
+
+msgid "Shipping destinations"
+msgstr "وجهات الشحن"
 
 msgid "Shipping only"
 msgstr "شحن فقط"
@@ -5732,6 +6097,17 @@ msgstr "المصدر"
 msgctxt "ui/views/vehicle_views.py"
 msgid "Source"
 msgstr "المصدر"
+
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Source Name"
+msgstr "اسم المصدر"
+
+msgid "Sources"
+msgstr "المصادر"
+
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Sources"
+msgstr "المصادر"
 
 msgid "Sourcing outside Germany or the EU"
 msgstr "الشراء من خارج ألمانيا أو الاتحاد الأوروبي"
@@ -6730,6 +7106,10 @@ msgctxt "ui/views/vehicle_views.py"
 msgid "Trim"
 msgstr "الفئة"
 
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Trim Level"
+msgstr "الفئة"
+
 msgid "Trim wanted"
 msgstr "الفئة المطلوبة"
 
@@ -6743,6 +7123,17 @@ msgstr "النوع"
 msgctxt "ui/views/document_views.py"
 msgid "Type"
 msgstr "النوع"
+
+msgctxt "ui/views/link_tracker_views.py"
+msgid "UTM Medium"
+msgstr "وسيط UTM"
+
+msgctxt "ui/views/link_tracker_views.py"
+msgid "UTM Source"
+msgstr "مصدر UTM"
+
+msgid "UTMs"
+msgstr "UTMs"
 
 msgid "Unknown"
 msgstr "غير معروف"
@@ -7331,6 +7722,13 @@ msgstr "الأسعار اللي الفئة دي بتغطيها"
 msgctxt "ui/views/quote_views.py"
 msgid "Which pricing band the gross price fell into — it fixes the admin fee and the deposit %"
 msgstr "أنهي فئة تسعير السعر الإجمالي وقع فيها — هي اللي بتحدد المصاريف الإدارية ونسبة مقدم التعاقد"
+
+msgid "While a salesperson is on this list, the automatic lead assignment gives them no new leads. The leads they already have stay with them."
+msgstr "طول ما البياع في القايمة دي، التوزيع التلقائي مش بيدّيله عملاء محتملين جداد. العملاء المحتملين اللي معاه بيفضلوا معاه."
+
+msgctxt "ui/views/link_tracker_views.py"
+msgid "While a salesperson is on this list, the automatic lead assignment gives them no new leads. The leads they already have stay with them."
+msgstr "طول ما البياع في القايمة دي، التوزيع التلقائي مش بيدّيله عملاء محتملين جداد. العملاء المحتملين اللي معاه بيفضلوا معاه."
 
 msgctxt "ui/views/consignment_views.py"
 msgid "While it runs, the owner may not sell the car themselves"

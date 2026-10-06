@@ -11,6 +11,11 @@ from .initiative import Initiative
 from .listings import ShowroomListing, InitiativeListing
 from .pricing import PricingBand
 from .lead_assignment import LeadAssignmentGroup, LeadAssignmentLog
+from .picklists import (
+    CarModelYear, CarColour, CarTrimLevel, CarBuyer,
+    ArrivalPort, ShippingDestination, InternationalShipper, LoadingPort, CustomsClearancePerson,
+    OpportunityProductType, OnHoldSalesperson, BlacklistedCustomer,
+)
 from .quote import Quote, QuoteLine, QuoteOption
 from .contract import Contract, ContractTemplate
 from .approval import ApprovalPolicy, ApprovalRequest
@@ -33,4 +38,7 @@ __all__ = [
     'ImportProgram', 'TaxRule', 'Eur1Rule',
     'DepositTier', 'CustomsValuation', 'ModelPriceRange',
     'FeeSchedule', 'FinancingPlan', 'FirstOwnerDiscount', 'FxReference',
+    'CarModelYear', 'CarColour', 'CarTrimLevel', 'CarBuyer',
+    'ArrivalPort', 'ShippingDestination', 'InternationalShipper', 'LoadingPort', 'CustomsClearancePerson',
+    'OpportunityProductType', 'OnHoldSalesperson', 'BlacklistedCustomer',
 ]

@@ -173,6 +173,25 @@ MODEL_PERMISSIONS = [
     {'model': 'car_import.leadassignmentlog', 'group': 'car_import.management',
      'permissions': VIEW_ONLY},
 
+    # ── the Link Tracker lists ──────────────────────────────────────────────
+    # Management keeps them. Sales and operations may read the plain lists —
+    # they are what a lead or a shipment will be described with — and nothing
+    # more. Who is on hold and who is blacklisted is management's alone.
+    *[{'model': f'car_import.{model}', 'group': group, 'permissions': rights}
+      for model in ('carmodelyear', 'carcolour', 'cartrimlevel', 'carbuyer',
+                    'arrivalport', 'shippingdestination', 'internationalshipper', 'loadingport',
+                    'customsclearanceperson', 'opportunityproducttype')
+      for group, rights in (('car_import.sales_agent', VIEW_ONLY), ('car_import.sales_manager', VIEW_ONLY),
+                            ('car_import.operations', VIEW_ONLY), ('car_import.management', FULL))],
+    {'model': 'car_import.onholdsalesperson', 'group': 'car_import.management', 'permissions': FULL},
+    {'model': 'car_import.blacklistedcustomer', 'group': 'car_import.management', 'permissions': FULL},
+    # Mediums and Sources are crm's tables, and crm grants them to no group at
+    # all: without these two rows the entries open on "not authorized" for
+    # anybody who is not a superuser. No delete — every lead's source and
+    # medium point at these rows, and removing one blanks them silently.
+    {'model': 'crm.utmmedium', 'group': 'car_import.management', 'permissions': MANAGE},
+    {'model': 'crm.utmsource', 'group': 'car_import.management', 'permissions': MANAGE},
+
     # ── the company's own legal identity ────────────────────────────────────
     {'model': 'car_import.contractissuer', 'group': 'car_import.management', 'permissions': FULL},
     {'model': 'car_import.contractissuer', 'group': 'car_import.sales_manager',

@@ -12,8 +12,9 @@ applied to one lead:
 2. **Whose turn.** The group's salespeople in id order, starting right after
    whoever received the last lead (`last_assigned_index`).
 3. **Who is skipped.** A switched-off account, somebody who already received
-   the group's daily limit from this job today, and somebody on approved time
-   off today. If that leaves nobody, the lead stays unassigned for the next run.
+   the group's daily limit from this job today, somebody on approved time off
+   today, and somebody management put on the On-Hold Salespersons list. If
+   that leaves nobody, the lead stays unassigned for the next run.
 
 What it never does is take a lead away from anybody. Only leads with NO
 salesperson are touched, and the write itself is conditional on that still
@@ -113,6 +114,22 @@ def users_on_leave(user_ids, now=None):
         return set()
 
 
+def users_on_hold(user_ids):
+    """Of these users, the ones on the On-Hold Salespersons list (models/picklists.py).
+
+    Not guarded the way the leave lookup is: if the list cannot be read the run
+    fails and the leads wait for the next one. Handing a lead to somebody
+    management took out of the turn is the worse mistake.
+    """
+    from car_import.models import OnHoldSalesperson
+
+    user_ids = list(user_ids or ())
+    if not user_ids:
+        return set()
+    return set(OnHoldSalesperson.objects.filter(active=True, user_id__in=user_ids)
+               .values_list('user_id', flat=True))
+
+
 # ── one run ──────────────────────────────────────────────────────────────────
 def assign_new_leads(now=None):
     """One run of the job. Safe to repeat and safe to overlap; returns counts."""
@@ -140,10 +157,10 @@ def assign_new_leads(now=None):
         tags_of[lead_id].add(tag_id)
 
     # Away for the whole run: no working account (`User.objects` leaves the
-    # assistant's own accounts out), or on leave.
+    # assistant's own accounts out), on leave, or on hold.
     everyone = {user_id for ids in members.values() for user_id in ids}
     working = set(User.objects.filter(pk__in=everyone, is_active=True).values_list('pk', flat=True))
-    away = (everyone - working) | users_on_leave(working, now)
+    away = (everyone - working) | users_on_leave(working, now) | users_on_hold(working)
 
     day_start, _day_end = local_day(now)
     teams, skip = {}, set()
