@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -93,6 +94,16 @@ class ImportStage(BaseModel):
     attach_media = models.BooleanField(
         default=False, verbose_name=_("Attach media"),
         help_text=_("Stage 6 sends the Berlin photos and video"),
+    )
+
+    # ── who may move a deal here ────────────────────────────────────────────
+    #: The client, 2026-10-07: «الستيج بتاع الشحن تبقى البيرميشن بتاعها مع ناس
+    #: محددين». Checked in `CarDeal._check_stage_permission` on every save, so
+    #: the button, the kanban drag and the form all obey it.
+    allowed_users = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, blank=True, related_name='+', verbose_name=_("Only these people move a deal here"),
+        help_text=_("When set, nobody else can move a deal INTO this stage — the shipping stage, for "
+                    "example. Empty: everyone who can edit deals"),
     )
 
     class Meta:

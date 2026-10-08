@@ -14,7 +14,7 @@ from .lead_assignment import LeadAssignmentGroup, LeadAssignmentLog
 from .picklists import (
     CarModelYear, CarColour, CarTrimLevel, CarBuyer,
     ArrivalPort, ShippingDestination, InternationalShipper, LoadingPort, CustomsClearancePerson,
-    OpportunityProductType, OnHoldSalesperson, BlacklistedCustomer,
+    OpportunityProductType, OnHoldSalesperson, BlacklistedCustomer, EuMadeBrand,
 )
 from .quote import Quote, QuoteLine, QuoteOption
 from .contract import Contract, ContractTemplate
@@ -40,5 +40,5 @@ __all__ = [
     'FeeSchedule', 'FinancingPlan', 'FirstOwnerDiscount', 'FxReference',
     'CarModelYear', 'CarColour', 'CarTrimLevel', 'CarBuyer',
     'ArrivalPort', 'ShippingDestination', 'InternationalShipper', 'LoadingPort', 'CustomsClearancePerson',
-    'OpportunityProductType', 'OnHoldSalesperson', 'BlacklistedCustomer',
+    'OpportunityProductType', 'OnHoldSalesperson', 'BlacklistedCustomer', 'EuMadeBrand',
 ]

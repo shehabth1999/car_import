@@ -198,3 +198,16 @@ def model_for_website(website_id, brand, name_en='', name_ar=''):
     if CarModel.objects.filter(brand=brand, name=name).exists():
         name = f'{name} #{website_id}'[:128]
     return CarModel.objects.create(brand=brand, name=name, name_ar=(name_ar or '')[:128], website_id=website_id)
+
+
+def made_in_eu(brand):
+    """True / False for a catalogue brand against the EU-made list (Link
+    Tracker → EU-Made Brands, the client's request of 2026-10-07), or None
+    while that list is empty or the brand is not known: an empty list must
+    not flag every car."""
+    if brand is None:
+        return None
+    from car_import.models import EuMadeBrand
+    if not EuMadeBrand.objects.exists():
+        return None
+    return EuMadeBrand.objects.filter(brand=brand).exists()

@@ -172,7 +172,7 @@ vehicle_form_view = {
                             {"fields": [
                                 {"name": "has_panorama", "string": _("Panorama roof"), "widget": "switch"},
                                 {"name": "has_sunroof", "string": _("Sunroof"), "widget": "switch"},
-                                {"name": "has_electric_seats", "string": _("Electric seats"), "widget": "switch"},
+                                {"name": "has_memory_seats", "string": _("Memory seats"), "widget": "switch"},
                             ]},
                             {"fields": [
                                 {"name": "has_electric_trunk", "string": _("Electric trunk"), "widget": "switch"},

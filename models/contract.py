@@ -493,10 +493,14 @@ class Contract(BaseModel, BranchMixin, FullChatterMixin):
                 continue
             try:
                 from modules.chat.services.omnichannel_send_service import OmnichannelSendService
+
+                from car_import.services import sales_flow
+                # The PDF, not the Word file (owner, 2026-10-07).
+                document = sales_flow.contract_file(contract)
                 result = OmnichannelSendService().send_and_broadcast(
-                    partner, {'url': contract.document.url},
+                    partner, {'url': sales_flow.absolute_url(document.url)},
                     message_type='document',
-                    filename=contract.document.name.rsplit('/', 1)[-1],
+                    filename=document.name.rsplit('/', 1)[-1],
                     caption=_("عقد الاستيراد — برجاء المراجعة والتوقيع")) or {}
             except Exception as exc:  # noqa: BLE001 — the reason belongs on screen
                 refused.append(f'{label}: {exc}')

@@ -130,6 +130,10 @@ def execute(input_data):
     if len([t for t in texts if t.strip()]) > 1:
         message = chr(10).join(t for t in texts if t.strip())   # not a backslash: this is a string
     has_media = any(item.get('type') not in (None, 'text') for item in blocks)
+    # The batch's files do not reach this box (the engine keeps them on its
+    # run context), so a PDF sent with no words is read off the thread.
+    if not message.strip() and not has_media:
+        has_media = turn_context.unanswered_media(convo)
 
     now = timezone.localtime()
     result = turn_context.build(who, convo, message)

@@ -84,11 +84,21 @@ def _gate(result, workflow_id, kwargs, started):
     # reply, sent from here exactly once — the tool itself sends nothing.
     # Without this, the bridge reads the agent's (correct) silence as a
     # failed run, re-runs the turn, and the customer gets the sentence twice.
-    if _escalated_during(conversation, started):
-        if isinstance(text, str) and text.strip() and text.strip() != supervisor.HOLDING_TEXT:
+    topic = _escalated_during(conversation, started)
+    if topic:
+        holding = supervisor.holding_text(topic)
+        if isinstance(text, str) and text.strip() and text.strip() != holding:
             logger.info("car_import: dropping the agent's text after a hand-over: %r", text[:200])
-        return dataclasses.replace(result, output=supervisor.HOLDING_TEXT, escalated_this_run=True)
+        return dataclasses.replace(result, output=holding, escalated_this_run=True)
 
+    if _is_run_data(text):
+        # A run that ended without the model hands back its own data, and the
+        # bridge sends `str()` of whatever it gets: on 2026-10-07 a customer
+        # got this turn's facts as "{'deal_reference': …}" after sending a PDF.
+        # Data is never a reply. Empty, the bridge runs the turn again.
+        logger.error('car_import: the run ended with data, not a reply (%s) — not sent', type(text).__name__)
+        text = ''
+        result = dataclasses.replace(result, output='')
     if isinstance(text, str) and not text.strip():
         # Silence, and no hand-over: when this turn's last tool gave a sentence
         # for the customer (a question it needs answered), that is the reply.
@@ -97,7 +107,7 @@ def _gate(result, workflow_id, kwargs, started):
             logger.info('car_import: empty reply replaced by the tool\'s sentence: %r', spoken[:120])
             return dataclasses.replace(result, output=spoken)
     if not isinstance(text, str) or not text.strip():
-        return result                       # nothing to inspect: empty or a dict
+        return result                       # nothing to inspect
     formatted = _chat_formatting(text)
     replacement, problems = supervisor.gate(formatted, conversation=conversation,
                                             since=started, workflow_name=name)
@@ -110,6 +120,20 @@ def _gate(result, workflow_id, kwargs, started):
     # the holding sentence even though `handled_by_ai` is now False. That is
     # exactly what `escalated_this_run` exists for (workflow_executor.py:80).
     return dataclasses.replace(result, output=replacement, escalated_this_run=True)
+
+
+#: The keys `prepare_turn` returns. A reply that IS them is the run's data.
+_RUN_DATA_KEYS = ("'deal_reference'", "'partner_facts'", "'sales_facts'", "'needs_ai'")
+
+
+def _is_run_data(output):
+    """True for anything that is not words for the customer: a dict, a list,
+    or the text of one of our own turn dicts."""
+    if output is None or isinstance(output, str) and not output.strip().startswith('{'):
+        return False
+    if not isinstance(output, str):
+        return True
+    return sum(key in output for key in _RUN_DATA_KEYS) >= 2
 
 
 _DOUBLE_STARS = re.compile(r'\*\*(.+?)\*\*', re.DOTALL)
@@ -157,23 +181,26 @@ def _one_message(text, limit=MESSAGE_LIMIT):
 
 
 def _escalated_during(conversation, started):
-    """Did our hand-over stamp land during this run? Re-read the row: the
-    object the bridge passed in may predate the tool's write."""
+    """The hand-over's topic when our stamp landed during this run, else ''.
+    Re-read the row: the object the bridge passed in may predate the tool's
+    write. The topic picks the line the customer gets (`holding_text`)."""
     if conversation is None or started is None:
-        return False
+        return ''
     try:
         from datetime import timedelta
         from django.utils.dateparse import parse_datetime
         row = (type(conversation)._base_manager.filter(pk=conversation.pk)
                .values_list('handled_by_ai', 'social_platform_data').first())
         if row is None or row[0]:
-            return False
+            return ''
         data = row[1] if isinstance(row[1], dict) else {}
         when = parse_datetime(str(data.get('car_import_escalated_at') or ''))
-        return bool(when and when >= started - timedelta(seconds=2))
+        if not (when and when >= started - timedelta(seconds=2)):
+            return ''
+        return str(data.get('car_import_escalation_topic') or 'other')
     except Exception:
         logger.exception('car_import: could not read the hand-over stamp')
-        return False
+        return ''
 
 
 def _workflow_name(workflow_id):

@@ -1515,4 +1515,40 @@ CATALOG = {
     'Customer Name': 'اسم العميل',
     'While a salesperson is on this list, the automatic lead assignment gives them no new leads. The leads they already have stay with them.': 'طول ما البياع في القايمة دي، التوزيع التلقائي مش بيدّيله عملاء محتملين جداد. العملاء المحتملين اللي معاه بيفضلوا معاه.',
     'Kept as it was in Odoo. It has no effect here.': 'زي ما كانت في Odoo. مالهاش أي تأثير هنا.',
+    # ── the client's list of 2026-10-07 ─────────────────────────────────────
+    'Memory seats': 'كراسي ميموري',
+    'Memory seats (كراسي ميموري)': 'كراسي ميموري',
+    'Who moves a deal here': 'مين ينقل الصفقة للمرحلة دي',
+    'Only these people move a deal here': 'الناس دول بس ينقلوا الصفقة للمرحلة دي',
+    'Nobody else can move a deal INTO this stage. Leave it empty to let everyone who edits deals do it':
+        'محدش غيرهم يقدر ينقل صفقة للمرحلة دي. سيبها فاضية عشان أي حد بيعدّل الصفقات يقدر.',
+    'Only %(people)s can move a deal to «%(stage)s».': 'مفيش غير %(people)s يقدر ينقل صفقة لمرحلة «%(stage)s».',
+    'Fill this and save before rejecting — the customer is sent it word for word':
+        'اكتب السبب واحفظ قبل الرفض — العميل بيوصله زي ما هو بالظبط',
+    'Write why it is rejected first — the customer is sent the reason.':
+        'اكتب سبب الرفض الأول — العميل بيوصله السبب.',
+    'Reject this transfer? Nothing is credited, and the customer is sent the reason you wrote in «Why it was rejected».':
+        'ترفض التحويل ده؟ مفيش أي مبلغ هيتسجّل، والعميل هيوصله السبب اللي كتبته في «سبب الرفض».',
+    'EU-Made Brands': 'ماركات صناعة الاتحاد الأوروبي',
+    'EU-made brand': 'ماركة صناعة الاتحاد الأوروبي',
+    'EU-made brands': 'ماركات صناعة الاتحاد الأوروبي',
+    'A brand whose cars are built inside the European Union. Once this list has brands, the assistant and the team are warned when a car of any other brand is priced for EUR 1':
+        'ماركة عربياتها بتتصنع جوه الاتحاد الأوروبي. أول ما القايمة يبقى فيها ماركات، المساعد والفريق بيتنبّهوا لما '
+        'عربية من أي ماركة تانية تتسعّر بشهادة يورو 1.',
+    'Optional, e.g. which countries or which models': 'اختياري، مثلاً أنهي دول أو أنهي موديلات',
+    'Customs Values': 'قيم الجمارك',
+    'Customs (EUR)': 'الجمارك (يورو)',
+    'A car one model year newer than the newest row takes this year\'s figure':
+        'العربية اللي موديلها أحدث بسنة من آخر سطر بتاخد رقم السنة دي',
+    'What a new car of this model pays in customs on a personal import, in euros':
+        'جمارك العربية الزيرو من الموديل ده في الاستيراد الشخصي، باليورو',
+    'Set it when the government changes the figure, and add the new figure as a new row':
+        'حطّه لما الحكومة تغيّر الرقم، وضيف الرقم الجديد في سطر جديد',
+    'Initiative Values': 'قيم المبادرات',
+    'Initiative value': 'قيمة المبادرة',
+    'Initiative value (USD)': 'قيمة المبادرة (دولار)',
+    'Residence': 'الإقامة',
+    'Inside Europe = lives in an EU country. UK and Turkey count as outside':
+        'داخل أوروبا = مقيم في دولة من الاتحاد الأوروبي. إنجلترا وتركيا بيتحسبوا برّه أوروبا',
+    'The dollar deposit the initiative needs for this car': 'الوديعة الدولارية اللي المبادرة محتاجاها للعربية دي',
 }

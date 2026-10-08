@@ -213,6 +213,23 @@ def review_and_log(deal, text, allowed_figures=None):
 HOLDING_TEXT = "تمام يا فندم 🙏 هحوّل حضرتك لزميلي وهو هيرد على حضرتك حالاً."
 
 
+def holding_text(topic=''):
+    """The line a customer gets when this turn hands them over.
+
+    One topic carries more than the holding line. Asked whether a car is full
+    or medium, the customer is shown the six options that decide it, in the
+    client's words, and told sales will explain (client, 2026-10-07: «نعرضلو
+    الخيارات … ونقولو هنحولك لفريق المبيعات يشرحلك التفصيل»). It is sent from
+    here, not written by the model: on 2026-10-07 the model listed six options
+    of its own — Burmester, 360° cameras — and decided the tier itself."""
+    if str(topic or '').strip().lower() == 'trim_check':
+        from car_import.models.vehicle import TIER_OPTION_FIELDS, TIER_OPTIONS_AR
+        options = '\n'.join(f'• {TIER_OPTIONS_AR[field]}' for field in TIER_OPTION_FIELDS)
+        return ('الفئة (كاملة ولا متوسطة) بتتحدد من الكماليات دي:\n' + options
+                + '\nهحوّل حضرتك لفريق المبيعات يشرحلك التفاصيل ويأكدلك فئة العربية دي.')
+    return HOLDING_TEXT
+
+
 def figures_from_tool_messages(conversation, since):
     """Every number the tools returned in this turn.
 

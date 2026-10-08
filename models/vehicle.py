@@ -9,23 +9,34 @@ from modules.base.models.base import BaseModel
 
 #: Options that move a car from the medium tier to the full tier.
 #: The client confirmed on 2026-09-14: panorama and sunroof count separately,
-#: and **any 3 of 6** options put the car in the full tier. All six were
-#: confirmed by the owner on 2026-09-16, in his own words:
-#:   فتحة سقف · سقف بانوراما · شنطة كهرباء · كراسي كهرباء · كراسي جلد · عداد ديجيتال
+#: and **any 3 of 6** options put the car in the full tier.
 #:
-#: Two corrections came with that list. What was recorded as "memory seats" is
-#: ELECTRIC seats — a different option, and a commoner one. And leather seats,
-#: which had been missed entirely, take the sixth slot that was a placeholder.
-#: Both mattered: the count decides the tier, the tier decides the deposit, and
-#: the deposit is thousands of dollars.
+#: The six, as the client corrected them on 2026-10-07 after the assistant
+#: told a test customer six options of its own (Burmester, 360° cameras …):
+#:   البانوراما · كراسي ميموري · كراسي جلد · شنطة كهرباء · فتحة سقف · عداد ديجيتال
+#: MEMORY seats — the list of 2026-09-16 had said electric seats, and that is
+#: the one entry that changed. The count decides the tier, the tier decides
+#: the deposit, and the deposit is thousands of dollars.
 TIER_OPTION_FIELDS = (
-    'has_sunroof',
     'has_panorama',
-    'has_electric_trunk',
-    'has_electric_seats',
+    'has_memory_seats',
     'has_leather_seats',
+    'has_electric_trunk',
+    'has_sunroof',
     'has_digital_cluster',
 )
+
+#: The six in the customer's words, in the client's order. The assistant reads
+#: them out exactly — never a list of its own — when a customer asks what makes
+#: a car كاملة (`services/supervisor.TRIM_CHECK_TEXT`).
+TIER_OPTIONS_AR = {
+    'has_panorama': 'البانوراما',
+    'has_memory_seats': 'كراسي ميموري',
+    'has_leather_seats': 'كراسي جلد',
+    'has_electric_trunk': 'شنطة كهربا',
+    'has_sunroof': 'فتحة سقف',
+    'has_digital_cluster': 'عداد ديجيتال',
+}
 
 #: How many of those options make the car "كاملة".
 TIER_FULL_THRESHOLD = 3
@@ -135,7 +146,7 @@ class Vehicle(BaseModel):
     has_panorama = models.BooleanField(default=False, verbose_name=_("Panorama roof"))
     has_sunroof = models.BooleanField(default=False, verbose_name=_("Sunroof"))
     has_electric_trunk = models.BooleanField(default=False, verbose_name=_("Electric boot (شنطة كهرباء)"))
-    has_electric_seats = models.BooleanField(default=False, verbose_name=_("Electric seats (كراسي كهرباء)"))
+    has_memory_seats = models.BooleanField(default=False, verbose_name=_("Memory seats (كراسي ميموري)"))
     has_leather_seats = models.BooleanField(default=False, verbose_name=_("Leather seats (كراسي جلد)"))
     has_digital_cluster = models.BooleanField(default=False, verbose_name=_("Digital cluster (عداد ديجيتال)"))
     tier_override = models.CharField(

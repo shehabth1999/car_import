@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-"""The Link Tracker menu: the client's Odoo configuration menu, entry for entry.
+"""The Link Tracker menu: the client's Odoo configuration menu, entry for entry —
+plus three entries the client asked for on 2026-10-07 (EU-made brands, and the
+customs and initiative values).
 
 In their Odoo "Link Tracker" is not a link tracker. It is the top menu where an
 administrator keeps every pick-list — the sources a lead comes from, the years
@@ -102,6 +104,17 @@ menu_dict = {
                     "Car Trim Level", "فئة العربية", "SlidersHorizontal", "car_import.cartrimlevel", 150),
                 "car_import_menu_lt_car_buyers": _entry(
                     "Car Buyer", "مشتري العربية", "UserCheck", "car_import.carbuyer", 160),
+                # Not in their Odoo: asked for on 2026-10-07 (EUR 1 needs an EU-built car).
+                "car_import_menu_lt_eu_made_brands": _entry(
+                    "EU-Made Brands", "ماركات صناعة الاتحاد الأوروبي", "Flag", "car_import.eumadebrand", 170),
+            }),
+            # Not in their Odoo either: «مكان مخصص لقيمة الجمارك والمبادرات»
+            # (2026-10-07) — the two tables the assistant prices from.
+            "car_import_menu_lt_customs": _group("Customs & Initiatives", "الجمارك والمبادرات", "Scale", 25, {
+                "car_import_menu_lt_customs_values": _entry(
+                    "Customs Values", "قيم الجمارك", "Scale", "car_import.customsvaluation", 110),
+                "car_import_menu_lt_initiative_values": _entry(
+                    "Initiative Values", "قيم المبادرات", "Landmark", "car_import.deposittier", 120),
             }),
             "car_import_menu_lt_delivery": _group("Delivery", "الشحن", "Ship", 30, {
                 "car_import_menu_lt_arrival_ports": _entry(

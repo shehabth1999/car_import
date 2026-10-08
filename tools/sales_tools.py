@@ -72,19 +72,22 @@ LINK_UNREADABLE_DO_NOW = (
 
 
 def id_name_needed():
-    """The written offer waits for the name on the ID (owner, 2026-09-30:
-    «عرض السعر مياخدش اسم العميل من واتساب» — the name in four parts, as on
-    the card). The figures themselves never wait: send_offer=false answers."""
+    """The written offer waits for the customer's name — four parts, as on the
+    card (owner, 2026-09-30: «عرض السعر مياخدش اسم العميل من واتساب») — and for
+    nothing else (owner, 2026-10-07: «نبسط الخانات المطلوبة في الأول، بعد
+    التحويل نكمل باقي المطلوب»). The ID photo, the national ID number and the
+    address are asked for after the transfer, for the contract
+    (`ka_record_payment_receipt`). The figures never wait: send_offer=false."""
     return {
         "success": False, "error_type": "id_name_needed",
-        "error": "The offer carries the customer's name as on their national ID, and it is not on file yet.",
-        "do_now": ("Do NOT send the offer with the WhatsApp name. Ask in ONE short line for a photo of their "
-                   "national ID card (best), or their full four-part name exactly as on the card and the "
-                   "14-digit national ID number. A photo → ka_customer_sent_image kind=national_id; typed → "
-                   "ka_save_contract_details. Then call ka_quote_car with send_offer=true again. If they "
-                   "already wrote the full name and number earlier in the chat, save them now and carry on."),
-        "say_to_customer_ar": ("عشان أطلّع عرض السعر باسم حضرتك، ممكن صورة البطاقة؟ "
-                               "أو الاسم رباعي زي ما هو في البطاقة بالظبط والرقم القومي."),
+        "error": "The offer carries the customer's full name (four parts, as on their ID), and it is not on file yet.",
+        "do_now": ("Do NOT send the offer with the WhatsApp name. Ask in ONE short line for their full name in "
+                   "four parts, as on their ID — and NOTHING else: no ID photo, no national ID number, no address "
+                   "(those are asked after the transfer, for the contract). When they write it → "
+                   "ka_save_contract_details with full_name, then ka_quote_car with send_offer=true again. If "
+                   "they already wrote it earlier in the chat, save it now and carry on. An ID photo they send "
+                   "anyway → ka_customer_sent_image kind=national_id."),
+        "say_to_customer_ar": "عشان أطلّع عرض السعر باسم حضرتك، ممكن الاسم رباعي زي ما هو في البطاقة؟",
     }
 
 
@@ -157,6 +160,24 @@ def _ask_for_missing_figure(context, programme, customs, deposits, car, year):
     if kind is None:
         return False
     return agent_help.ask_staff(_partner(context), getattr(context, 'conversation', None), kind, car, year)
+
+
+def _eu_origin(context, listing, car_model, car, year):
+    """What the assistant must say when the car's brand is not on the EU-made
+    list (Link Tracker → EU-Made Brands) — '' when it is, or while the list is
+    empty. A colleague is tagged once: EUR 1 needs a car built in the EU, and
+    any other origin needs management (prompt rule 9)."""
+    from car_import.services import agent_help, catalogue
+    brand = getattr(listing, 'brand', None) if listing is not None else None
+    if brand is None and car_model is not None:
+        brand = getattr(car_model, 'brand', None)
+    if catalogue.made_in_eu(brand) is not False:
+        return ''
+    agent_help.ask_staff(_partner(context), getattr(context, 'conversation', None), 'eu_origin',
+                         car or brand, year)
+    return (f"{brand} is NOT on the company's list of EU-made brands, and a colleague was tagged. Price it as "
+            f"returned, then say in ONE line that a colleague is confirming the car's origin before "
+            f"contracting. Do not refuse the car and do not guess where it is built.")
 
 
 def _resolve_price(listing_reference, gross_price_eur):
@@ -257,6 +278,8 @@ def _quote_sent_reply(quote, sent, resent=False):
         data["programme"] = rules.for_agent(quote.programme, quote.port, quote.customs_eur,
                                             quote.initiative_deposits, model_year=quote.model_year,
                                             poa=quote.poa_usd)
+        data["full_cost_ar"] = rules.full_cost_of_quote(quote)
+        data["full_cost_rule"] = rules.FULL_COST_RULE
     if resent:
         data["same_offer_resent"] = True
     if sent.get('sent'):
@@ -482,13 +505,20 @@ def ka_price_car(context, listing_reference: Optional[str] = None,
         customs = rules.customs_eur(car_model, year) if programme == rules.PERSONAL else None
         deposits = (rules.initiative_deposits(car_model, year, initiative_tier, initiative_region)
                     if programme == rules.INITIATIVE else None)
+        poa = rules.poa_usd(programme, has_own_initiative)
         data["programme"] = rules.for_agent(
             programme, port, customs=customs, deposits=deposits,
-            car_model=car_model, model_year=year, poa=rules.poa_usd(programme, has_own_initiative))
+            car_model=car_model, model_year=year, poa=poa)
         if programme == rules.PERSONAL:
             data["programme"]["eur1"] = "The EUR 1 certificate is included in this price."
         if _ask_for_missing_figure(context, programme, customs, deposits, car_model or car_description, year):
             data["programme"]["colleague_tagged"] = True
+        data["full_cost_ar"] = rules.full_cost_ar(result['total_eur'], result['egp_due_on_arrival'], programme,
+                                                  customs=customs, deposits=deposits, poa=poa)
+        data["full_cost_rule"] = rules.FULL_COST_RULE
+        origin = _eu_origin(context, listing, car_model, data["car"], year)
+        if origin:
+            data["origin_check"] = origin
         # The offer, when asked for, is for THIS car with THESE inputs.
         from car_import.services import agent_help
         agent_help.remember_pricing(
@@ -607,7 +637,11 @@ def ka_send_quotation(context, listing_reference: Optional[str] = None,
             subject=f'عرض سعر من المساعد — {quote.name}', url=url)
         _ask_for_missing_figure(context, quote.programme, quote.customs_eur, quote.initiative_deposits,
                                 car_model or quote.car_label, year)
-        return {"success": True, "data": _quote_sent_reply(quote, sent)}
+        reply = _quote_sent_reply(quote, sent)
+        origin = _eu_origin(context, listing, car_model, quote.car_label, year)
+        if origin:
+            reply["origin_check"] = origin
+        return {"success": True, "data": reply}
     except Exception as e:
         logger.exception("ka_send_quotation failed")
         return {"success": False, "error": str(e), "error_type": "unknown"}
@@ -622,8 +656,8 @@ def ka_send_quotation(context, listing_reference: Optional[str] = None,
         "Before calling it you MUST have sent them a quotation (ka_quote_car with send_offer=true). It opens the "
         "customer's deal, issues a numbered proforma invoice for the deposit, and sends the invoice file "
         "and the company's approved bank details to the customer by itself. After it succeeds, write a "
-        "short message: ask them to send a screenshot of the transfer here, and ask for whatever "
-        "`contract_details_missing` lists. Never type bank details yourself."
+        "short message asking them to send a screenshot of the transfer here — nothing else: the ID and the "
+        "rest of the contract details are asked for after the transfer. Never type bank details yourself."
     ),
     category="car_import",
     side_effect=True,
@@ -699,9 +733,10 @@ def ka_issue_proforma_invoice(context, quotation_reference: Optional[str] = None
             "amount_due_now": _fmt(invoice.amount_due),
             "invoice_sent_to_customer": bool(sent.get('sent')),
             "bank_details_sent": bool(sent.get('sent') and invoice.bank_details_text),
-            "contract_details_missing": labels,
-            "next_step": ("Ask the customer to send a screenshot of the transfer here"
-                          + (", and ask for: " + "، ".join(labels) if labels else "")
+            "contract_details_missing_after_transfer": labels,
+            # Owner, 2026-10-07: the ID and the rest come AFTER the transfer.
+            "next_step": ("Ask the customer to send a screenshot of the transfer here — nothing else now; the "
+                          "contract details are asked for once the transfer screenshot arrives"
                           + (". The bank details come from the accounts team — say so."
                              if not invoice.bank_details_text else ".")),
         }}
@@ -775,6 +810,7 @@ def ka_record_payment_receipt(context, amount: Optional[float] = None, currency:
                 if stored_name else None)
         if twin is not None:
             return {"success": True, "data": {"receipt_reference": twin.name, "already_recorded": True,
+                                              "say_to_customer_ar": _receipt_reply(partner),
                                               "next_step": "Tell the customer the accounts team is reviewing it."}}
 
         screenshot = _mirror(source)
@@ -792,13 +828,24 @@ def ka_record_payment_receipt(context, amount: Optional[float] = None, currency:
         return {"success": True, "data": {
             "receipt_reference": receipt.name,
             "state": "waiting for the accountant",
-            "say_to_customer_ar": "استلمنا الصورة، شكراً لحضرتك 🙏 الحسابات بتراجعها وهنبلّغ حضرتك "
-                                  "بالتأكيد، وبعدها العقد بيتبعتلك على طول.",
-            "next_step": "Say that line (or close to it). Do NOT confirm that the money arrived.",
+            "say_to_customer_ar": _receipt_reply(partner),
+            "next_step": ("Say that line (or close to it). Do NOT confirm that the money arrived. An ID photo "
+                          "that arrives next → ka_customer_sent_image kind=national_id."),
         }}
     except Exception as e:
         logger.exception("ka_record_payment_receipt failed")
         return {"success": False, "error": str(e), "error_type": "unknown"}
+
+
+def _receipt_reply(partner):
+    """The line after a transfer screenshot — and, when the contract still
+    lacks them, the ask for the ID card: the moment the owner chose for it
+    (2026-10-07: «بعد التحويل نكمل باقي المطلوب»), not before the offer."""
+    from car_import.services import identity
+    text = 'استلمنا الصورة، شكراً لحضرتك 🙏 الحسابات بتراجعها وهنبلّغ حضرتك بالتأكيد'
+    if identity.full_id_name(partner) and getattr(partner, 'national_id', None):
+        return text + '، وبعدها العقد بيتبعتلك على طول.'
+    return text + '.\nوعشان نجهّز العقد باسم حضرتك، ممكن صورة البطاقة (الوشين)؟'
 
 
 # ── the contract's blanks ────────────────────────────────────────────────────

@@ -98,19 +98,16 @@ def blank_bytes(template):
     return _without_pictures(emptied)
 
 
-class _StoredFile:
-    """Just what `sales_flow.send_document` reads off a file field."""
-
-    def __init__(self, name):
-        from django.core.files.storage import default_storage
-        self.name = name
-        self.url = default_storage.url(name)
-
-
 def blank_copy(programme):
-    """(file, '') ready to send, or (None, why). Built once per template version."""
+    """(file, '') ready to send, or (None, why). Built once per template version.
+
+    The file is the PDF (owner, 2026-10-07: every draft contract goes as a
+    PDF — `services/contract_pdf.py`); the Word copy it is made from stays in
+    storage beside it, and goes instead only on a server that cannot convert."""
     from django.core.files.base import ContentFile
     from django.core.files.storage import default_storage
+
+    from car_import.services import contract_pdf
 
     template = template_for(programme)
     if template is None or not template.docx:
@@ -119,7 +116,10 @@ def blank_copy(programme):
     path = f'car_import/contract_previews/Khaled-Automobile-contract-{programme}-{digest}.docx'
     if not default_storage.exists(path):
         path = default_storage.save(path, ContentFile(blank_bytes(template)))
-    return _StoredFile(path), ''
+    document, why = contract_pdf.pdf_of(path)
+    if why:
+        logger.warning('car_import: the blank contract goes as Word: %s', why)
+    return document, ''
 
 
 def programme_of(partner, explicit=None):

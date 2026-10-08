@@ -172,4 +172,5 @@ def quote_note(car_model, year, tier, region):
     if not found:
         return ''
     return (f'قيمة وديعة المبادرة لـ {car_model} موديل {year} ({TIER_AR[tier]}، {REGION_AR[region]}): '
-            f'{_usd(found[0].deposit_usd)} — بتتدفع بالدولار وبترجع بعد 5 سنين، ومش جزء من الإجمالي باليورو.')
+            f'{_usd(found[0].deposit_usd)} — بتتدفع بالدولار وبترجع لصاحب المبادرة بعد 5 سنين، ومش جزء من '
+            f'الإجمالي باليورو.')

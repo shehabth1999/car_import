@@ -23,6 +23,34 @@ MEDIA_KINDS = {
 }
 
 
+#: Inbound messages with no words that still wait for an answer.
+ANSWERABLE_MEDIA = ('document', 'file', 'image', 'video', 'audio', 'voice')
+
+
+def unanswered_media(conversation, minutes=30):
+    """True when the newest message in the thread is a file or a photo the
+    customer sent in the last half hour, and nothing went out after it.
+
+    `prepare_turn` decides whether the model runs at all, and it cannot see
+    the batch's files: the engine keeps them on its run context, not in the
+    state a function node reads. So a PDF bank receipt sent with no words was
+    judged "nothing to answer" (2026-10-07), and the run's own data went to the
+    customer as the reply. The thread itself says what arrived."""
+    if conversation is None:
+        return False
+    try:
+        from datetime import timedelta
+
+        from modules.chat.models import Message
+        newest = (Message.objects.filter(conversation=conversation, is_internal=False)
+                  .order_by('-created_at').values('direction', 'type', 'created_at').first())
+    except Exception:
+        return False
+    if not newest or newest['direction'] != 'inbound' or newest['type'] not in ANSWERABLE_MEDIA:
+        return False
+    return newest['created_at'] >= timezone.now() - timedelta(minutes=minutes)
+
+
 def channel_label(conversation):
     """'واتساب', 'ماسنجر', … — the voice adapts to the channel."""
     channel = str(getattr(conversation, 'type', '') or '').lower()
@@ -42,12 +70,16 @@ def partner_facts(partner):
         from car_import.services import identity
         lines.append('الاسم في البطاقة: %s — %s' % (
             partner.id_full_name,
-            'متسجّل، والعرض والفاتورة بيطلعوا بيه. متطلبش البطاقة ولا الاسم تاني.'
+            'متسجّل، والعرض والفاتورة بيطلعوا بيه. متطلبش الاسم تاني.'
             if identity.full_id_name(partner) else
             'أقل من رباعي: العرض المكتوب محتاج الاسم رباعي زي البطاقة.'))
     else:
-        lines.append('البطاقة: لسه متقرتش — العرض المكتوب محتاج الاسم رباعي زي البطاقة والرقم القومي '
-                     '(صورة البطاقة أحسن). الأرقام نفسها بتتقال من غير ما تستنى.')
+        # Owner, 2026-10-07: the name only before the offer; the card and the
+        # number after the transfer.
+        lines.append('الاسم الرباعي: لسه متسجّلش — العرض المكتوب محتاج الاسم رباعي بس (من غير صورة بطاقة ولا '
+                     'رقم قومي ولا عنوان). الأرقام نفسها بتتقال من غير ما تستنى.')
+    if not getattr(partner, 'national_id', None):
+        lines.append('البطاقة والرقم القومي: بيتطلبوا بعد ما العميل يبعت صورة التحويل (عشان العقد) — مش قبل كده.')
     if getattr(partner, 'phone', None):
         lines.append('الرقم: %s' % partner.phone)
     if getattr(partner, 'residence_country', None):
@@ -154,6 +186,19 @@ def sales_facts(partner, deal):
                 quote.name, state, quote.car_label or (str(quote.vehicle) if quote.vehicle_id else '-'),
                 f'{quote.total_eur:,.2f}', f'{float(quote.deposit_pct):g}', f'{quote.deposit_eur:,.2f}',
                 (' — ساري لحد %s' % quote.valid_until) if quote.valid_until else ''))
+            if quote.programme:
+                # Owner, 2026-10-07: asked to confirm the price after the
+                # offer, the assistant said the car's price only — and called
+                # the euro total "everything included". This is everything.
+                from car_import.services import programme as rules
+                lines.append('التكلفة الكاملة للعرض ده — العميل سأل عن السعر كله، أو السعر مع المبادرة أو الجمارك، '
+                             'أو طلب يتأكد من السعر؟ قولها زي ما هي في رسالة واحدة، كل مبلغ بعملته. الإجمالي '
+                             'باليورو مش شامل اللي تحته، ومتجمعش عملات على بعض، ومتحوّلش لجنيه:\n'
+                             + rules.full_cost_of_quote(quote))
+                if quote.programme == rules.INITIATIVE and quote.poa_usd is not None:
+                    lines.append('المبادرة هنا الشركة اللي بتوفّرها: قيمة الوديعة العميل مش بيستردها — بيستردها '
+                                 'صاحب المبادرة بس. لو سأل «طب أنا وفّرت إيه؟»: «%s»'
+                                 % rules.COMPANY_INITIATIVE_SAVING_AR)
             if quote.paid_eur:
                 lines.append('المؤكَّد استلامه: %s € — المتبقي %s €' % (
                     f'{quote.paid_eur:,.2f}', f'{quote.remaining_eur:,.2f}'))
@@ -162,6 +207,17 @@ def sales_facts(partner, deal):
         if invoice is not None:
             lines.append('الفاتورة المبدئية %s: %s — المطلوب %s €' % (
                 invoice.name, invoice.get_state_display(), f'{invoice.remaining_due:,.2f}'))
+        from datetime import timedelta
+        rejected = (PaymentReceipt.all_objects
+                    .filter(partner_id=partner.pk, state='rejected',
+                            reviewed_at__gte=timezone.now() - timedelta(days=3))
+                    .order_by('-reviewed_at').first())
+        if rejected is not None:
+            lines.append('الحسابات رفضت صورة تحويل بعتها العميل (%s) — السبب: %s. العميل اتبلّغ بالسبب من '
+                         'السيستم. لو سأل عنها: قوله السبب ده بس، واطلب صورة التحويل الصح.' % (
+                             f'{rejected.amount:,.2f} {getattr(rejected.currency, "code", "")}'
+                             if rejected.amount is not None else rejected.name,
+                             rejected.reject_reason or '-'))
         waiting = PaymentReceipt.all_objects.filter(partner_id=partner.pk, state='pending').count()
         if waiting:
             lines.append('فيه %d صورة تحويل مستنية تأكيد المحاسب. لو العميل سأل عنها قول «استلمنا صورة التحويل '
@@ -177,8 +233,12 @@ def sales_facts(partner, deal):
                            else ['customer_name', 'customer_national_id'])
                 ask = [sales_flow.CONTRACT_DETAIL_LABELS[m] for m in missing
                        if m in ('customer_name', 'customer_national_id')]
-                if ask and invoice is not None:
-                    lines.append('العقد ناقصه من العميل: ' + '، '.join(ask))
+                # Asked for once the transfer screenshot is in (owner, 2026-10-07).
+                transferred = PaymentReceipt.all_objects.filter(
+                    partner_id=partner.pk, state__in=['pending', 'accepted']).exists()
+                if ask and transferred:
+                    lines.append('العقد ناقصه من العميل: ' + '، '.join(ask)
+                                 + ' — اطلب صورة البطاقة (الوشين) لو مبعتهاش.')
             elif contract.sent_at:
                 lines.append('العقد اتبعت للعميل (%s).' % contract.get_state_display())
     except Exception:

@@ -59,6 +59,18 @@ import_stage_form_view = {
                     ],
                 },
                 {
+                    "title": _("Who moves a deal here"),
+                    "groups": [
+                        {
+                            "fields": [
+                                {"name": "allowed_users", "string": _("Only these people move a deal here"),
+                                 "widget": "relation", "displayField": "name", "multiSelect": True,
+                                 "help": _("Nobody else can move a deal INTO this stage. Leave it empty to let everyone who edits deals do it")},  # noqa: E501
+                            ],
+                        },
+                    ],
+                },
+                {
                     "title": _("The customer's message"),
                     "groups": [
                         {

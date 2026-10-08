@@ -180,7 +180,7 @@ MODEL_PERMISSIONS = [
     *[{'model': f'car_import.{model}', 'group': group, 'permissions': rights}
       for model in ('carmodelyear', 'carcolour', 'cartrimlevel', 'carbuyer',
                     'arrivalport', 'shippingdestination', 'internationalshipper', 'loadingport',
-                    'customsclearanceperson', 'opportunityproducttype')
+                    'customsclearanceperson', 'opportunityproducttype', 'eumadebrand')
       for group, rights in (('car_import.sales_agent', VIEW_ONLY), ('car_import.sales_manager', VIEW_ONLY),
                             ('car_import.operations', VIEW_ONLY), ('car_import.management', FULL))],
     {'model': 'car_import.onholdsalesperson', 'group': 'car_import.management', 'permissions': FULL},

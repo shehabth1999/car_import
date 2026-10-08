@@ -522,8 +522,12 @@ def _file_discount_request(partner, context, reason):
 #: must never slip past it.
 ESCALATION_TOPICS = ('refund', 'cancellation', 'complaint', 'legal', 'instalment_amount',
                      'commercial_import', 'showroom_purchase', 'foreign_destination', 'payment_schedule',
-                     'tool_refused', 'discount', 'money', 'other')
+                     'trim_check', 'tool_refused', 'discount', 'money', 'other')
 _TOPIC_WORDS = (
+    # «العربية دي فئة متوسطة ولا كاملة؟» — sales confirms it, after the
+    # customer is shown the six options that decide it (client, 2026-10-07).
+    ('trim_check', ('trim_check', 'فئة متوسطة ولا كاملة', 'فئه متوسطه ولا كامله', 'كاملة ولا متوسطة',
+                    'كامله ولا متوسطه')),
     # Paying the price in two or three payments is a schedule management
     # agrees to — not the 27% instalment product (the client's GM asked for
     # «3 دفعات» and was pitched the cheques, 2026-10-01).
@@ -565,7 +569,9 @@ def _escalation_topic(topic, reason=''):
         "one of our own cars (a `WC-` reference from ka_search_cars), a customer who wants the car delivered "
         "to a country OTHER than Egypt (topic foreign_destination), a customer who wants to split the price "
         "into payments other than the standard deposit + balance (topic payment_schedule — that is not the "
-        "instalment plan), or when another tool returned "
+        "instalment plan), a customer who asks whether a car is full or medium tier or what makes a car full "
+        "(topic trim_check — the six options that decide it are sent with the hand-over, so do not list "
+        "options yourself), or when another tool returned "
         "`must_escalate`. Do NOT use it for prices, quotations, the proforma invoice, bank details "
         "(ka_share_bank_details sends them), transfer screenshots (ka_customer_sent_image), discounts "
         "(ka_request_discount), or a customer who wants to read or change the contract (ka_contract_request) "
@@ -587,10 +593,11 @@ def _escalation_topic(topic, reason=''):
                 "type": "string",
                 "enum": ["refund", "cancellation", "complaint", "legal", "instalment_amount",
                          "commercial_import", "showroom_purchase", "foreign_destination", "payment_schedule",
-                         "tool_refused", "other"],
+                         "trim_check", "tool_refused", "other"],
                 "description": "Why a person is needed. showroom_purchase = buying one of our own (WC-) cars. "
                                "foreign_destination = the car is to be delivered outside Egypt. "
-                               "payment_schedule = paying in 2 or 3 payments instead of deposit + balance",
+                               "payment_schedule = paying in 2 or 3 payments instead of deposit + balance. "
+                               "trim_check = is this car full or medium tier / what makes a car full",
             },
         },
         "required": ["reason"],
@@ -625,8 +632,8 @@ def ka_escalate_conversation_to_staff(context, reason: str, topic: Optional[str]
         # sees this run handed over. Sending it here as well made the bridge
         # see an empty reply, re-run the turn, escalate again and send the
         # sentence twice — live on 2026-09-17, two notes and two messages.
-        from car_import.services.supervisor import HOLDING_TEXT
-        holding = HOLDING_TEXT
+        from car_import.services.supervisor import holding_text
+        holding = holding_text(topic)
 
         # The client's decision of 2026-09-16: the assistant stays closed AND
         # the colleague picking this up is shown the approved figures to check

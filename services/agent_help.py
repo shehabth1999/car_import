@@ -25,8 +25,9 @@ HELP_REPEAT_HOURS = 6
 PRICING_MEMORY_HOURS = 72
 
 KIND_AR = {
-    'customs': ('قيمة الجمارك', 'الإعدادات ← القيم الجمركية'),
-    'initiative': ('قيمة المبادرة (الوديعة)', 'الإعدادات ← قيم الودائع'),
+    'customs': ('قيمة الجمارك', 'Link Tracker ← الجمارك والمبادرات ← قيم الجمارك'),
+    'initiative': ('قيمة المبادرة (الوديعة)', 'Link Tracker ← الجمارك والمبادرات ← قيم المبادرات'),
+    'eu_origin': ('منشأ العربية', 'Link Tracker ← العربيات ← ماركات صناعة الاتحاد الأوروبي'),
 }
 
 
@@ -57,9 +58,15 @@ def ask_staff(partner, conversation, kind, car, year=None):
             if user.pk not in seen:
                 seen.add(user.pk)
                 recipients.append(user)
-        body = (f'🙋 المساعد محتاج مساعدة: {label} لـ {car_text} مش موجودة في الجدول، والعميل مستني الرقم.\n'
-                f'المساعد قاله إن زميل بيأكدها. ردّ على العميل بالرقم هنا'
-                + (f'، وضيفه في {where} عشان المساعد يقوله لوحده بعد كده.' if where else '.'))
+        if kind == 'eu_origin':
+            body = (f'🙋 المساعد سعّر {car_text}، والماركة مش في قايمة ماركات صناعة الاتحاد الأوروبي. '
+                    f'شهادة يورو 1 محتاجة عربية متصنعة في الاتحاد الأوروبي، وأي منشأ تاني بموافقة الإدارة.\n'
+                    f'المساعد قال للعميل إن زميل بيأكد المنشأ. أكّده للعميل هنا، ولو الماركة أوروبية ضيفها في '
+                    f'{where}.')
+        else:
+            body = (f'🙋 المساعد محتاج مساعدة: {label} لـ {car_text} مش موجودة في الجدول، والعميل مستني الرقم.\n'
+                    f'المساعد قاله إن زميل بيأكدها. ردّ على العميل بالرقم هنا'
+                    + (f'، وضيفه في {where} عشان المساعد يقوله لوحده بعد كده.' if where else '.'))
         return bool(sales_flow.note(partner, body, recipients=recipients, conversation=conversation,
                                     subject=f'المساعد محتاج {label}'))
     except Exception:

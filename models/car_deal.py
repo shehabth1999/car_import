@@ -355,6 +355,26 @@ class CarDeal(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
             raise ValidationError({'payment_state': _(
                 "Only the accountant or management records that money arrived.")})
 
+    def _check_stage_permission(self):
+        """A stage with named people takes a deal only from them (the client,
+        2026-10-07: the shipping stage belongs to specific people). A save with
+        no signed-in person behind it — a scheduled job — is not somebody
+        moving the deal, and passes."""
+        stage = self.import_stage
+        if stage is None:
+            return
+        allowed = list(stage.allowed_users.all())
+        if not allowed:
+            return
+        user = getattr(getattr(self, 'env', None), 'user', None)
+        if user is None or not getattr(user, 'is_authenticated', False) or getattr(user, 'is_superuser', False):
+            return
+        if any(person.pk == user.pk for person in allowed):
+            return
+        raise ValidationError({'import_stage': _(
+            "Only %(people)s can move a deal to «%(stage)s».")
+            % {'people': '، '.join(str(person) for person in allowed), 'stage': stage}})
+
     def pre_save(self):
         super().pre_save()
         self._check_money_authority()
@@ -367,6 +387,7 @@ class CarDeal(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
         self._stage_did_change = bool(self.import_stage_id) and self.import_stage_id != stored_stage_id
 
         if self._stage_did_change:
+            self._check_stage_permission()
             self.stage_entered_at = timezone.now()
             if stored_stage_id:
                 self.previous_stage_id = stored_stage_id
@@ -545,7 +566,7 @@ class CarDeal(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
         """
         from car_import.models import StageChangeLog
 
-        moved = 0
+        moved, refused = 0, []
         for deal in queryset:
             previous_id = deal.import_stage_id
             if previous_id == form.import_stage_id:
@@ -557,7 +578,11 @@ class CarDeal(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
             deal.notifications_suppressed = was_suppressed or not form.notify_customer
             deal.previous_stage_id = previous_id
             deal.import_stage = form.import_stage
-            deal.save()
+            try:
+                deal.save()
+            except ValidationError as exc:        # a stage kept for named people
+                refused.append(f"{deal.name}: {'; '.join(exc.messages)}")
+                continue
             deal.notifications_suppressed = was_suppressed
             deal.save(update_fields=['notifications_suppressed'])
 
@@ -569,8 +594,11 @@ class CarDeal(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
                 % {'stage': str(form.import_stage), 'reason': form.reason})
             moved += 1
 
-        return {'status': True, 'open_mode': 'message', 'data': {},
-                'message': _("Moved %(count)d deal(s)") % {'count': moved}}
+        message = _("Moved %(count)d deal(s)") % {'count': moved}
+        if refused:
+            message += "\n" + "\n".join(refused)
+        return {'status': bool(moved) or not refused, 'open_mode': 'message', 'data': {},
+                'message': message}
 
     @staticmethod
     def _set_state(queryset, state, only_from=None):

@@ -3,10 +3,10 @@
 
 The receipt form is built around one decision. The assistant has already read
 the screenshot and filled the row in; what is left for a person is to look at
-the picture, look at the bank statement, and press **Accept — money received**.
-So there is one button. Rejecting is real but rare, and lives in the actions
-menu where nobody presses it by reflex; after a decision there are no buttons
-at all.
+the picture, look at the bank statement, and press **Accept — money received**,
+or write why and press **Reject** — the customer is sent that reason. It lived
+in the actions menu until 2026-10-07, where the client's accountant typed a
+reason and never found it. After a decision there are no buttons at all.
 
 No status pills in either header — the pills win the 30px row and push the
 button off the screen (see `quote_views.py`). The state is a ribbon.
@@ -30,14 +30,18 @@ _RECEIPT_ACTIONS = [
                              "told, the deal is credited, and the contract is issued and sent."),
     },
     {
+        # A button beside Accept since 2026-10-07: in the dropdown the
+        # accountant typed a reason and never found where to reject.
         "name": "action_reject",
         "string": _("Reject this receipt"),
         "icon": "Ban",
         "type": "server",
-        "as": "dropdown",
+        "as": "button",
+        "variant": "danger",
         "view_type": ["form", "list"],
         "invisible": _PENDING_ONLY,
         "confirm_required": True,
+        "confirm_message": _("Reject this transfer? Nothing is credited, and the customer is sent the reason you wrote in «Why it was rejected»."),  # noqa: E501 — one line, or the extractor misses it
     },
 ]
 
@@ -142,7 +146,7 @@ receipt_form_view = {
                             {"name": "contract_outcome", "string": _("What happened to the contract"),
                              "widget": "text", "readonly": True},
                             {"name": "reject_reason", "string": _("Why it was rejected"), "widget": "text",
-                             "help": _("Fill this before rejecting — the agent reads it in the chat")},
+                             "help": _("Fill this and save before rejecting — the customer is sent it word for word")},
                             {"name": "notes", "string": _("Notes"), "widget": "textarea"},
                         ]},
                     ],

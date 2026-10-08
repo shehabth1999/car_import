@@ -71,9 +71,17 @@ msgstr "17 حرف، لا يُختصر أبداً"
 msgid "A Font Awesome 6 class the website draws, e.g. fa-solid fa-ship"
 msgstr "كلاس Font Awesome 6 الموقع بيرسمه، زي fa-solid fa-ship"
 
+msgctxt "ui/views/link_tracker_views.py"
+msgid "A brand whose cars are built inside the European Union. Once this list has brands, the assistant and the team are warned when a car of any other brand is priced for EUR 1"
+msgstr "ماركة عربياتها بتتصنع جوه الاتحاد الأوروبي. أول ما القايمة يبقى فيها ماركات، المساعد والفريق بيتنبّهوا لما عربية من أي ماركة تانية تتسعّر بشهادة يورو 1."
+
 msgctxt "ui/views/consignment_views.py"
 msgid "A buyer we introduced who signs within this many days after the mandate ends still owes commission"
 msgstr "مشتري إحنا اللي قدّمناه ووقّع خلال العدد ده من الأيام بعد انتهاء التوكيل لسه عليه عمولة"
+
+msgctxt "ui/views/link_tracker_views.py"
+msgid "A car one model year newer than the newest row takes this year's figure"
+msgstr "العربية اللي موديلها أحدث بسنة من آخر سطر بتاخد رقم السنة دي"
 
 msgid "A complaint about condition, a missing option or damage"
 msgstr "شكوى عن الحالة أو مواصفة ناقصة أو ضرر"
@@ -541,9 +549,6 @@ msgstr "الموافقة من (مجموعة)"
 msgctxt "ui/views/link_tracker_views.py"
 msgid "Arrival Port Name"
 msgstr "اسم ميناء الوصول"
-
-msgid "Arrival Ports"
-msgstr "مواني الوصول"
 
 msgctxt "ui/views/link_tracker_views.py"
 msgid "Arrival Ports"
@@ -1107,22 +1112,13 @@ msgctxt "ui/views/quote_views.py"
 msgid "Car (as quoted)"
 msgstr "العربية (زي ما اتسعّرت)"
 
-msgid "Car Brands"
-msgstr "ماركات العربيات"
-
 msgctxt "ui/views/link_tracker_views.py"
 msgid "Car Brands"
 msgstr "ماركات العربيات"
 
-msgid "Car Buyer"
-msgstr "مشتري العربية"
-
 msgctxt "ui/views/link_tracker_views.py"
 msgid "Car Buyer"
 msgstr "مشتري العربية"
-
-msgid "Car Color"
-msgstr "لون العربية"
 
 msgctxt "ui/views/link_tracker_views.py"
 msgid "Car Color"
@@ -1137,22 +1133,13 @@ msgstr "صفقات العربيات"
 msgid "Car Import"
 msgstr "استيراد العربيات"
 
-msgid "Car Model Year"
-msgstr "سنة موديل العربية"
-
 msgctxt "ui/views/link_tracker_views.py"
 msgid "Car Model Year"
 msgstr "سنة موديل العربية"
 
-msgid "Car Models"
-msgstr "موديلات العربيات"
-
 msgctxt "ui/views/link_tracker_views.py"
 msgid "Car Models"
 msgstr "موديلات العربيات"
-
-msgid "Car Trim Level"
-msgstr "فئة العربية"
 
 msgctxt "ui/views/link_tracker_views.py"
 msgid "Car Trim Level"
@@ -1883,9 +1870,6 @@ msgstr "المرحلة الحالية"
 msgid "Current token"
 msgstr "التوكن الحالي"
 
-msgid "Custom Clearance Person/Employee"
-msgstr "شخص/موظف التخليص الجمركي"
-
 msgctxt "ui/views/link_tracker_views.py"
 msgid "Custom Clearance Person/Employee"
 msgstr "شخص/موظف التخليص الجمركي"
@@ -1970,12 +1954,17 @@ msgctxt "ui/views/car_deal_views.py"
 msgid "Customer-facing status"
 msgstr "الحالة كما يراها العميل"
 
+msgctxt "ui/views/link_tracker_views.py"
 msgid "Customers Blacklist"
 msgstr "القايمة السودا للعملاء"
 
 msgctxt "ui/views/link_tracker_views.py"
-msgid "Customers Blacklist"
-msgstr "القايمة السودا للعملاء"
+msgid "Customs (EUR)"
+msgstr "الجمارك (يورو)"
+
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Customs Values"
+msgstr "قيم الجمارك"
 
 msgid "Customs clearance people"
 msgstr "المخلّصين الجمركيين"
@@ -1998,6 +1987,10 @@ msgctxt "ui/views/car_deal_views.py"
 msgid "Customs released on"
 msgstr "تاريخ الإفراج الجمركي"
 
+msgid "Customs value"
+msgstr "القيمة الجمركية"
+
+msgctxt "ui/views/link_tracker_views.py"
 msgid "Customs value"
 msgstr "القيمة الجمركية"
 
@@ -2449,6 +2442,20 @@ msgctxt "ui/views/car_deal_views.py"
 msgid "ETA"
 msgstr "الوصول المتوقع"
 
+msgctxt "ui/views/link_tracker_views.py"
+msgid "EU-Made Brands"
+msgstr "ماركات صناعة الاتحاد الأوروبي"
+
+msgid "EU-made brand"
+msgstr "ماركة صناعة الاتحاد الأوروبي"
+
+msgctxt "ui/views/link_tracker_views.py"
+msgid "EU-made brand"
+msgstr "ماركة صناعة الاتحاد الأوروبي"
+
+msgid "EU-made brands"
+msgstr "ماركات صناعة الاتحاد الأوروبي"
+
 msgctxt "ui/views/quote_views.py"
 msgid "EUR 1"
 msgstr "يورو 1"
@@ -2751,6 +2758,10 @@ msgstr "الملف"
 
 msgid "File name"
 msgstr "اسم الملف"
+
+msgctxt "ui/views/payment_views.py"
+msgid "Fill this and save before rejecting — the customer is sent it word for word"
+msgstr "اكتب السبب واحفظ قبل الرفض — العميل بيوصله زي ما هو بالظبط"
 
 msgctxt "ui/views/payment_views.py"
 msgid "Fill this before rejecting — the agent reads it in the chat"
@@ -3222,6 +3233,10 @@ msgctxt "ui/views/document_views.py"
 msgid "In force from"
 msgstr "ساري من"
 
+msgctxt "ui/views/link_tracker_views.py"
+msgid "In force from"
+msgstr "ساري من"
+
 msgctxt "ui/views/pricing_views.py"
 msgid "In force from"
 msgstr "ساري من"
@@ -3238,6 +3253,10 @@ msgid "In force until"
 msgstr "ساري حتى"
 
 msgctxt "ui/views/document_views.py"
+msgid "In force until"
+msgstr "ساري حتى"
+
+msgctxt "ui/views/link_tracker_views.py"
 msgid "In force until"
 msgstr "ساري حتى"
 
@@ -3291,6 +3310,10 @@ msgstr "المبادرة"
 msgid "Initiative (المبادرة)"
 msgstr "المبادرة"
 
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Initiative Values"
+msgstr "قيم المبادرات"
+
 msgid "Initiative for sale"
 msgstr "مبادرة للبيع"
 
@@ -3301,6 +3324,14 @@ msgctxt "ui/views/qualify_views.py"
 msgid "Initiative type"
 msgstr "نوع المبادرة"
 
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Initiative value"
+msgstr "قيمة المبادرة"
+
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Initiative value (USD)"
+msgstr "قيمة المبادرة (دولار)"
+
 msgid "Initiatives"
 msgstr "المبادرات"
 
@@ -3309,6 +3340,10 @@ msgstr "مبادرات للبيع"
 
 msgid "Inside Europe"
 msgstr "داخل أوروبا"
+
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Inside Europe = lives in an EU country. UK and Turkey count as outside"
+msgstr "داخل أوروبا = مقيم في دولة من الاتحاد الأوروبي. إنجلترا وتركيا بيتحسبوا برّه أوروبا"
 
 msgid "Inspection report"
 msgstr "تقرير الفحص"
@@ -3342,15 +3377,9 @@ msgctxt "ui/views/quote_views.py"
 msgid "Internal. Nothing here reaches the offer document"
 msgstr "داخلي. مفيش حاجة هنا بتوصل لمستند العرض"
 
-msgid "International Shippers"
-msgstr "شركات الشحن الدولي"
-
 msgctxt "ui/views/link_tracker_views.py"
 msgid "International Shippers"
 msgstr "شركات الشحن الدولي"
-
-msgid "International Shipping"
-msgstr "الشحن الدولي"
 
 msgctxt "ui/views/link_tracker_views.py"
 msgid "International Shipping"
@@ -3853,12 +3882,16 @@ msgctxt "ui/views/link_tracker_views.py"
 msgid "Medium Name"
 msgstr "اسم الوسيط"
 
-msgid "Mediums"
-msgstr "الوسايط"
-
 msgctxt "ui/views/link_tracker_views.py"
 msgid "Mediums"
 msgstr "الوسايط"
+
+msgctxt "ui/views/vehicle_views.py"
+msgid "Memory seats"
+msgstr "كراسي ميموري"
+
+msgid "Memory seats (كراسي ميموري)"
+msgstr "كراسي ميموري"
 
 msgid "Message"
 msgstr "الرسالة"
@@ -4308,6 +4341,10 @@ msgctxt "ui/views/quote_views.py"
 msgid "No price yet"
 msgstr "لسه مفيش سعر"
 
+msgctxt "ui/views/import_stage_views.py"
+msgid "Nobody else can move a deal INTO this stage. Leave it empty to let everyone who edits deals do it"
+msgstr "محدش غيرهم يقدر ينقل صفقة للمرحلة دي. سيبها فاضية عشان أي حد بيعدّل الصفقات يقدر."
+
 msgid "Not applied"
 msgstr "لم يتم التقديم"
 
@@ -4379,6 +4416,10 @@ msgid "Note"
 msgstr "ملاحظة"
 
 msgctxt "ui/views/document_views.py"
+msgid "Note"
+msgstr "ملاحظة"
+
+msgctxt "ui/views/link_tracker_views.py"
 msgid "Note"
 msgstr "ملاحظة"
 
@@ -4559,9 +4600,6 @@ msgstr "على الموقع"
 msgid "On while migrating or bulk-loading, so nobody is messaged by accident"
 msgstr "شغّله أثناء الترحيل أو التحميل الجماعي، عشان محدش يتبعتله بالغلط"
 
-msgid "On-Hold Salespersons"
-msgstr "البياعين المعلّقين"
-
 msgctxt "ui/views/link_tracker_views.py"
 msgid "On-Hold Salespersons"
 msgstr "البياعين المعلّقين"
@@ -4579,6 +4617,9 @@ msgstr "بياع معلّق"
 msgid "One is the maximum. The second request is refused."
 msgstr "الحد الأقصى واحد. الطلب الثاني مرفوض."
 
+msgid "Only %(people)s can move a deal to «%(stage)s»."
+msgstr "مفيش غير %(people)s يقدر ينقل صفقة لمرحلة «%(stage)s»."
+
 msgctxt "ui/views/website_views.py"
 msgid "Only brands the website carries"
 msgstr "الماركات اللي على الموقع بس"
@@ -4595,6 +4636,13 @@ msgstr "تأكيد وصول الفلوس للمحاسب أو الإدارة بس
 
 msgid "Only the accountant or management records that money arrived."
 msgstr "المحاسب أو الإدارة بس هما اللي بيسجّلوا إن الفلوس وصلت."
+
+msgid "Only these people move a deal here"
+msgstr "الناس دول بس ينقلوا الصفقة للمرحلة دي"
+
+msgctxt "ui/views/import_stage_views.py"
+msgid "Only these people move a deal here"
+msgstr "الناس دول بس ينقلوا الصفقة للمرحلة دي"
 
 msgid "Only when asked for"
 msgstr "عند الطلب فقط"
@@ -4647,6 +4695,9 @@ msgstr "إضافة اختيارية"
 msgctxt "ui/views/quote_views.py"
 msgid "Optional on a multi-car offer — the chosen candidate's car is copied here"
 msgstr "اختياري في عرض متعدد العربيات — عربية المرشح المختار بتتنسخ هنا"
+
+msgid "Optional, e.g. which countries or which models"
+msgstr "اختياري، مثلاً أنهي دول أو أنهي موديلات"
 
 msgid "Optional. When set, the website receives this image's link as well"
 msgstr "اختياري. لو اتحطت، الموقع بياخد لينك الصورة دي كمان"
@@ -5142,9 +5193,6 @@ msgctxt "ui/views/link_tracker_views.py"
 msgid "Product Type Name"
 msgstr "اسم نوع الطلب"
 
-msgid "Product Types"
-msgstr "أنواع الطلب"
-
 msgctxt "ui/views/link_tracker_views.py"
 msgid "Product Types"
 msgstr "أنواع الطلب"
@@ -5524,6 +5572,10 @@ msgctxt "ui/views/payment_views.py"
 msgid "Reject this receipt"
 msgstr "رفض الإيصال"
 
+msgctxt "ui/views/payment_views.py"
+msgid "Reject this transfer? Nothing is credited, and the customer is sent the reason you wrote in «Why it was rejected»."
+msgstr "ترفض التحويل ده؟ مفيش أي مبلغ هيتسجّل، والعميل هيوصله السبب اللي كتبته في «سبب الرفض»."
+
 msgid "Rejected"
 msgstr "مرفوض"
 
@@ -5596,6 +5648,10 @@ msgstr "محجوزة لـ"
 msgctxt "ui/views/listing_views.py"
 msgid "Reserved for"
 msgstr "محجوزة لـ"
+
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Residence"
+msgstr "الإقامة"
 
 msgid "Residencies that qualify"
 msgstr "الإقامات المؤهلة"
@@ -5835,6 +5891,10 @@ msgctxt "ui/views/lead_assignment_views.py"
 msgid "Set by the system. It remembers who received the last lead, so the next one goes to the person after them."
 msgstr "النظام هو اللي بيحدده. بيفتكر مين آخر واحد خد عميل محتمل، عشان العميل الجاي يروح للي بعده."
 
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Set it when the government changes the figure, and add the new figure as a new row"
+msgstr "حطّه لما الحكومة تغيّر الرقم، وضيف الرقم الجديد في سطر جديد"
+
 msgid "Set only when the deposit sheet disagrees with the option count"
 msgstr "حدده بس لو شيت الودائع مختلف عن عدد المواصفات"
 
@@ -5875,9 +5935,6 @@ msgstr "الشحن (يورو)"
 msgctxt "ui/views/quote_views.py"
 msgid "Shipping (€)"
 msgstr "الشحن (€)"
-
-msgid "Shipping Destination"
-msgstr "وجهة الشحن"
 
 msgctxt "ui/views/link_tracker_views.py"
 msgid "Shipping Destination"
@@ -6101,9 +6158,6 @@ msgstr "المصدر"
 msgctxt "ui/views/link_tracker_views.py"
 msgid "Source Name"
 msgstr "اسم المصدر"
-
-msgid "Sources"
-msgstr "المصادر"
 
 msgctxt "ui/views/link_tracker_views.py"
 msgid "Sources"
@@ -6592,6 +6646,10 @@ msgctxt "ui/views/document_views.py"
 msgid "The document"
 msgstr "المستند"
 
+msgctxt "ui/views/link_tracker_views.py"
+msgid "The dollar deposit the initiative needs for this car"
+msgstr "الوديعة الدولارية اللي المبادرة محتاجاها للعربية دي"
+
 msgid "The factory list the supplier sends against the VIN"
 msgstr "قائمة المصنع اللي المورد بيبعتها على رقم الشاسيه"
 
@@ -6902,6 +6960,10 @@ msgid "Tier"
 msgstr "الفئة"
 
 msgctxt "ui/views/document_views.py"
+msgid "Tier"
+msgstr "الفئة"
+
+msgctxt "ui/views/link_tracker_views.py"
 msgid "Tier"
 msgstr "الفئة"
 
@@ -7529,6 +7591,10 @@ msgctxt "ui/views/website_views.py"
 msgid "Website → Genie (leads and tracking)"
 msgstr "من الموقع لـ Genie (الطلبات والتتبع)"
 
+msgctxt "ui/views/link_tracker_views.py"
+msgid "What a new car of this model pays in customs on a personal import, in euros"
+msgstr "جمارك العربية الزيرو من الموديل ده في الاستيراد الشخصي، باليورو"
+
 msgctxt "ui/views/consignment_views.py"
 msgid "What decides the commission"
 msgstr "اللي بيحدد العمولة"
@@ -7695,6 +7761,10 @@ msgctxt "ui/views/document_views.py"
 msgid "Where this came from"
 msgstr "مصدر الرقم"
 
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Where this came from"
+msgstr "مصدر الرقم"
+
 msgctxt "ui/views/pricing_views.py"
 msgid "Where this came from"
 msgstr "مصدر الرقم"
@@ -7752,6 +7822,10 @@ msgstr "مين بياخدهم"
 msgctxt "ui/views/call_views.py"
 msgid "Who it was with"
 msgstr "مع مين"
+
+msgctxt "ui/views/import_stage_views.py"
+msgid "Who moves a deal here"
+msgstr "مين ينقل الصفقة للمرحلة دي"
 
 msgctxt "ui/views/contract_views.py"
 msgid "Who represents it"
@@ -7849,9 +7923,16 @@ msgctxt "ui/views/crm_dashboard_patch.py"
 msgid "Won deals by campaign"
 msgstr "الصفقات المكسوبة حسب الحملة"
 
+msgid "Write why it is rejected first — the customer is sent the reason."
+msgstr "اكتب سبب الرفض الأول — العميل بيوصله السبب."
+
 msgctxt "ui/views/payment_views.py"
 msgid "Written by the assistant: anything that did not match the invoice, the customer or the calendar"
 msgstr "كتبها المساعد: أي حاجة ما طابقتش الفاتورة أو اسم العميل أو التاريخ"
+
+msgctxt "ui/views/link_tracker_views.py"
+msgid "Year"
+msgstr "السنة"
 
 msgctxt "ui/views/reference_views.py"
 msgid "Year"

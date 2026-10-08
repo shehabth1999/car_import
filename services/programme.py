@@ -211,6 +211,66 @@ def eur(value):
     return f'{text[:-3] if text.endswith(".00") else text} €'
 
 
+#: Who gets the initiative's deposit back (owner, 2026-10-07): «قيمة الوديعة
+#: مش بتستردها الا لو كنت انت صاحب المبادرة». When the company provides the
+#: initiative the customer is not its holder, and nothing comes back to them.
+#: Until then the assistant told such a customer the deposit «بترجعلك بعد 5
+#: سنين», twice in one chat.
+COMPANY_INITIATIVE_SAVING_AR = ('حضرتك بتجيب عربية بسعر أقل من مصر، وبكماليات أعلى، وبحالة الزيرو، '
+                                'وعداد قليل.')
+
+
+def deposit_refund_rule(company_provides):
+    """What the assistant may say about getting the deposit back."""
+    if company_provides:
+        return ('The COMPANY provides this initiative, so the deposit is NOT returned to this customer — only '
+                'the initiative\'s holder gets it back. Never say it is returned to them. If they ask who gets '
+                'it back or whether they get it back, say exactly: «قيمة الوديعة مش بتستردها حضرتك — بيستردها '
+                'صاحب المبادرة بس». If they then ask what they save, say: «' + COMPANY_INITIATIVE_SAVING_AR + '»')
+    return ('The deposit is returned after 5 years to the initiative\'s HOLDER — to the customer only when the '
+            'initiative is their own. Never promise it back to a customer the company provides an initiative to.')
+
+
+def full_cost_ar(total_eur, egp_due=None, programme='', customs=None, deposits=None, poa=None):
+    """Everything the customer pays for the car, each sum in its own currency —
+    the text the assistant says when asked for "the price with the initiative".
+
+    The owner, 2026-10-07: after the offer the customer asks to confirm the
+    price and the assistant «بيتلخبط وبيقول سعر العربية بس». In the client's
+    test chat it said the euro total already held the initiative, then took it
+    back, then summed dollars into a figure of its own. The pieces are in three
+    currencies and stay three lines; nothing here adds them up."""
+    lines = [f'• إجمالي سعر البيع لحد باب البيت (العربية والشحن والمصاريف): {eur(total_eur)}']
+    if programme == PERSONAL:
+        lines.append(f'• الجمارك والضرايب: {eur(customs)}' if customs is not None else
+                     '• الجمارك والضرايب: قيمتها بتتأكد من الشركة قبل التعاقد')
+    elif programme == INITIATIVE:
+        if deposits:
+            values = ' — '.join(f'{deposit_label(r)}: {usd(r["usd"])}' for r in deposits)
+            lines.append(f'• قيمة المبادرة (وديعة بالدولار): {values}')
+        else:
+            lines.append('• قيمة المبادرة (وديعة بالدولار): بتتأكد من الشركة قبل التعاقد')
+        if poa is not None:
+            lines.append(f'• ثمن التوكيلات: {usd(poa)}')
+    if egp_due:
+        lines.append(f'• مصاريف الميناء عند الوصول: {Decimal(str(egp_due)):,.0f} جنيه')
+    return '\n'.join(lines)
+
+
+def full_cost_of_quote(quote):
+    """`full_cost_ar` for a stored quotation."""
+    return full_cost_ar(quote.total_eur, quote.egp_due_on_arrival, quote.programme,
+                        customs=quote.customs_eur, deposits=quote.initiative_deposits,
+                        poa=quote.poa_usd)
+
+
+FULL_COST_RULE = ('When the customer asks for the whole price, the price with the initiative or the customs, '
+                  'what they pay in total, or to confirm the price after the offer, say `full_cost_ar` exactly as '
+                  'written, as one message. The EUR total does NOT include the initiative value, the customs, the '
+                  'powers of attorney or the port fees — never say it does. Never add the currencies together and '
+                  'never convert anything to EGP or state an exchange rate yourself.')
+
+
 def for_agent(programme, port, customs=None, deposits=None, car_model=None, model_year=None, poa=None):
     """What the assistant is told to say about the programme, in one block."""
     data = {
@@ -235,10 +295,10 @@ def for_agent(programme, port, customs=None, deposits=None, car_model=None, mode
         if deposits:
             data['initiative_value'] = [{'variant': deposit_label(r), 'year': r['year'],
                                          'deposit_usd': usd(r['usd'])} for r in deposits]
-            data['initiative_note'] = ('«قيمة المبادرة» = the USD deposit, paid in dollars and returned after 5 '
-                                       'years, NOT part of the EUR total. It is on the offer; state the figures '
-                                       'exactly. Several variants = the tier or residence is not known yet: say '
-                                       'them all in one line, do not interrogate.')
+            data['initiative_note'] = ('«قيمة المبادرة» = the USD deposit, paid in dollars, NOT part of the EUR '
+                                       'total. It is on the offer; state the figures exactly. Several variants = '
+                                       'the tier or residence is not known yet: say them all in one line, do '
+                                       'not interrogate. ' + deposit_refund_rule(poa is not None))
         else:
             data['initiative_value'] = None
             data['initiative_note'] = (f'The initiative deposit sheet has no value for {car}. A colleague was '

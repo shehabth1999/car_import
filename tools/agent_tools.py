@@ -551,7 +551,9 @@ def _read_id_card(context, full_name, national_id, address, note):
         "tier (full / medium) and the region (inside / outside Europe) change the figure. Pass `tier` and "
         "`region` only when the customer already said them; otherwise the tool returns every variant and you "
         "state them all in one short message («فئة كاملة: …، فئة متوسطة: …»). State the figures exactly as "
-        "returned, in US dollars. «فئة كاملة» is the full tier — never list the options to the customer. "
+        "returned, in US dollars. Whether a GIVEN car is full or medium is never yours to decide: when the "
+        "customer asks that, or what makes a car full, call ka_escalate_conversation_to_staff with topic "
+        "trim_check — the six options that decide it go to the customer with the hand-over. "
         "Europe = residence in an EU country; UK and Turkey count as outside Europe for this table."
     ),
     category="car_import",
@@ -584,9 +586,12 @@ def ka_initiative_deposit(context, model: str, year: Optional[int] = None, tier:
                                "is confirming the value now, and offer the closest year listed (labelled with its "
                                "year) — do not guess a figure, and do not escalate.")
             return {"success": True, "data": found}
-        found["rules"] = ("State these USD figures exactly. It is paid in dollars and returned after 5 years; "
-                          "it is not part of the car's EUR price. One short message, no questions about "
-                          "options or colour.")
+        from car_import.services import agent_help
+        from car_import.services import programme as rules
+        holds = agent_help.known_initiative(getattr(context, 'partner', None))
+        found["rules"] = ("State these USD figures exactly. It is paid in dollars and is not part of the car's "
+                          "EUR price. One short message, no questions about options or colour. "
+                          + rules.deposit_refund_rule(company_provides=holds is False))
         return {"success": True, "data": found}
     except Exception as e:
         return _failed("ka_initiative_deposit", e)

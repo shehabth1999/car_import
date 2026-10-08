@@ -292,13 +292,19 @@ class PaymentReceipt(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
         """This is not a payment we received. Nothing is credited."""
         from car_import.services import sales_flow
 
-        rejected = 0
+        rejected, refused = 0, []
         for receipt in queryset:
             if receipt.state != 'pending':
                 continue
-            sales_flow.reject_receipt(
-                receipt, user=getattr(getattr(receipt, 'env', None), 'user', None))
+            try:
+                sales_flow.reject_receipt(
+                    receipt, user=getattr(getattr(receipt, 'env', None), 'user', None))
+            except ValidationError as exc:
+                refused.append(f"{receipt.name or receipt.pk}: {'; '.join(exc.messages)}")
+                continue
             rejected += 1
-        return {'status': bool(rejected), 'open_mode': 'message',
-                'message': _("Rejected %(count)d receipt(s)") % {'count': rejected},
+        message = _("Rejected %(count)d receipt(s)") % {'count': rejected}
+        if refused:
+            message += "\n" + "\n".join(refused)
+        return {'status': bool(rejected), 'open_mode': 'message', 'message': message,
                 'data': {}, 'on_success': {'type': 'refresh'}}

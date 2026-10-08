@@ -503,15 +503,38 @@ def accept_receipt(receipt, user=None):
 
 
 def reject_receipt(receipt, user=None):
+    """Not a payment we received: nothing is credited, and the customer is told
+    in plain words why — the same way they are told when it is accepted.
+
+    Refuses without a reason: the reason is what the customer reads, and "it
+    was rejected" alone leaves them guessing what to send next."""
+    reason = ' '.join(str(receipt.reject_reason or '').split())
+    if not reason:
+        raise ValidationError(_("Write why it is rejected first — the customer is sent the reason."))
     receipt.state = 'rejected'
     receipt.reviewed_by = user
     receipt.reviewed_at = timezone.now()
     receipt.save()
+    told = send_text(receipt.partner, rejection_text(receipt))
     note(receipt.partner,
-         f'⛔ {receipt.name} اترفض'
-         + (f': {receipt.reject_reason}' if receipt.reject_reason else '')
-         + '\nمفيش أي مبلغ اتسجّل. كمّل مع العميل من هنا.',
+         f'⛔ {receipt.name} اترفض: {reason}\n'
+         f'العميل اتبلّغ بالسبب: {"أيوه" if told.get("sent") else "لأ — " + str(told.get("error"))}\n'
+         'مفيش أي مبلغ اتسجّل.',
          recipients=owners(receipt.partner), subject=f'إيصال مرفوض — {receipt.name}')
+    return told
+
+
+def rejection_text(receipt):
+    """What the customer reads when the accountant rejects their transfer."""
+    seen = []
+    if receipt.amount is not None:
+        seen.append(f'{receipt.amount:,.2f} {getattr(receipt.currency, "code", "")}'.strip())
+    if receipt.transfer_date:
+        seen.append(str(receipt.transfer_date))
+    which = f' ({" — ".join(seen)})' if seen else ''
+    return (f'بخصوص صورة التحويل اللي حضرتك بعتها{which}: الحسابات راجعتها ومقدرتش تأكد التحويل ده.\n'
+            f'السبب: {" ".join(str(receipt.reject_reason or "").split())}\n'
+            'لو حضرتك حوّلت تحويل تاني أو عندك إيصال تاني، ابعتهولنا هنا ونراجعه على طول.')
 
 
 def _contract_summary(outcome):
@@ -600,7 +623,7 @@ def issue_and_send_contract(deal, user=None):
             contract.generate(user=user)
         if contract.sent_at:
             return {'issued': True, 'sent': True, 'reason': ''}
-        outcome = send_document(deal.partner, contract.document,
+        outcome = send_document(deal.partner, contract_file(contract),
                                 'عقد الاستيراد — برجاء المراجعة والتوقيع')
         if not outcome.get('sent'):
             return {'issued': True, 'sent': False, 'reason': outcome.get('error') or 'send failed'}
@@ -612,6 +635,16 @@ def issue_and_send_contract(deal, user=None):
         logger.exception('car_import: could not issue the contract for deal %s', deal.pk)
         reason = '; '.join(exc.messages) if isinstance(exc, ValidationError) else str(exc)
         return {'issued': False, 'sent': False, 'reason': reason}
+
+
+def contract_file(contract):
+    """What the customer is sent for a generated contract: its PDF (owner,
+    2026-10-07), else — on a server that cannot convert — the Word file."""
+    from car_import.services import contract_pdf
+    document, why = contract_pdf.pdf_of(contract.document.name)
+    if why:
+        logger.warning('car_import: contract %s goes as Word: %s', contract.pk, why)
+    return document
 
 
 def _balance_contract(contract):

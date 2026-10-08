@@ -9,10 +9,11 @@ table here (crm.UtmMedium, crm.UtmSource, CarBrand, CarModel) and the menu
 points at those. These are the other twelve, field for field, so management
 finds the lists they already keep.
 
-Lists and nothing more, with one exception. No lead, deal or car points at
+Lists and nothing more, with two exceptions. No lead, deal or car points at
 them yet — the colour, the year and the port on those records are what they
-were before. The exception is `OnHoldSalesperson`: the lead assignment job
-(services/lead_assignment.py) gives nobody on it a new lead.
+were before. The exceptions: `OnHoldSalesperson` — the lead assignment job
+(services/lead_assignment.py) gives nobody on it a new lead — and
+`EuMadeBrand` (2026-10-07), which the quoting tool reads for EUR 1.
 
 No chatter on any of them, and class names that say whose they are: a model
 named like another module's, both with chatter, once broke the system checks
@@ -74,6 +75,31 @@ class CarBuyer(PickList):
     class Meta(PickList.Meta):
         verbose_name = _("Car buyer")
         verbose_name_plural = _("Car buyers")
+
+
+class EuMadeBrand(BaseModel):
+    """A brand whose cars are built inside the European Union.
+
+    The client, 2026-10-07: «ندخل البراندات اللي بتتصنع داخل الاتحاد
+    الأوروبي». It is what EUR 1 rests on — a car must be built in the EU for
+    the certificate — so the quoting tool reads it: once this list has rows, a
+    brand that is not on it is flagged to the assistant and to staff
+    (`services/catalogue.made_in_eu`). An empty list flags nothing, so the
+    tool says nothing until management has filled it in.
+    """
+
+    brand = models.OneToOneField('car_import.CarBrand', on_delete=models.CASCADE, related_name='eu_made',
+                                 verbose_name=_("Brand"))
+    note = models.CharField(max_length=190, blank=True, verbose_name=_("Note"),
+                            help_text=_("Optional, e.g. which countries or which models"))
+
+    class Meta:
+        verbose_name = _("EU-made brand")
+        verbose_name_plural = _("EU-made brands")
+        ordering = ['brand__name']
+
+    def __str__(self):
+        return str(self.brand)
 
 
 # ── Delivery ─────────────────────────────────────────────────────────────────

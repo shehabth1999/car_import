@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-"""The screens of the Link Tracker menu: a list and a form for each of its sixteen entries.
+"""The screens of the Link Tracker menu: a list and a form for each of its entries —
+Odoo's sixteen, and three the client asked for on 2026-10-07.
 
 Plain on purpose. In the client's Odoo these are short lists an administrator
 edits now and then, and that is what they are here; the column titles are
@@ -121,6 +122,39 @@ car_import_lt_car_model_form_view = _form(
          "help": _("Other spellings, comma separated — e.g. C 200, C-200")},
     ]}], priority=SECOND_SCREEN)
 
+# Not an Odoo entry: the client's request of 2026-10-07 — the brands built in
+# the EU, which EUR 1 rests on. Each row points at a catalogue brand.
+car_import_lt_eu_made_brand_list_view = _list(
+    "car_import_lt_eu_made_brand_list_view", _("EU-Made Brands"), "car_import.eumadebrand",
+    "car_import_menu_lt_eu_made_brands",
+    [
+        {"name": "brand", "widget": "relation", "displayField": "name", "string": _("Brand"), "width": "260"},
+        {"name": "note", "widget": "text", "string": _("Note"), "width": "360"},
+    ])
+
+car_import_lt_eu_made_brand_form_view = _form(
+    "car_import_lt_eu_made_brand_form_view", _("EU-made brand"), "car_import.eumadebrand",
+    "car_import_menu_lt_eu_made_brands",
+    [{"fields": [
+        {"name": "brand", "string": _("Brand"), "widget": "relation", "displayField": "name",
+         "multiSelect": False, "required": True,
+         "help": _("A brand whose cars are built inside the European Union. Once this list has brands, the assistant and the team are warned when a car of any other brand is priced for EUR 1")},  # noqa: E501
+        {"name": "note", "string": _("Note"), "widget": "text"},
+    ]}])
+
+car_import_lt_eu_made_brand_search_view = {
+    "key": "car_import_lt_eu_made_brand_search_view",
+    "name": _("EU-Made Brands"),
+    "model": "car_import.eumadebrand",
+    "menu_item": "car_import_menu_lt_eu_made_brands",
+    "view_type": "search",
+    "priority": 20,
+    "module": "car_import",
+    "body": {"search": {"search_fields": [
+        {"name": ["brand__name", "brand__name_ar"], "string": _("Brand"), "widget": "text"},
+    ]}},
+}
+
 car_import_lt_car_model_year_list_view, car_import_lt_car_model_year_form_view = _names(
     "car_model_year", "car_import.carmodelyear", "car_import_menu_lt_car_model_years",
     _("Car Model Year"), _("Car model year"), _("Model year"))
@@ -223,6 +257,92 @@ car_import_lt_on_hold_salesperson_search_view = {
         {"name": ["user__name", "user__email"], "string": _("Salesperson"), "widget": "text"},
     ]}},
 }
+
+# ── Customs and initiatives ──────────────────────────────────────────────────
+# The client, 2026-10-07: «مكان مخصص لقيمة الجمارك والمبادرات». The same two
+# tables the assistant prices from (CustomsValuation, DepositTier) — until
+# now read-only lists under Settings — here with a form, so management adds a
+# model or corrects a figure where it keeps its other lists. A figure saved
+# here is the one the next quotation uses.
+_DATED = [
+    {"name": "effective_from", "string": _("In force from"), "widget": "date"},
+    {"name": "effective_to", "string": _("In force until"), "widget": "date",
+     "help": _("Set it when the government changes the figure, and add the new figure as a new row")},
+    {"name": "source_note", "string": _("Where this came from"), "widget": "text"},
+]
+
+car_import_lt_customs_value_list_view = _list(
+    "car_import_lt_customs_value_list_view", _("Customs Values"), "car_import.customsvaluation",
+    "car_import_menu_lt_customs_values",
+    [
+        {"name": "car_model", "string": _("Model"), "widget": "relation", "displayField": "display_name",
+         "width": "240"},
+        {"name": "model_year", "string": _("Year"), "widget": "number", "width": "90"},
+        {"name": "value_eur", "string": _("Customs (EUR)"), "widget": "number", "width": "150"},
+        {"name": "effective_from", "string": _("In force from"), "widget": "date", "width": "130"},
+        {"name": "effective_to", "string": _("In force until"), "widget": "date", "width": "130"},
+    ], priority=SECOND_SCREEN)
+
+car_import_lt_customs_value_form_view = _form(
+    "car_import_lt_customs_value_form_view", _("Customs value"), "car_import.customsvaluation",
+    "car_import_menu_lt_customs_values",
+    [
+        {"fields": [
+            {"name": "car_model", "string": _("Model"), "widget": "relation", "displayField": "display_name",
+             "multiSelect": False, "required": True},
+            {"name": "model_year", "string": _("Model year"), "widget": "number", "required": True,
+             "help": _("A car one model year newer than the newest row takes this year's figure")},
+            {"name": "value_eur", "string": _("Customs (EUR)"), "widget": "number", "required": True,
+             "help": _("What a new car of this model pays in customs on a personal import, in euros")},
+        ]},
+        {"fields": _DATED},
+    ], priority=SECOND_SCREEN)
+
+car_import_lt_initiative_value_list_view = _list(
+    "car_import_lt_initiative_value_list_view", _("Initiative Values"), "car_import.deposittier",
+    "car_import_menu_lt_initiative_values",
+    [
+        {"name": "car_model", "string": _("Model"), "widget": "relation", "displayField": "display_name",
+         "width": "240"},
+        {"name": "model_year", "string": _("Year"), "widget": "number", "width": "90"},
+        {"name": "tier", "string": _("Tier"), "widget": "select", "width": "120"},
+        {"name": "region", "string": _("Residence"), "widget": "select", "width": "150"},
+        {"name": "deposit_usd", "string": _("Initiative value (USD)"), "widget": "number", "width": "170"},
+    ], priority=SECOND_SCREEN)
+
+car_import_lt_initiative_value_form_view = _form(
+    "car_import_lt_initiative_value_form_view", _("Initiative value"), "car_import.deposittier",
+    "car_import_menu_lt_initiative_values",
+    [
+        {"fields": [
+            {"name": "car_model", "string": _("Model"), "widget": "relation", "displayField": "display_name",
+             "multiSelect": False, "required": True},
+            {"name": "model_year", "string": _("Model year"), "widget": "number", "required": True},
+            {"name": "tier", "string": _("Tier"), "widget": "select", "required": True},
+            {"name": "region", "string": _("Residence"), "widget": "select", "required": True,
+             "help": _("Inside Europe = lives in an EU country. UK and Turkey count as outside")},
+            {"name": "deposit_usd", "string": _("Initiative value (USD)"), "widget": "number", "required": True,
+             "help": _("The dollar deposit the initiative needs for this car")},
+        ]},
+        {"fields": _DATED},
+    ], priority=SECOND_SCREEN)
+
+
+def _model_search(slug, model, menu_item, name):
+    """These two tables have no `name`, which is what a list searches by default."""
+    return {
+        "key": f"car_import_lt_{slug}_search_view", "name": name, "model": model, "menu_item": menu_item,
+        "view_type": "search", "priority": 20, "module": "car_import",
+        "body": {"search": {"search_fields": [
+            {"name": ["car_model__display_name", "car_model__name_ar"], "string": _("Model"), "widget": "text"},
+        ]}},
+    }
+
+
+car_import_lt_customs_value_search_view = _model_search(
+    "customs_value", "car_import.customsvaluation", "car_import_menu_lt_customs_values", _("Customs Values"))
+car_import_lt_initiative_value_search_view = _model_search(
+    "initiative_value", "car_import.deposittier", "car_import_menu_lt_initiative_values", _("Initiative Values"))
 
 # ── Blacklist ────────────────────────────────────────────────────────────────
 car_import_lt_blacklisted_customer_list_view = _list(

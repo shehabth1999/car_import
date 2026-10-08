@@ -98,17 +98,9 @@ def _rows(vehicle):
 
 
 def _options(vehicle):
-    from car_import.models.vehicle import TIER_OPTION_FIELDS
+    from car_import.models.vehicle import TIER_OPTION_FIELDS, TIER_OPTIONS_AR
 
-    labels = {
-        'has_sunroof': 'فتحة سقف',
-        'has_panorama': 'سقف بانوراما',
-        'has_electric_trunk': 'شنطة كهربا',
-        'has_electric_seats': 'كراسي كهربا',
-        'has_leather_seats': 'كراسي جلد',
-        'has_digital_cluster': 'عداد ديجيتال',
-    }
-    rows = [(labels[f], getattr(vehicle, f, False)) for f in TIER_OPTION_FIELDS]
+    rows = [(TIER_OPTIONS_AR[f], getattr(vehicle, f, False)) for f in TIER_OPTION_FIELDS]
     tier = 'كاملة' if vehicle.deposit_tier == 'full' else 'متوسطة'
     rows.append((f'الفئة الناتجة ({vehicle.tier_option_count} من 6)', tier))
     return rows

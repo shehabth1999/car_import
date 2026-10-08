@@ -187,11 +187,15 @@ def _programme_block(quote):
         # The company provides the initiative: its price is the car + the
         # initiative + the powers of attorney + the port fees (owner, 2026-09-30).
         poa = [(POA_LABEL, rules.usd(quote.poa_usd))] if quote.poa_usd is not None else []
+        # The deposit comes back to the initiative's holder only (owner,
+        # 2026-10-07): «بترجع بعد 5 سنين» on a company-provided initiative
+        # told the customer money was coming back to them that is not.
+        back = 'وبترجع لحضرتك بعد 5 سنين' if quote.own_initiative is True else 'وبيستردها صاحب المبادرة بس'
         if rows:
             return ('قيمة المبادرة (الوديعة الدولارية)', rows + poa,
-                    'بتتدفع بالدولار وبترجع بعد 5 سنين، ومش داخلة في إجمالي سعر البيع.')
+                    f'بتتدفع بالدولار {back}، ومش داخلة في إجمالي سعر البيع.')
         return ('قيمة المبادرة (الوديعة الدولارية)', poa,
-                'قيمة المبادرة للعربية دي بتتأكد من الشركة قبل التعاقد، وبتتدفع بالدولار وبترجع بعد 5 سنين.')
+                f'قيمة المبادرة للعربية دي بتتأكد من الشركة قبل التعاقد، وبتتدفع بالدولار {back}.')
     return None
 
 
