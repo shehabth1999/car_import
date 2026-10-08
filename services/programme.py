@@ -246,8 +246,8 @@ def full_cost_ar(total_eur, egp_due=None, programme='', customs=None, deposits=N
                      '• الجمارك والضرايب: قيمتها بتتأكد من الشركة قبل التعاقد')
     elif programme == INITIATIVE:
         if deposits:
-            values = ' — '.join(f'{deposit_label(r)}: {usd(r["usd"])}' for r in deposits)
-            lines.append(f'• قيمة المبادرة (وديعة بالدولار): {values}')
+            lines.append('• قيمة المبادرة (وديعة بالدولار):')
+            lines.extend(f'   - {line}' for line in _deposit_lines(deposits))
         else:
             lines.append('• قيمة المبادرة (وديعة بالدولار): بتتأكد من الشركة قبل التعاقد')
         if poa is not None:
@@ -255,6 +255,20 @@ def full_cost_ar(total_eur, egp_due=None, programme='', customs=None, deposits=N
     if egp_due:
         lines.append(f'• مصاريف الميناء عند الوصول: {Decimal(str(egp_due)):,.0f} جنيه')
     return '\n'.join(lines)
+
+
+def _deposit_lines(deposits):
+    """One line per tier; the residence is named only where it changes the figure."""
+    from car_import.services.initiative_values import REGION_AR, TIER_AR
+    lines = []
+    for tier in [t for t in TIER_AR if any(r.get('tier') == t for r in deposits)]:
+        rows = [r for r in deposits if r.get('tier') == tier]
+        if len({str(r['usd']) for r in rows}) == 1:
+            lines.append(f'{TIER_AR[tier]}: {usd(rows[0]["usd"])}')
+        else:
+            lines.append(f'{TIER_AR[tier]}: ' + ' / '.join(
+                f'{REGION_AR.get(r.get("region"), r.get("region"))} {usd(r["usd"])}' for r in rows))
+    return lines
 
 
 def full_cost_of_quote(quote):
