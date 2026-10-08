@@ -226,7 +226,8 @@ def deposit_refund_rule(company_provides):
         return ('The COMPANY provides this initiative, so the deposit is NOT returned to this customer — only '
                 'the initiative\'s holder gets it back. Never say it is returned to them. If they ask who gets '
                 'it back or whether they get it back, say exactly: «قيمة الوديعة مش بتستردها حضرتك — بيستردها '
-                'صاحب المبادرة بس». If they then ask what they save, say: «' + COMPANY_INITIATIVE_SAVING_AR + '»')
+                'صاحب المبادرة بس». Only if they then ask what they save, say exactly: «'
+                + COMPANY_INITIATIVE_SAVING_AR + '» — those four points and nothing added.')
     return ('The deposit is returned after 5 years to the initiative\'s HOLDER — to the customer only when the '
             'initiative is their own. Never promise it back to a customer the company provides an initiative to.')
 
