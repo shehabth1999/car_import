@@ -196,10 +196,13 @@ VAT_NOT_RECLAIMABLE_DO_NOW = (
 
 def _vat_not_reclaimable(context, listing):
     from car_import.services import agent_help, sales_flow
+    car = sales_flow.listing_label(listing)
     agent_help.ask_staff(_partner(context), getattr(context, 'conversation', None), 'vat',
-                         f'{sales_flow.listing_label(listing)} (إعلان {listing.ad_id})')
+                         f'{car} (إعلان {listing.ad_id})')
+    # The car is named so the offer to "find the same model" is about THIS
+    # advert and not the car discussed before it.
     return {"success": False, "error": "This advert is sold without reclaimable VAT; a colleague prices it",
-            "error_type": "vat_not_reclaimable", "do_now": VAT_NOT_RECLAIMABLE_DO_NOW}
+            "error_type": "vat_not_reclaimable", "car": car, "do_now": VAT_NOT_RECLAIMABLE_DO_NOW}
 
 
 def _resolve_price(listing_reference, gross_price_eur, context=None):
