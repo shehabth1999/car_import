@@ -261,6 +261,30 @@ class CarDeal(SequenceMixin, BaseModel, BranchMixin, FullChatterMixin):
             return None
         return (timezone.now() - self.stage_entered_at).days
 
+    # ── what a stage message says about this deal ───────────────────────────
+    # A WhatsApp template fills `{{name}}` with getattr(record, name), and for
+    # a stage template the record is the deal. `vessel`, `bl_number`, `eta` and
+    # `tracking_url` are fields already; these three are the rest of what the
+    # stage texts use. The free-text message reads the same three
+    # (`stage_notifier.stage_placeholders`), so both say the same thing.
+    @property
+    def customer_name(self):
+        return (getattr(self.partner, 'name', '') or '') if self.partner_id else ''
+
+    @property
+    def car_full(self):
+        """"Mercedes-Benz C200 2024" — one variable, because a template may not
+        put two next to each other."""
+        vehicle = self.vehicle if self.vehicle_id else None
+        if vehicle is None:
+            return ''
+        return ' '.join(part for part in (f"{vehicle.brand_name} {vehicle.model_name}".strip(),
+                                          str(vehicle.model_year or '')) if part)
+
+    @property
+    def port(self):
+        return self.arrival_port or ''
+
     # ── rules ───────────────────────────────────────────────────────────────
     def _check_approvals(self):
         """Cancellation and a non-standard schedule are management's calls.

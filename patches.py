@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """car_import runtime patches, applied from apps.ready().
 
-One patch, and the reason it is a patch rather than configuration is worth
+The main one first (the others say why at their own definition), and the reason
+it is a patch rather than configuration is worth
 stating: AI Studio has **no hook between the agent's reply and the channel
 send**. No signal, no `pre_send`, no `global_configuration` key, no settings
 callable — the five channel bridges each call `execute_workflow_sync`, read
@@ -65,6 +66,38 @@ def apply_patches():
     aistudio_services.execute_workflow_sync = execute_workflow_sync
     _PATCHED = True
     logger.info('car_import: outbound gate installed in front of execute_workflow_sync')
+
+
+def apply_template_patches():
+    """Example values for a stage template, for the day somebody submits one.
+
+    Submitting a template sends Meta an example for each variable, and the
+    platform reads those off the NEWEST record of the template's model
+    (`WhatsAppTemplate.get_example_field_values`). For a stage template that is
+    the newest deal — which has no vessel, no bill of lading and no arrival
+    date yet, so the reviewer would read "None" and reject it. There is no
+    setting for the examples, so this one method answers from our own samples
+    for templates bound to the deal, and is untouched for every other template.
+
+    It runs only inside a submission that a person starts. Nothing here
+    submits anything.
+    """
+    try:
+        from modules.whatsapp.models import WhatsAppTemplate
+    except Exception:  # pragma: no cover - whatsapp not installed on this tenant
+        return
+    original = WhatsAppTemplate.get_example_field_values
+    if getattr(original, '_car_import', False):
+        return
+
+    def get_example_field_values(self, fields_names):
+        from car_import.services import stage_templates
+        if stage_templates.is_stage_template(self):
+            return [stage_templates.sample(name) for name in fields_names]
+        return original(self, fields_names)
+
+    get_example_field_values._car_import = True
+    WhatsAppTemplate.get_example_field_values = get_example_field_values
 
 
 def _corrected(original, result, workflow_id, input_data, kwargs, started):

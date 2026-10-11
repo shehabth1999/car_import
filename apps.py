@@ -12,3 +12,4 @@ class CarImportConfig(AppConfig):
         from . import patches
         patches.apply_patches()
         patches.apply_url_patches()
+        patches.apply_template_patches()

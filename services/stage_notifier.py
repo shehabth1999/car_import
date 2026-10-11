@@ -186,9 +186,8 @@ def render_stage_message(deal, stage, language='ar'):
 
 def stage_placeholders(deal, stage):
     vehicle = deal.vehicle
-    partner = deal.partner
     values = {
-        'customer_name': getattr(partner, 'name', '') or '',
+        'customer_name': deal.customer_name,
         'agent_name': getattr(deal.assigned_to, 'name', '') or '',
         'stage_name': stage.name or stage.name_en or '',
         'deal_ref': deal.name or '',
@@ -196,14 +195,12 @@ def stage_placeholders(deal, stage):
         # One placeholder for "the car", because WhatsApp templates may not put
         # two variables next to each other — `{model} {model_year}` is rejected
         # by Meta even with a space between them. Renders identically.
-        'car_full': ' '.join(p for p in (
-            f"{vehicle.brand_name} {vehicle.model_name}".strip() if vehicle else '',
-            str(getattr(vehicle, 'model_year', '') or '') if vehicle else '') if p),
+        'car_full': deal.car_full,
         'trim': getattr(vehicle, 'trim', '') or '',
         'model_year': str(getattr(vehicle, 'model_year', '') or ''),
         'colour': getattr(vehicle, 'colour_exterior', '') or '',
         'vin': getattr(vehicle, 'vin', '') or '',
-        'port': deal.arrival_port or '',
+        'port': deal.port,
         'vessel': deal.vessel or '',
         'bl_number': deal.bl_number or '',
         'acid_number': deal.acid_number or '',
@@ -242,8 +239,16 @@ def deliver(log):
 
     text = render_stage_message(deal, stage)
 
+    # Only a template Meta has approved can be sent. A stage may be linked to a
+    # draft, or to one still in review — that is how the templates are prepared
+    # ahead of their approval — and until then the stage behaves as if it had
+    # none.
+    template = stage.whatsapp_template if stage.whatsapp_template_id else None
+    if template is not None and template.status != 'approved':
+        template = None
+
     try:
-        if _inside_whatsapp_window(partner) or not stage.whatsapp_template_id:
+        if _inside_whatsapp_window(partner) or template is None:
             result = _send_free_text(partner, text)
             channel = result.get('channel') or 'omnichannel'
             message_id = str(result.get('message_id') or result.get('social_id') or '')
@@ -251,9 +256,11 @@ def deliver(log):
                 return _mark(log, 'failed', text=text, channel=channel,
                              error=str(result.get('error') or result.get('message') or 'send failed'))
         else:
-            result = stage.whatsapp_template.send_template_message(
-                _sender_partner(deal), partner,
-            )
+            # The record is the DEAL: the template's variables are the deal's
+            # attributes, and the platform finds the customer through
+            # `deal.partner`. (It was the customer until 2026-10-11, which no
+            # stage template could have been filled from.)
+            result = template.send_template_message(_sender_partner(deal) or system_sender(), deal)
             channel = 'whatsapp_template'
             message_id = str(result.get('message_id') or '') if isinstance(result, dict) else ''
             if isinstance(result, dict) and result.get('status') is False:

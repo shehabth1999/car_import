@@ -35,38 +35,9 @@ from django.core.management.base import BaseCommand
 from django.utils import timezone
 from django.utils.html import escape
 
-#: What each placeholder means, and the sample Meta's reviewer will see. The
-#: samples are deliberately plausible: a reviewer reading "XXXX" assumes the
-#: template is a spam vehicle, and the review takes days either way.
-VARIABLES = {
-    'customer_name': ('اسم العميل', 'أحمد محمد'),
-    'model': ('الماركة والموديل', 'Mercedes-Benz C200'),
-    'car_full': ('العربية كاملة', 'Mercedes-Benz C200 2024'),
-    'model_year': ('سنة الموديل', '2024'),
-    'vessel': ('اسم الباخرة', 'MSC Rania'),
-    'bl_number': ('رقم بوليصة الشحن', 'MSCU7761234'),
-    'eta': ('تاريخ الوصول المتوقع', '2026-10-12'),
-    'port': ('ميناء الوصول', 'الإسكندرية'),
-    'tracking_url': ('لينك تتبع الشحنة', 'https://khaledautomobile.de/track/42'),
-    'deal_ref': ('رقم الصفقة', 'KA/2026/0042'),
-    'stage_name': ('اسم المرحلة', 'الشحن الدولي'),
-    'agent_name': ('اسم المندوب', 'آية'),
-    'colour': ('اللون', 'أسود'),
-    'vin': ('رقم الشاسيه', 'W1K2060461F123456'),
-    'acid_number': ('رقم ACID', '3120260042'),
-    'trim': ('الفئة', 'AMG Line'),
-    'amount_paid': ('المدفوع', '11,574 €'),
-    'amount_due': ('المستحق', '34,722 €'),
-}
-
-#: Bodies that would be rejected for ending on a placeholder get a closing
-#: sentence. Keyed by stage code, so the fix is visible and reviewable rather
-#: than a regex guessing at Arabic.
-CLOSING_SENTENCE = {
-    'shipped_bl': 'وهنفضل نطمّن حضرتك أول بأول.',
-}
-
-BODY_LIMIT = 1024
+# The placeholders, their samples and the closing sentences are shared with the
+# command that creates the drafts in the platform (create_stage_templates).
+from car_import.services.stage_templates import BODY_LIMIT, CLOSING_SENTENCE, VARIABLES
 
 
 class Command(BaseCommand):
