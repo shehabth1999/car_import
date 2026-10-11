@@ -99,7 +99,10 @@ def ka_search_vehicle_listings(context, make: Optional[str] = None, model: Optio
         import re
 
         wanted = max(1, min(int(limit or 5), 20))
-        narrowed = bool(model_class or exclude_references)
+        # Room for the adverts the customer already turned down, and no more:
+        # every advert read is paid for. (A class used to ask for twenty, from
+        # the days the class was picked out of a make-wide result here.)
+        page_size = min(20, wanted + len(exclude_references or []))
         saloon_only = bool(saloon) or _is_c_class(make, model, model_class)
         rules = SEARCH_RULES % (', SALOON body only' if saloon_only else '')
         if year_max and int(year_max) < OLDEST_MODEL_YEAR:
@@ -109,7 +112,7 @@ def ka_search_vehicle_listings(context, make: Optional[str] = None, model: Optio
             make=make, model=None if model_class else model,
             year_min=max(int(year_min or 0), OLDEST_MODEL_YEAR), year_max=year_max,
             mileage_max=max_mileage, price_max=price_max_eur or None, fuel=IMPORT_FUEL,
-            vatable=True, page_size=20 if narrowed else wanted, model_class=model_class or None,
+            vatable=True, page_size=page_size, model_class=model_class or None,
             saloon_only=saloon_only, accident_free=True)
         if model_class:
             in_class = re.compile(r'^%s[\s-]?\d' % re.escape(str(model_class).strip()), re.IGNORECASE)
