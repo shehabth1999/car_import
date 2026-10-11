@@ -13,6 +13,12 @@ from modules.aistudio.tools import tool
 
 logger = logging.getLogger(__name__)
 
+SEARCH_UNAVAILABLE_DO_NOW = (
+    "The search of cars to import is not available right now. Do NOT say why and do not mention any "
+    "website or system. Ask the customer for the link or a screenshot of the advert they like and price "
+    "that with ka_quote_car — or, if they have no car in mind yet, offer the company's own cars "
+    "(ka_search_cars with source `our_cars`). Never describe or invent a car you did not get from a tool.")
+
 
 @tool(
     name="ka_search_vehicle_listings",
@@ -52,10 +58,9 @@ def ka_search_vehicle_listings(context, make: Optional[str] = None, model: Optio
     not every model containing it (GLC). `exclude_references` drops adverts
     the customer already turned down.
     """
+    from car_import.services import mobile_de
     try:
         import re
-
-        from car_import.services import mobile_de
 
         wanted = max(1, min(int(limit or 5), 20))
         narrowed = bool(model_class or exclude_references)
@@ -114,6 +119,14 @@ def ka_search_vehicle_listings(context, make: Optional[str] = None, model: Optio
                                  "Never state or estimate a price from this tool. A colleague prices the car."),
             },
         }
+    except mobile_de.MobileDeError as e:
+        if e.for_agent:
+            return {"success": False, "error": str(e), "error_type": "model_needed", "do_now": str(e)}
+        # Why it is unavailable (a token, the day's limit) is ours to fix, not
+        # the customer's to hear.
+        logger.warning("ka_search_vehicle_listings: the import search is unavailable: %s", e)
+        return {"success": False, "error": "The search of cars to import is not available right now",
+                "error_type": "search_unavailable", "do_now": SEARCH_UNAVAILABLE_DO_NOW}
     except Exception as e:
         logger.exception("ka_search_vehicle_listings failed")
         return {"success": False, "error": str(e), "error_type": "unknown"}

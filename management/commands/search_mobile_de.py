@@ -1,17 +1,19 @@
 # -*- coding: utf-8 -*-
-"""Search mobile.de (or the simulator) and optionally store what came back.
+"""Search mobile.de and optionally store what came back.
 
     uv run python manage.py search_mobile_de --make Mercedes-Benz --model C200
-    uv run python manage.py search_mobile_de --make Mercedes-Benz --max-price 50000 --import
+    uv run python manage.py search_mobile_de --make Mercedes-Benz --model C200 --max-price 50000 --import
     uv run python manage.py search_mobile_de --status
 
-Through Apify, without flipping the switch for everybody else:
+One backend for this run only, without flipping the switch for everybody else:
 
     uv run python manage.py search_mobile_de --backend apify --make BMW --model X1 --size 10 --raw /tmp/x1.json
     uv run python manage.py search_mobile_de --backend apify --url "https://suchen.mobile.de/fahrzeuge/details.html?id=…"
+    uv run python manage.py search_mobile_de --backend simulator --make Mercedes-Benz      # fake cars, development only
 
 It prints which backend answered, every time. A simulated result that reads
-like a real one is how a fake car ends up in a customer's quote.
+like a real one is how a fake car ends up in a customer's quote — which is why
+the simulator answers only when it is named.
 """
 import json
 
@@ -27,7 +29,7 @@ BACKEND_LABEL = {
 
 
 class Command(BaseCommand):
-    help = "Search mobile.de for cars (falls back to the built-in simulator)"
+    help = "Search mobile.de for cars"
 
     def add_arguments(self, parser):
         parser.add_argument('--make', default=None)
@@ -138,11 +140,12 @@ class Command(BaseCommand):
                 f"{row.get('mileage_km','?')} km  {price} €{vat}")
 
     def _status(self):
+        backend = None
         try:
             backend = mobile_de.get_backend()
             self.stdout.write(self.style.NOTICE(f'Backend: {BACKEND_LABEL[backend.name]}'))
         except mobile_de.MobileDeError as exc:
-            self.stdout.write(self.style.ERROR(str(exc)))
+            self.stdout.write(self.style.ERROR(f'Backend: NONE — {exc}'))
         user, _password = mobile_de.credentials()
         self.stdout.write(f"  switch {mobile_de.BACKEND_KEY}: {mobile_de.backend_choice()}")
         self.stdout.write("  official Search API:")
@@ -155,7 +158,7 @@ class Command(BaseCommand):
         self.stdout.write(f"    actor: {mobile_de.APIFY_ACTOR}")
         self.stdout.write(f"    results used today: {apify.used_today()} of {apify.daily_cap()} "
                           f"({apify.DAILY_CAP_KEY})")
-        if not mobile_de.is_live() and mobile_de.backend_choice() != 'apify':
+        if backend is not None and backend.simulated:
             self.stdout.write(self.style.WARNING(
-                "  Running simulated. To read real adverts: put the token in the environment and set "
-                f"{mobile_de.BACKEND_KEY} to apify — or set the two official config parameters."))
+                "  FAKE CARS: the simulator is answering because it was switched on by name. "
+                "This must never be the setting on a system customers talk to."))

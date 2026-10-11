@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Pull call recordings out of Dropbox — with a simulator, as with mobile.de.
+"""Pull call recordings out of Dropbox — with a simulator for development, as
+with mobile.de, that answers only when it is switched on by name.
 
 Dropbox is the only source: the owner ruled the Vodafone IVR out on 2026-09-14.
 
@@ -11,8 +12,8 @@ returns a new short-lived access token. The RPC and content paths below
 header the content endpoints take their arguments in) are the documented
 shapes, but the docs pages would not render for automated fetching today, so
 **they are unconfirmed and must be proved against a real token before anyone
-relies on them.** Until then the simulator answers, and `sync_calls` says which
-backend served it every single time.
+relies on them.** Until Dropbox is connected nothing is imported, and
+`sync_calls` says which backend served it every single time.
 
 The cursor matters more than it looks. `list_folder` returns a cursor;
 `/continue` takes it and returns only what changed since. Store it, and a
@@ -63,8 +64,12 @@ def _set_config(key, value):
     ConfigParameter.objects.update_or_create(key=key, defaults={'value': value})
 
 
+def simulation_forced():
+    return str(_config(FORCE_SIMULATION_KEY)).strip().lower() in ('1', 'true', 'yes', 'on')
+
+
 def is_live():
-    if str(_config(FORCE_SIMULATION_KEY)).strip().lower() in ('1', 'true', 'yes', 'on'):
+    if simulation_forced():
         return False
     return bool(_config(APP_KEY) and _config(APP_SECRET) and _config(REFRESH_TOKEN))
 
@@ -190,7 +195,15 @@ def load_fixture():
 
 
 def get_backend():
-    return LiveBackend() if is_live() else SimulatedBackend()
+    """Dropbox, or an error. The simulator answers only where it was asked for
+    by name (`car_import.dropbox_force_simulation`): until 2026-10-11 it stood
+    in whenever Dropbox was not connected, and a tenant going live had four
+    invented call recordings on its customers' screens."""
+    if simulation_forced():
+        return SimulatedBackend()
+    if is_live():
+        return LiveBackend()
+    raise DropboxError('Dropbox is not connected: the app key, app secret and refresh token are not set')
 
 
 # ───────────────────────────────────────────────────────────────────────────
@@ -207,8 +220,16 @@ def sync_calls(limit=None, reset_cursor=False):
     from car_import.models import CallRecording
     from car_import.services import call_matching
 
-    backend = get_backend()
     folder = _config(FOLDER_KEY, '')
+    try:
+        backend = get_backend()
+    except DropboxError as exc:
+        # Not connected is a state, not a failure: the scheduled job runs every
+        # few hours whether or not anybody has connected Dropbox yet.
+        result = {'simulated': False, 'seen': 0, 'imported': 0, 'already_had': 0,
+                  'needs_review': 0, 'folder': folder or '(root)', 'skipped': str(exc)}
+        logger.info('car_import: dropbox sync %s', result)
+        return result
     cursor = '' if reset_cursor else _config(CURSOR_KEY, '')
 
     entries, next_cursor = backend.list_new(folder, cursor or None)

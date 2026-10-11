@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Import call recordings from Dropbox (or the simulator).
+"""Import call recordings from Dropbox.
 
     uv run python manage.py sync_dropbox_calls
     uv run python manage.py sync_dropbox_calls --status
@@ -24,8 +24,9 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         live = dropbox_sync.is_live()
+        simulated = dropbox_sync.simulation_forced()
         self.stdout.write(self.style.NOTICE(
-            f"Backend: {'Dropbox (LIVE)' if live else 'the SIMULATOR (no credentials)'}"))
+            f"Backend: {'Dropbox (LIVE)' if live else 'the SIMULATOR (switched on by name)' if simulated else 'NONE — Dropbox is not connected'}"))
 
         if options['status']:
             for label, key in (('app key', dropbox_sync.APP_KEY),
@@ -38,11 +39,16 @@ class Command(BaseCommand):
                 self.stdout.write(f'  {label:<15} {shown if value else "not set"}   ({key})')
             if not live:
                 self.stdout.write(self.style.WARNING(
-                    '  Running simulated. Set the three credentials to go live — no code change.'))
+                    '  Nothing is imported until the three credentials are set — no code change needed.'
+                    if not simulated else
+                    '  FAKE CALLS: the simulator is on. This must never be the setting on a live system.'))
             return
 
         result = dropbox_sync.sync_calls(limit=options['limit'],
                                          reset_cursor=options['reset_cursor'])
+        if result.get('skipped'):
+            self.stdout.write(f"  nothing imported: {result['skipped']}")
+            return
         self.stdout.write(
             f"  seen {result['seen']} · imported {result['imported']} · "
             f"already had {result['already_had']} · needs review {result['needs_review']}")

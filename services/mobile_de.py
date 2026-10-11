@@ -14,13 +14,18 @@ documentation at https://services.mobile.de/docs/search-api.html (re-verified
     page.size caps at 100, and at most 2,000 ads can be paged through.
 
 **Three backends, one interface.** `LiveBackend` talks to mobile.de when
-credentials exist. `SimulatedBackend` answers from a fixture with the same
-filtering, the same paging and the same response shape when they do not — so
-everything downstream (import, screens, tools, pricing) is written once and
-does not change when the real key arrives. `ApifyBackend` reads the public
-site through an Apify Actor (`services/apify.py`); it is used only when the
-switch `car_import.mobile_de_backend` says `apify` — a token in the
-environment does not turn it on by itself.
+credentials exist. `ApifyBackend` reads the public site through an Apify Actor
+(`services/apify.py`); it is used only when the switch
+`car_import.mobile_de_backend` says `apify` — a token in the environment does
+not turn it on by itself. `SimulatedBackend` answers from a fixture with the
+same filtering, paging and response shape, for a developer's machine.
+
+**The simulator never answers by default** (2026-10-11, the day the tenant went
+to production use). It used to stand in whenever nothing real was configured,
+which is how nine invented cars came to sit in a tenant about to go live. Now
+it answers only where somebody asked for it by name
+(`car_import.mobile_de_backend = simulator`); with no real source the search
+says so and returns nothing.
 
 Every simulated row is stamped `is_simulated`, and nothing anywhere strips that
 flag: a fake car must never be quotable to a customer by accident.
@@ -49,8 +54,8 @@ MAX_ADS_PER_RESULT_SET = 2000  # documented hard cap
 USERNAME_KEY = 'car_import.mobile_de_username'
 PASSWORD_KEY = 'car_import.mobile_de_password'
 FORCE_SIMULATION_KEY = 'car_import.mobile_de_force_simulation'
-#: `auto` (the official API when it has credentials, else the simulator) or
-#: `apify`. Anything else reads as `auto`.
+#: `apify`, `simulator` (a developer's machine only), or `auto` — the official
+#: API when it has credentials, else nothing. Anything else reads as `auto`.
 BACKEND_KEY = 'car_import.mobile_de_backend'
 
 # The Apify Actor that reads mobile.de, pay per result. Its input and output
@@ -62,7 +67,16 @@ DETAIL_URL = 'https://suchen.mobile.de/fahrzeuge/details.html?id=%s'
 
 
 class MobileDeError(Exception):
-    """Anything that stops a search returning results."""
+    """Anything that stops a search returning results.
+
+    `for_agent` marks a message written for the assistant — what to ask the
+    customer next. Every other message is for whoever runs the system (a
+    missing token, the day's limit, a switch to set) and must not reach a chat.
+    """
+
+    def __init__(self, message, for_agent=False):
+        super().__init__(message)
+        self.for_agent = for_agent
 
 
 # ───────────────────────────────────────────────────────────────────────────
@@ -297,10 +311,10 @@ class ApifyBackend:
         if not models:
             asked = model_class or model
             raise MobileDeError(
-                f"The mobile.de reader has no model '{asked}' for make '{make}'. Check the model's name "
-                f"with the customer." if asked else
-                f"The mobile.de reader needs a model: the make alone ('{make}') is not enough. Ask the "
-                f"customer which model they want.")
+                f"No model '{asked}' is known for make '{make}'. Check the model's name with the "
+                f"customer." if asked else
+                f"Cars to import are searched by model: the make alone ('{make}') is not enough. Ask the "
+                f"customer which model they want.", for_agent=True)
 
         size = max(1, min(int(params.get('page.size', 20)), APIFY_MAX_ITEMS_PER_RUN))
         narrowed_here = bool(params.get('vatable')) or any(
@@ -452,38 +466,40 @@ def load_fixture():
 
 
 def backend_choice():
-    """What the switch says: `apify`, or `auto` for anything else."""
-    return 'apify' if str(_config(BACKEND_KEY)).strip().lower() == 'apify' else 'auto'
+    """What the switch says: `apify`, `simulator`, or `auto` for anything else."""
+    value = str(_config(BACKEND_KEY)).strip().lower()
+    return value if value in ('apify', 'simulator') else 'auto'
+
+
+def _simulation_forced():
+    return str(_config(FORCE_SIMULATION_KEY)).strip().lower() in ('1', 'true', 'yes', 'on')
 
 
 def get_backend(force=None):
-    """Live when we can, simulated when we cannot — and it says which.
+    """A real source, or an error that says what is missing — never fake cars
+    unless they were asked for.
 
-    `force` names one outright (`apify`, `official`, `simulator`) for a command
-    that wants to try a backend without flipping the switch for everybody; it
-    raises when that backend has no credentials rather than quietly answering
-    from another.
+    `force` names a backend outright (`apify`, `official`, `simulator`) for a
+    command that wants to try one without flipping the switch for everybody.
+    Raises MobileDeError when the backend that was chosen cannot answer: a
+    missing token must read as "no search today", not as a list of invented
+    cars from another backend.
     """
     choice = str(force or backend_choice()).strip().lower()
-    if choice == 'simulator':
+    if choice == 'simulator' or (not force and _simulation_forced()):
         return SimulatedBackend()
-    if choice == 'official':
-        user, password = credentials()
-        if not (user and password):
-            raise MobileDeError('No mobile.de Search-API credentials are configured')
-        return LiveBackend(user, password)
     if choice == 'apify':
         from car_import.services import apify
         if apify.is_configured():
             return ApifyBackend()
-        if force:
-            raise MobileDeError(f'{apify.TOKEN_ENV} is not set in the environment')
-        logger.warning('car_import: %s says apify but %s is not set — answering as before',
-                       BACKEND_KEY, apify.TOKEN_ENV)
-    if is_live():
-        user, password = credentials()
+        raise MobileDeError(f'{BACKEND_KEY} says apify but {apify.TOKEN_ENV} is not set in the environment')
+    user, password = credentials()
+    if user and password:
         return LiveBackend(user, password)
-    return SimulatedBackend()
+    if choice == 'official':
+        raise MobileDeError('No mobile.de Search-API credentials are configured')
+    raise MobileDeError(f'No mobile.de source is configured: set {BACKEND_KEY} to apify (with '
+                        f'APIFY_TOKEN in the environment) or add the Search-API credentials')
 
 
 # ───────────────────────────────────────────────────────────────────────────
@@ -697,7 +713,11 @@ def refresh_availability(queryset=None):
 
     rows = queryset if queryset is not None else SupplierListing.objects.filter(
         still_available=True, source='mobile.de')
-    backend = get_backend()
+    try:
+        backend = get_backend()
+    except MobileDeError as exc:
+        # Nothing to check against is not a reason to flag every car as sold.
+        return {'seen': 0, 'gone': 0, 'failed': 0, 'simulated': False, 'skipped': str(exc)}
     if isinstance(backend, ApifyBackend):
         # What follows calls an advert gone when one search does not return it.
         # An Apify search returns a capped handful, so it would flag cars that
@@ -783,7 +803,11 @@ def read_advert(link):
            .order_by('-id').first())
     if row is not None and row.still_available and row.price_gross_eur:
         return row, 'stored'
-    backend = get_backend()
+    try:
+        backend = get_backend()
+    except MobileDeError:
+        logger.warning('car_import: no mobile.de source to read advert %s with', ad_id, exc_info=True)
+        return None, 'no_api_access'
     try:
         ad = backend.ad(ad_id)
     except MobileDeError:

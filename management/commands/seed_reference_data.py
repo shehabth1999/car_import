@@ -341,9 +341,9 @@ class Command(BaseCommand):
                 # Reading mobile.de through Apify (services/apify.py). The token
                 # itself is NOT a switch: it is APIFY_TOKEN in the environment.
                 ('car_import.mobile_de_backend', 'auto',
-                 'مصدر إعلانات mobile.de: auto = زي ما هو (الـ API الرسمي لو بياناته متسجلة، غير كده المحاكي). '
-                 'apify = قراءة الموقع عن طريق Apify (لازم التوكن APIFY_TOKEN يكون في إعدادات السيرفر). '
-                 'متتغيّرش لـ apify غير بعد ما أول تشغيل حقيقي يتراجع.'),
+                 'مصدر إعلانات mobile.de: apify = قراءة الموقع عن طريق Apify (لازم التوكن APIFY_TOKEN يكون في '
+                 'إعدادات السيرفر). auto = الـ API الرسمي لو بياناته متسجلة، غير كده مفيش بحث خالص. '
+                 'simulator = عربيات وهمية لجهاز المبرمج بس — ممنوع على النظام اللي العملاء بيكلموه.'),
                 ('car_import.apify_daily_results_cap', '300',
                  'أقصى عدد إعلانات تتقري من Apify في اليوم (كل إعلان بفلوس). لو العدد اتعدّى، القراءة بتقف '
                  'لحد بكرة والمساعد بيرجع يطلب صورة الإعلان من العميل. 0 = إيقاف Apify خالص.'),

@@ -211,6 +211,10 @@ def ka_search_cars(context, source: str = 'both', brand: Optional[str] = None,
                     data['import']['class_searched'] = f"{model_class}-Class: models named {model_class} + a number"
             else:
                 errors.append(f"import: {found.get('error')}")
+                if found.get('do_now'):
+                    # What to do instead travels with the result, whether or
+                    # not the company's own cars were searched too.
+                    data['import'] = {'count': 0, 'cars': [], 'do_now': found['do_now']}
         if not data:
             return {"success": False, "error": '; '.join(errors) or 'search failed',
                     "error_type": "search_failed"}
