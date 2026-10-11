@@ -170,7 +170,7 @@ class LiveBackend:
         self.password = password
         self.timeout = timeout
 
-    def search(self, params, model_class=None):
+    def search(self, params, model_class=None, **_rules):
         return self._get(f'{BASE_URL}{SEARCH_PATH}?{urllib.parse.urlencode(params)}')
 
     def ad(self, ad_id):
@@ -222,7 +222,7 @@ class SimulatedBackend:
     def __init__(self, ads=None):
         self.ads = ads if ads is not None else load_fixture()
 
-    def search(self, params, model_class=None):
+    def search(self, params, model_class=None, **_rules):
         rows = [dict(ad) for ad in self.ads]
 
         classification = params.get('classification') or ''
@@ -305,7 +305,7 @@ class ApifyBackend:
               'HYDROGENIUM', 'ETHANOL', 'OTHER'}
     _GEARBOXES = {'MANUAL_GEAR', 'AUTOMATIC_GEAR', 'SEMIAUTOMATIC_GEAR'}
 
-    def search(self, params, model_class=None):
+    def search(self, params, model_class=None, saloon_only=False, accident_free=False):
         make, model = _classified(params)
         models = self._models(make, model, model_class)
         if not models:
@@ -317,9 +317,11 @@ class ApifyBackend:
                 f"customer which model they want.", for_agent=True)
 
         size = max(1, min(int(params.get('page.size', 20)), APIFY_MAX_ITEMS_PER_RUN))
-        narrowed_here = bool(params.get('vatable')) or any(
-            params.get(key) is not None for key in ('price.min', 'price.max'))
-        fetch = min(size * 2, APIFY_MAX_ITEMS_PER_RUN) if narrowed_here else size
+        # Every filter applied here, after the run, costs adverts — so the run
+        # is asked for a multiple, and enough are left.
+        late_filters = int(bool(params.get('vatable')) or any(
+            params.get(key) is not None for key in ('price.min', 'price.max'))) + int(bool(accident_free))
+        fetch = min(size * (1 + late_filters), APIFY_MAX_ITEMS_PER_RUN)
         descending = str(params.get('sort.order', '')).upper().startswith('DESC')
         run_input = {
             'searchCategory': 'Car', 'models': models, 'maxItems': fetch,
@@ -345,11 +347,15 @@ class ApifyBackend:
             run_input['transmission'] = [gearbox]
         if params.get('country'):
             run_input['location'] = str(params['country']).upper()
+        if saloon_only:
+            run_input['vehicleType'] = ['Limousine']        # the marketplace's code for a saloon
 
         ads = self._run(run_input, fetch, timeout=120)
         ads = [ad for ad in ads if _price_within(ad, params.get('price.min'), params.get('price.max'))]
         if params.get('vatable'):
             ads = [ad for ad in ads if _apify_vat(ad)[0]]
+        if accident_free:
+            ads = [ad for ad in ads if _apify_accident_free(ad)]
         ads = ads[:size]
         return {'total': len(ads), 'page': {'number': 1, 'size': size}, 'ads': ads}
 
@@ -413,6 +419,16 @@ def _apify_vat(item):
     rate = price.get('vat')
     vatable = bool(net.get('amount')) and isinstance(rate, (int, float)) and rate > 0
     return vatable, (rate if vatable else None)
+
+
+def _apify_accident_free(item):
+    """The seller declared the car accident-free — or it is new. The Actor has
+    no filter for it; the advert says it in its condition line ("Used vehicle,
+    Accident-free"), which is the same thing the marketplace's own checkbox
+    reads. An advert that does not say so is left out: silence is not a claim."""
+    attributes = item.get('attributes') if isinstance(item.get('attributes'), dict) else {}
+    condition = str(attributes.get('Vehicle condition') or '').lower()
+    return 'accident-free' in condition or condition.startswith('new')
 
 
 def _price_within(ad, low, high):
@@ -624,7 +640,7 @@ def _normalise_apify(item):
         'gearbox': str(attributes.get('Transmission') or '')[:32],
         'colour_exterior': str(attributes.get('Colour') or '')[:64],
         'condition_new': condition.startswith('new'),
-        'accident_free': 'accident-free' in condition,
+        'accident_free': _apify_accident_free(item),      # said so in the advert, or a new car
         'price_gross_eur': total.get('amount') if (total.get('currency') or 'EUR') == 'EUR' else None,
         'vatable': vatable,
         'seller_name': str(dealer.get('name') or '')[:190],
@@ -647,16 +663,19 @@ def _normalised(backend, ad):
     return _normalise(ad, backend.simulated)
 
 
-def search(backend=None, model_class=None, **kwargs):
+def search(backend=None, model_class=None, saloon_only=False, accident_free=False, **kwargs):
     """Search, and return (listings, meta). Never raises for an empty result.
 
     `backend` forces one for a command (see `get_backend`). `model_class` is a
     class letter ("C" for C-Class) for the backend that cannot be asked for a
     make alone; the others ignore it and the caller narrows the result itself.
+    `saloon_only` and `accident_free` are applied by the Apify backend, the one
+    that reads the real marketplace.
     """
     backend = get_backend(backend)
     params = build_query(**kwargs)
-    payload = backend.search(params, model_class=model_class)
+    payload = backend.search(params, model_class=model_class, saloon_only=saloon_only,
+                             accident_free=accident_free)
     ads = payload.get('ads') or payload.get('searchResult', {}).get('ads') or []
     listings = [_normalised(backend, ad) for ad in ads]
     meta = {

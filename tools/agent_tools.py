@@ -109,7 +109,10 @@ def _import_budget_eur(price_max, currency):
         "a few cars, each with a `reference` (use it for photos), year, mileage, price, where it is and its "
         "`link`; `matching` is how many match in all and `see_all_on_website` links to all of them — share "
         "that link instead of listing more cars. Import cars carry the German advert price, NOT the "
-        "customer's cost — price those with ka_quote_car. Do NOT offer a car whose `quotable` is false."
+        "customer's cost — price those with ka_quote_car. Do NOT offer a car whose `quotable` is false. "
+        "The import search is fixed by the company to PETROL, ACCIDENT-FREE cars of model year 2024 and "
+        "newer; set `body_type` to `sedan` when the customer asks for a sedan (سيدان). Follow "
+        "`search_rules` in the result."
     ),
     category="car_import",
     parameters_schema={
@@ -133,6 +136,9 @@ def _import_budget_eur(price_max, currency):
             "year_min": {"type": "integer", "description": "Oldest acceptable model year"},
             "year_max": {"type": "integer", "description": "Newest acceptable model year"},
             "max_mileage": {"type": "integer", "description": "Highest acceptable odometer in km (import only)"},
+            "body_type": {"type": "string", "enum": ["sedan"],
+                          "description": "import only: sedan when the customer asks for a sedan / saloon / سيدان. "
+                                         "A Mercedes C-Class is always searched as a saloon"},
             "limit": {"type": "integer", "description": "How many cars, 1 to 5, default 3", "default": 3},
         },
         "required": ["source"],
@@ -144,7 +150,7 @@ def ka_search_cars(context, source: str = 'both', brand: Optional[str] = None,
                    year_min: Optional[int] = None, year_max: Optional[int] = None,
                    max_mileage: Optional[int] = None, limit: int = 3,
                    where: str = 'any', make: Optional[str] = None,
-                   exclude_references=None) -> Dict[str, Any]:
+                   exclude_references=None, body_type: Optional[str] = None) -> Dict[str, Any]:
     """The company's own cars, and the market to import from — always narrowed first."""
     try:
         from car_import.services import website_catalog
@@ -197,12 +203,13 @@ def ka_search_cars(context, source: str = 'both', brand: Optional[str] = None,
                 model=model_row.name if model_row else named_model, year_min=year_min, year_max=year_max,
                 max_mileage=max_mileage, limit=max(1, min(int(limit or 3), 5)),
                 price_max_eur=ceiling_eur, model_class=model_class,
-                exclude_references=exclude_references)
+                exclude_references=exclude_references,
+                saloon=str(body_type or '').strip().lower() in ('sedan', 'saloon', 'limousine', 'سيدان'))
             if found.get('success'):
                 data['import'] = found['data']
                 if budget_note:
                     data['import']['budget'] = budget_note
-                if ceiling_eur and not found['data'].get('count'):
+                if ceiling_eur and not found['data'].get('count') and not found['data'].get('do_now'):
                     data['import']['do_now'] = (
                         f"Nothing is advertised at or under {ceiling_eur:,.0f} € for this search. Say so "
                         f"plainly — do NOT show a dearer car as if it fits. Offer ONE of: a higher budget, "

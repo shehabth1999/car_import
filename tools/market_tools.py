@@ -20,6 +20,38 @@ SEARCH_UNAVAILABLE_DO_NOW = (
     "(ka_search_cars with source `our_cars`). Never describe or invent a car you did not get from a tool.")
 
 
+#: The owner's rules for the search of cars to import (2026-10-11). They are
+#: fixed HERE — not a switch, and not the assistant's to choose — exactly as
+#: asked: «Petrol / بنزين — Free accident / خالية من الحوادث — البحث مينزلش
+#: عن ثلاث سنين من موديل السنة بدايةً من 2024 لأن خلاص السنة خلصت — لو العميل
+#: بيسأل عن عربية C class أو عربية سيدان يتعلّم saloon إجباري».
+IMPORT_FUEL = 'PETROL'
+OLDEST_MODEL_YEAR = 2024      # raise it when the next model year closes
+
+SEARCH_RULES = (
+    "Fixed by the company and already applied to this search: PETROL only, ACCIDENT-FREE only, model year "
+    f"{OLDEST_MODEL_YEAR} and newer%s. If the customer asked for anything outside these (diesel, an older "
+    "year, an estate), say so in ONE short line — the company imports petrol, accident-free cars of "
+    f"{OLDEST_MODEL_YEAR} and newer — and offer what was found. Never present a car as something it is not.")
+
+TOO_OLD_DO_NOW = (
+    f"The company imports model year {OLDEST_MODEL_YEAR} and newer only, so nothing was searched for an "
+    f"older year. Say that in ONE short line and offer the same car from {OLDEST_MODEL_YEAR} or newer.")
+
+
+def _is_c_class(make, model, model_class):
+    """A Mercedes C-Class, however it was asked for — the class letter, or a
+    model that is C and a number (C180, C 200, C 43 AMG). Never a Citroën C3."""
+    import re
+
+    brand = str(make or '').lower()
+    if 'mercedes' not in brand and 'مرسيدس' not in brand:
+        return False
+    if str(model_class or '').strip().upper() == 'C':
+        return True
+    return bool(re.match(r'^C[\s-]?\d{2,3}\b', str(model or '').strip(), re.IGNORECASE))
+
+
 @tool(
     name="ka_search_vehicle_listings",
     display_name="Search cars for sale",
@@ -48,7 +80,7 @@ def ka_search_vehicle_listings(context, make: Optional[str] = None, model: Optio
                                year_min: Optional[int] = None, max_mileage: Optional[int] = None,
                                limit: int = 5, price_max_eur: Optional[float] = None,
                                year_max: Optional[int] = None, model_class: Optional[str] = None,
-                               exclude_references=None) -> Dict[str, Any]:
+                               exclude_references=None, saloon: bool = False) -> Dict[str, Any]:
     """Cars on the marketplace, without a price.
 
     `price_max_eur` caps the German advert price — until 2026-10-01 a budget
@@ -56,7 +88,11 @@ def ka_search_vehicle_listings(context, make: Optional[str] = None, model: Optio
     cars "in his range". `model_class` is a Mercedes-style class letter ("C"
     for C-Class): the models that are that letter and a number (C180, C200),
     not every model containing it (GLC). `exclude_references` drops adverts
-    the customer already turned down.
+    the customer already turned down. `saloon` is the customer asking for a
+    sedan; a C-Class is searched as a saloon whether or not it is set.
+
+    The owner's rules (`IMPORT_FUEL`, `OLDEST_MODEL_YEAR`, accident-free, the
+    saloon rule) are applied here to every search, whatever was asked for.
     """
     from car_import.services import mobile_de
     try:
@@ -64,10 +100,17 @@ def ka_search_vehicle_listings(context, make: Optional[str] = None, model: Optio
 
         wanted = max(1, min(int(limit or 5), 20))
         narrowed = bool(model_class or exclude_references)
+        saloon_only = bool(saloon) or _is_c_class(make, model, model_class)
+        rules = SEARCH_RULES % (', SALOON body only' if saloon_only else '')
+        if year_max and int(year_max) < OLDEST_MODEL_YEAR:
+            return {"success": True, "data": {"count": 0, "cars": [], "simulated": False,
+                                              "search_rules": rules, "do_now": TOO_OLD_DO_NOW}}
         listings, meta = mobile_de.search(
-            make=make, model=None if model_class else model, year_min=year_min, year_max=year_max,
-            mileage_max=max_mileage, price_max=price_max_eur or None,
-            vatable=True, page_size=20 if narrowed else wanted, model_class=model_class or None)
+            make=make, model=None if model_class else model,
+            year_min=max(int(year_min or 0), OLDEST_MODEL_YEAR), year_max=year_max,
+            mileage_max=max_mileage, price_max=price_max_eur or None, fuel=IMPORT_FUEL,
+            vatable=True, page_size=20 if narrowed else wanted, model_class=model_class or None,
+            saloon_only=saloon_only, accident_free=True)
         if model_class:
             in_class = re.compile(r'^%s[\s-]?\d' % re.escape(str(model_class).strip()), re.IGNORECASE)
             listings = [row for row in listings if in_class.match(str(row.get('model') or '').strip())]
@@ -113,6 +156,7 @@ def ka_search_vehicle_listings(context, make: Optional[str] = None, model: Optio
                 "count": len(cars),
                 "cars": cars,
                 "simulated": meta['simulated'],
+                "search_rules": rules,
                 "price_policy": ("The advert price is the German price with VAT, not the customer's cost. "
                                  "Use ka_quote_car with the reference for what they will pay."
                                  if ai_first else

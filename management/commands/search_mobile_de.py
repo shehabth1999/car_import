@@ -44,6 +44,9 @@ class Command(BaseCommand):
         parser.add_argument('--country', default=None)
         parser.add_argument('--any-vat', action='store_true',
                             help="Include cars whose VAT is NOT reclaimable (default: only vatable)")
+        parser.add_argument('--saloon', action='store_true', help="Saloon body only (Apify)")
+        parser.add_argument('--accident-free', action='store_true',
+                            help="Only adverts that say accident-free, or new cars (Apify)")
         parser.add_argument('--page', type=int, default=1)
         parser.add_argument('--size', type=int, default=20)
         parser.add_argument('--import', dest='do_import', action='store_true',
@@ -86,6 +89,7 @@ class Command(BaseCommand):
                     fuel=options['fuel'], gearbox=options['gearbox'],
                     country=options['country'],
                     vatable=not options['any_vat'],
+                    saloon_only=options['saloon'], accident_free=options['accident_free'],
                     page_number=options['page'], page_size=options['size'],
                 )
                 total = meta['total']
