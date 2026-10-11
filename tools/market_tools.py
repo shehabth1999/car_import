@@ -62,7 +62,7 @@ def ka_search_vehicle_listings(context, make: Optional[str] = None, model: Optio
         listings, meta = mobile_de.search(
             make=make, model=None if model_class else model, year_min=year_min, year_max=year_max,
             mileage_max=max_mileage, price_max=price_max_eur or None,
-            vatable=True, page_size=20 if narrowed else wanted)
+            vatable=True, page_size=20 if narrowed else wanted, model_class=model_class or None)
         if model_class:
             in_class = re.compile(r'^%s[\s-]?\d' % re.escape(str(model_class).strip()), re.IGNORECASE)
             listings = [row for row in listings if in_class.match(str(row.get('model') or '').strip())]

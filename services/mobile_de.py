@@ -13,11 +13,14 @@ documentation at https://services.mobile.de/docs/search-api.html (re-verified
     country · customerNumber · sort.field/sort.order · page.number/page.size
     page.size caps at 100, and at most 2,000 ads can be paged through.
 
-**Two backends, one interface.** `LiveBackend` talks to mobile.de when
+**Three backends, one interface.** `LiveBackend` talks to mobile.de when
 credentials exist. `SimulatedBackend` answers from a fixture with the same
 filtering, the same paging and the same response shape when they do not — so
 everything downstream (import, screens, tools, pricing) is written once and
-does not change when the real key arrives.
+does not change when the real key arrives. `ApifyBackend` reads the public
+site through an Apify Actor (`services/apify.py`); it is used only when the
+switch `car_import.mobile_de_backend` says `apify` — a token in the
+environment does not turn it on by itself.
 
 Every simulated row is stamped `is_simulated`, and nothing anywhere strips that
 flag: a fake car must never be quotable to a customer by accident.
@@ -46,6 +49,16 @@ MAX_ADS_PER_RESULT_SET = 2000  # documented hard cap
 USERNAME_KEY = 'car_import.mobile_de_username'
 PASSWORD_KEY = 'car_import.mobile_de_password'
 FORCE_SIMULATION_KEY = 'car_import.mobile_de_force_simulation'
+#: `auto` (the official API when it has credentials, else the simulator) or
+#: `apify`. Anything else reads as `auto`.
+BACKEND_KEY = 'car_import.mobile_de_backend'
+
+# The Apify Actor that reads mobile.de, pay per result. Its input and output
+# were read off its public schema and README on 2026-10-11; `_normalise_apify`
+# is written for THIS Actor, which is why it is a constant and not a switch.
+APIFY_ACTOR = '3x1t~mobile-de-scraper-ppr'
+APIFY_MAX_ITEMS_PER_RUN = 50
+DETAIL_URL = 'https://suchen.mobile.de/fahrzeuge/details.html?id=%s'
 
 
 class MobileDeError(Exception):
@@ -134,14 +147,16 @@ def build_query(make=None, model=None, price_max=None, price_min=None,
 class LiveBackend:
     """The real thing. Only used when credentials exist."""
 
+    name = 'official'
     simulated = False
+    gone_is_certain = True       # a 404 on an advert means it was taken down
 
     def __init__(self, user, password, timeout=20):
         self.user = user
         self.password = password
         self.timeout = timeout
 
-    def search(self, params):
+    def search(self, params, model_class=None):
         return self._get(f'{BASE_URL}{SEARCH_PATH}?{urllib.parse.urlencode(params)}')
 
     def ad(self, ad_id):
@@ -186,12 +201,14 @@ class SimulatedBackend:
     matching data is code whose filters were never tested.
     """
 
+    name = 'simulator'
     simulated = True
+    gone_is_certain = False
 
     def __init__(self, ads=None):
         self.ads = ads if ads is not None else load_fixture()
 
-    def search(self, params):
+    def search(self, params, model_class=None):
         rows = [dict(ad) for ad in self.ads]
 
         classification = params.get('classification') or ''
@@ -242,15 +259,150 @@ class SimulatedBackend:
                      if str(a.get('ad_id') or a.get('id') or '') == str(ad_id)), None)
 
 
+class ApifyBackend:
+    """mobile.de's public pages, read by an Apify Actor (`services/apify.py`).
+
+    The same two questions as the other backends — a search, and one advert —
+    asked in the Actor's vocabulary. What the Actor cannot do is said here once:
+
+    * it has NO price filter, so a budget is applied to what comes back;
+    * it has NO VAT filter and its documented output has no VAT field, so
+      `vatable` on a query is not honoured and every row arrives as not
+      vatable until a real run has shown what the data carries;
+    * it takes a model only from its own list (`Mercedes-Benz|C 200`), so a
+      search needs a model or a class — a make alone is not something it can
+      be asked for;
+    * it returns one page, the first.
+    """
+
+    name = 'apify'
+    simulated = False
+    gone_is_certain = False      # an empty run may be a blocked run, not a sold car
+
+    _SORT = {
+        ('price', False): 'Price (lowest first)',
+        ('price', True): 'Price (highest first)',
+        ('mileage', False): 'Mileage (lowest first)',
+        ('mileage', True): 'Mileage (highest first)',
+        ('firstRegistrationDate', False): 'Initial registration date (oldest first)',
+        ('firstRegistrationDate', True): 'Initial registration date (newest first)',
+    }
+    # The Actor's codes are the marketplace's own, the same as the official API's.
+    _FUELS = {'PETROL', 'DIESEL', 'ELECTRICITY', 'HYBRID', 'HYBRID_DIESEL', 'LPG', 'CNG',
+              'HYDROGENIUM', 'ETHANOL', 'OTHER'}
+    _GEARBOXES = {'MANUAL_GEAR', 'AUTOMATIC_GEAR', 'SEMIAUTOMATIC_GEAR'}
+
+    def search(self, params, model_class=None):
+        make, model = _classified(params)
+        models = self._models(make, model, model_class)
+        if not models:
+            asked = model_class or model
+            raise MobileDeError(
+                f"The mobile.de reader has no model '{asked}' for make '{make}'. Check the model's name "
+                f"with the customer." if asked else
+                f"The mobile.de reader needs a model: the make alone ('{make}') is not enough. Ask the "
+                f"customer which model they want.")
+
+        size = max(1, min(int(params.get('page.size', 20)), APIFY_MAX_ITEMS_PER_RUN))
+        descending = str(params.get('sort.order', '')).upper().startswith('DESC')
+        run_input = {
+            'searchCategory': 'Car', 'models': models, 'maxItems': size,
+            'searchPageURLs': [], 'searchTerms': [],
+            # Dealer reviews are not ours to collect, and each one slows the run.
+            'automaticPaging': True, 'reviewLimit': 0, 'showDamagedVehicles': 'false',
+            'sort': self._SORT.get((params.get('sort.field'), descending), 'Standard'),
+        }
+        for ours, theirs in (('mileage.min', 'mileageKmMin'), ('mileage.max', 'mileageKmMax'),
+                             ('power.min', 'powerKwMin'), ('power.max', 'powerKwMax')):
+            if params.get(ours) is not None:
+                run_input[theirs] = int(params[ours])
+        for ours, theirs in (('firstRegistrationDate.min', 'registrationDateYearMin'),
+                             ('firstRegistrationDate.max', 'registrationDateYearMax')):
+            year = _year_of(params.get(ours))
+            if year:
+                run_input[theirs] = year
+        fuel = str(params.get('fuel') or '').upper()
+        if fuel in self._FUELS:
+            run_input['fuelType'] = [fuel]
+        gearbox = str(params.get('gearbox') or '').upper()
+        if gearbox in self._GEARBOXES:
+            run_input['transmission'] = [gearbox]
+        if params.get('country'):
+            run_input['location'] = str(params['country']).upper()
+
+        ads = self._run(run_input, size, timeout=120)
+        ads = [ad for ad in ads if _price_within(ad, params.get('price.min'), params.get('price.max'))]
+        return {'total': len(ads), 'page': {'number': 1, 'size': size}, 'ads': ads}
+
+    def ad(self, ad_id):
+        """One advert, by its page. None when the run returns nothing for it."""
+        ads = self._run({
+            'searchCategory': 'Car', 'searchPageURLs': [DETAIL_URL % urllib.parse.quote(str(ad_id))],
+            'searchPageURLMaxItems': 1, 'maxItems': 1, 'automaticPaging': False, 'reviewLimit': 0,
+        }, 1, timeout=60)
+        # Only the advert that was asked for: a page that falls back to
+        # "similar cars" is not an answer about this one.
+        return next((ad for ad in ads if str(ad.get('id') or '') == str(ad_id)), None)
+
+    def _run(self, run_input, max_items, timeout):
+        from car_import.services import apify
+        try:
+            return apify.run_sync(APIFY_ACTOR, run_input, max_items=max_items, timeout=timeout)
+        except apify.ApifyError as exc:
+            raise MobileDeError(f'{exc} [{exc.kind}]') from exc
+
+    def _models(self, make, model, model_class):
+        """Our make and model in the Actor's words. Its list spells them the
+        marketplace's way, so the match folds case and spacing ("C200" = "C 200")
+        and reads the catalogue's own names first ("Mercedes" = "Mercedes-Benz")."""
+        from car_import.services import apify, catalogue
+        try:
+            choices = apify.model_choices(APIFY_ACTOR)
+        except apify.ApifyError as exc:
+            raise MobileDeError(f'{exc} [{exc.kind}]') from exc
+
+        brand = catalogue.find_brand(make)
+        makes = {catalogue.norm(make), catalogue.norm(brand.name) if brand is not None else ''} - {''}
+        of_make = [choice for choice in choices if catalogue.norm(choice.split('|')[0]) in makes]
+        if model_class:
+            in_class = re.compile(r'^%s[\s-]?\d' % re.escape(str(model_class).strip()), re.IGNORECASE)
+            return [choice for choice in of_make if in_class.match(choice.split('|', 1)[-1])]
+        car_model = catalogue.find_model(brand, model) if brand is not None else None
+        names = {catalogue.norm(model), catalogue.norm(car_model.name) if car_model is not None else ''} - {''}
+        return [choice for choice in of_make if catalogue.norm(choice.split('|', 1)[-1]) in names]
+
+
+def _classified(params):
+    """(make, model) back out of a query's `classification`."""
+    text = str(params.get('classification') or '')
+    make = text.split('/makes/')[1].split('/')[0] if '/makes/' in text else ''
+    model = text.split('/models/')[1].split('/')[0] if '/models/' in text else ''
+    return make, model
+
+
+def _price_within(ad, low, high):
+    """The Actor has no price filter, so the budget is applied here."""
+    if low is None and high is None:
+        return True
+    amount = (((ad.get('price') or {}).get('total') or {}).get('amount'))
+    if amount is None:
+        return False
+    return (low is None or amount >= float(low)) and (high is None or amount <= float(high))
+
+
 def _slug(value):
     return str(value or '').strip().lower().replace('-', '').replace(' ', '')
 
 
 def _year_of(value):
-    """2023 from '2023', '2023-05' or the live API's '202305' (yyyyMM)."""
+    """2023 from '2023', '2023-05', the live API's '202305' (yyyyMM) or the
+    Apify Actor's '05/2023'."""
     text = str(value or '').strip()
     if len(text) == 6 and text.isdigit():
         text = text[:4]
+    month_first = re.fullmatch(r'\d{1,2}/((?:19|20)\d\d)', text)
+    if month_first:
+        return int(month_first.group(1))
     try:
         return int(text.split('-')[0])
     except (TypeError, ValueError):
@@ -278,8 +430,35 @@ def load_fixture():
         return []
 
 
-def get_backend():
-    """Live when we can, simulated when we cannot — and it says which."""
+def backend_choice():
+    """What the switch says: `apify`, or `auto` for anything else."""
+    return 'apify' if str(_config(BACKEND_KEY)).strip().lower() == 'apify' else 'auto'
+
+
+def get_backend(force=None):
+    """Live when we can, simulated when we cannot — and it says which.
+
+    `force` names one outright (`apify`, `official`, `simulator`) for a command
+    that wants to try a backend without flipping the switch for everybody; it
+    raises when that backend has no credentials rather than quietly answering
+    from another.
+    """
+    choice = str(force or backend_choice()).strip().lower()
+    if choice == 'simulator':
+        return SimulatedBackend()
+    if choice == 'official':
+        user, password = credentials()
+        if not (user and password):
+            raise MobileDeError('No mobile.de Search-API credentials are configured')
+        return LiveBackend(user, password)
+    if choice == 'apify':
+        from car_import.services import apify
+        if apify.is_configured():
+            return ApifyBackend()
+        if force:
+            raise MobileDeError(f'{apify.TOKEN_ENV} is not set in the environment')
+        logger.warning('car_import: %s says apify but %s is not set — answering as before',
+                       BACKEND_KEY, apify.TOKEN_ENV)
     if is_live():
         user, password = credentials()
         return LiveBackend(user, password)
@@ -357,15 +536,94 @@ def _normalise(ad, simulated):
     }
 
 
-def search(**kwargs):
-    """Search, and return (listings, meta). Never raises for an empty result."""
-    backend = get_backend()
+def _first_number(text):
+    """89106 from '89,106 km', 1984 from '1.984 ccm'. None when there is none."""
+    match = re.search(r'\d[\d.,]*', str(text or ''))
+    digits = re.sub(r'\D', '', match.group(0)) if match else ''
+    return int(digits) if digits else None
+
+
+def _normalise_apify(item):
+    """The Apify Actor's item as the columns SupplierListing keeps.
+
+    Written against the Actor's published sample (2026-10-11): the car's facts
+    sit in `attributes` under the site's English labels, as display text
+    ("89,106 km", "169 kW (230 hp)", "08/2016").
+
+    `vatable` is False on purpose. The published output says nothing about VAT,
+    and a guess the wrong way understates a quote by the whole 19% — so until a
+    real run has shown what the data carries, no row from here claims a reclaim.
+    """
+    attributes = item.get('attributes') if isinstance(item.get('attributes'), dict) else {}
+    dealer = item.get('dealerDetails') if isinstance(item.get('dealerDetails'), dict) else {}
+    total = ((item.get('price') or {}).get('total') or {})
+
+    title = str(item.get('title') or '').strip()
+    for lead in (item.get('brand'), item.get('model')):
+        lead = str(lead or '').strip()
+        if lead and title.lower().startswith(lead.lower()):
+            title = title[len(lead):].strip()
+
+    condition = str(attributes.get('Vehicle condition') or '').lower()
+    registered = str(attributes.get('First Registration') or '').strip()
+    power = str(attributes.get('Power') or '')
+    kilowatts = re.search(r'(\d+)\s*kW', power, re.IGNORECASE)
+    horsepower = re.search(r'(\d+)\s*(?:hp|PS)\b', power, re.IGNORECASE)
+    seller = str(dealer.get('sellerType') or '').lower()
+    # "Mülhauser Straße 111, DE-47906 Kempen" → Kempen
+    city = re.search(r'\b[A-Z]{1,3}-\d{4,5}\s+(.+)$', str(dealer.get('address') or '').strip())
+
+    return {
+        'ad_id': str(item.get('id') or ''),
+        'url': item.get('url') or '',
+        'make': item.get('brand') or '',
+        'model': item.get('model') or '',
+        'version': title[:190],
+        'model_year': _year_of(registered),
+        'first_registration': registered[:16],
+        'mileage_km': _first_number(attributes.get('Mileage')),
+        'cc': _first_number(attributes.get('Cubic Capacity')),
+        'power_kw': int(kilowatts.group(1)) if kilowatts else None,
+        'power_hp': int(horsepower.group(1)) if horsepower else None,
+        'fuel': str(attributes.get('Fuel') or '')[:32],
+        'gearbox': str(attributes.get('Transmission') or '')[:32],
+        'colour_exterior': str(attributes.get('Colour') or '')[:64],
+        'condition_new': condition.startswith('new'),
+        'accident_free': 'accident-free' in condition,
+        'price_gross_eur': total.get('amount') if (total.get('currency') or 'EUR') == 'EUR' else None,
+        'vatable': False,
+        'seller_name': str(dealer.get('name') or '')[:190],
+        'seller_type': 'dealer' if 'dealer' in seller else ('private' if 'private' in seller else 'unknown'),
+        'seller_city': (city.group(1).strip() if city else '')[:128],
+        'country': str(dealer.get('country') or '')[:8],
+        'images': [image for image in (item.get('images') or []) if image],
+        'features': item.get('features') or [],
+        'is_simulated': False,
+        'raw': item,
+    }
+
+
+def _normalised(backend, ad):
+    if isinstance(backend, ApifyBackend):
+        return _normalise_apify(ad)
+    return _normalise(ad, backend.simulated)
+
+
+def search(backend=None, model_class=None, **kwargs):
+    """Search, and return (listings, meta). Never raises for an empty result.
+
+    `backend` forces one for a command (see `get_backend`). `model_class` is a
+    class letter ("C" for C-Class) for the backend that cannot be asked for a
+    make alone; the others ignore it and the caller narrows the result itself.
+    """
+    backend = get_backend(backend)
     params = build_query(**kwargs)
-    payload = backend.search(params)
+    payload = backend.search(params, model_class=model_class)
     ads = payload.get('ads') or payload.get('searchResult', {}).get('ads') or []
-    listings = [_normalise(ad, backend.simulated) for ad in ads]
+    listings = [_normalised(backend, ad) for ad in ads]
     meta = {
         'simulated': backend.simulated,
+        'backend': backend.name,
         'total': payload.get('total') or payload.get('searchResult', {}).get('total') or len(ads),
         'page': params['page.number'],
         'page_size': params['page.size'],
@@ -418,6 +676,11 @@ def refresh_availability(queryset=None):
     rows = queryset if queryset is not None else SupplierListing.objects.filter(
         still_available=True, source='mobile.de')
     backend = get_backend()
+    if isinstance(backend, ApifyBackend):
+        # What follows calls an advert gone when one search does not return it.
+        # An Apify search returns a capped handful, so it would flag cars that
+        # are still for sale — and bill for the privilege every night.
+        return {'seen': 0, 'gone': 0, 'failed': 0, 'simulated': False, 'skipped': 'apify'}
     now = timezone.now()
     gone, seen, failed = 0, 0, 0
 
@@ -482,9 +745,11 @@ def read_advert(link):
     """(listing, how) for a mobile.de link the customer sent.
 
     `how` is `stored` or `fetched` with a listing, or — with None — why not:
-    `not_a_mobile_de_link`, `no_api_access` (no Search-API credentials: the
-    site itself refuses automated readers, so there is no fallback to
-    scraping), `not_found` (the advert is gone) or `mobile_de_error`.
+    `not_a_mobile_de_link`, `no_api_access` (the simulator: nothing can open
+    the link), `not_found` (the advert is gone) or `mobile_de_error`. Through
+    Apify an empty answer is `mobile_de_error`, never `not_found`: a blocked
+    run looks the same as a removed advert, and telling a customer their car
+    was sold when it was not is the worse mistake.
     """
     from car_import.models import SupplierListing
 
@@ -502,7 +767,9 @@ def read_advert(link):
         logger.warning('car_import: could not read mobile.de advert %s', ad_id, exc_info=True)
         return None, 'mobile_de_error'
     if not ad:
-        return None, ('no_api_access' if backend.simulated else 'not_found')
-    created, updated = import_listings([_normalise(ad, backend.simulated)])
+        if backend.simulated:
+            return None, 'no_api_access'
+        return None, ('not_found' if backend.gone_is_certain else 'mobile_de_error')
+    created, updated = import_listings([_normalised(backend, ad)])
     rows = created or updated
     return (rows[0], 'fetched') if rows else (None, 'not_found')

@@ -338,6 +338,15 @@ class Command(BaseCommand):
                 ('car_import.dealer_price_gap_text', 'الفرق بينا وبين الوكيل حوالي 200 ألف جنيه',
                  'الجملة الوحيدة اللي المساعد بيقولها لما العميل يقارن بسعر الوكيل أو بمصر أو يسأل «هوفّر كام؟». '
                  'عدّل الرقم لما السوق يتغيّر. المساعد عمره ما بيقول سعر الوكيل نفسه ولا رقم توفير تاني.'),
+                # Reading mobile.de through Apify (services/apify.py). The token
+                # itself is NOT a switch: it is APIFY_TOKEN in the environment.
+                ('car_import.mobile_de_backend', 'auto',
+                 'مصدر إعلانات mobile.de: auto = زي ما هو (الـ API الرسمي لو بياناته متسجلة، غير كده المحاكي). '
+                 'apify = قراءة الموقع عن طريق Apify (لازم التوكن APIFY_TOKEN يكون في إعدادات السيرفر). '
+                 'متتغيّرش لـ apify غير بعد ما أول تشغيل حقيقي يتراجع.'),
+                ('car_import.apify_daily_results_cap', '300',
+                 'أقصى عدد إعلانات تتقري من Apify في اليوم (كل إعلان بفلوس). لو العدد اتعدّى، القراءة بتقف '
+                 'لحد بكرة والمساعد بيرجع يطلب صورة الإعلان من العميل. 0 = إيقاف Apify خالص.'),
             ):
                 row, made = ConfigParameter.objects.get_or_create(
                     key=key, defaults={'value': value, 'description': note})
