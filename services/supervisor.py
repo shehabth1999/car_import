@@ -160,25 +160,58 @@ def figures_in(text):
     return [m.group(1) for m in _STANDALONE_NUMBER.finditer(str(text or '').translate(_ARABIC_DIGITS))]
 
 
-def _untraceable_figures(text, allowed):
-    """Amounts of money in the reply that no tool, search or rule supplied."""
-    allowed_forms = set()
+_UNIT_AFTER = re.compile(r'^\s{0,2}(مليون|ألف|الف|آلاف)')
+_PERCENT_AFTER = re.compile(r'^\s{0,2}[%٪]')
+
+
+def _scaled(raw, factor):
+    """'3.45' × a million as the digits a tool would have returned, or ''."""
+    exact = [f for f in _canonical(raw) if not f.startswith('~')]
+    try:
+        return str(int(round(float(exact[0]) * factor))) if exact else ''
+    except ValueError:
+        return ''
+
+
+def _untraceable_figures(text, allowed, with_percent=True):
+    """Amounts of money in the reply that no tool, search or rule supplied.
+
+    «3.8 مليون» is an amount though it is two digits: until 2026-10-09 the
+    three-digit floor let «3.5 لـ 3.8 مليون جنيه» — a dealer's price the
+    assistant made up — through without so much as a note. A figure in
+    millions or thousands is also accepted when the tools returned it written
+    out (3.45 مليون against 3,450,000)."""
+    allowed_forms, allowed_exact = set(), set()
     for a in allowed:
         for form in _canonical(a):
             allowed_forms.add(form.lstrip('~'))
+            if not form.startswith('~'):
+                allowed_exact.add(form)
     text = _EUR1.sub(' ', str(text or '').translate(_ARABIC_DIGITS))
     found = []
     for match in _STANDALONE_NUMBER.finditer(text):
-        number = _normalise_number(match.group(1))
-        if not number or len(number) < 3:
+        raw = match.group(1)
+        after = text[match.end():match.end() + 12]
+        unit = _UNIT_AFTER.match(after)
+        million = bool(unit and unit.group(1) == 'مليون')
+        number = _normalise_number(raw)
+        if not number or (len(number) < 3 and not million):
             continue                  # counts, small percentages, a year's last digits
-        is_money = (_MONEY_AFTER.match(text[match.end():match.end() + 12])
+        is_money = (_MONEY_AFTER.match(after)
                     or _MONEY_BEFORE.search(text[max(0, match.start() - 2):match.start()]))
         if not is_money:
             continue                  # a model, a year, an engine size, a mileage
-        if {f.lstrip('~') for f in _canonical(match.group(1))} & allowed_forms:
+        if not with_percent and _PERCENT_AFTER.match(after):
             continue
-        found.append(match.group(1))
+        forms = _canonical(raw)
+        if million:
+            if ({f for f in forms if not f.startswith('~')} & allowed_exact
+                    or _scaled(raw, 1000000) in allowed_forms):
+                continue
+        elif ({f.lstrip('~') for f in forms} & allowed_forms
+              or (unit and _scaled(raw, 1000) in allowed_forms)):
+            continue
+        found.append(f'{raw} {unit.group(1)}' if unit else raw)
     return found
 
 
@@ -336,7 +369,10 @@ FIGURE_WINDOW_HOURS = 72
 #: to a queue, and the client's instruction is that staff monitor, not answer:
 #: a false alarm there is a customer talking to nobody.
 BLOCKING_UNDER_AI_FIRST = {'bank_details'}
-BLOCKING_WHY_UNDER_AI_FIRST = {'confirming money arrived'}
+DEPOSIT_PROMISE_WHY = 'promising the deposit back to a customer the company provides the initiative to'
+#: …and one that promises a customer thousands of dollars that will never come
+#: back to them (owner, 2026-10-07 and again 2026-10-09).
+BLOCKING_WHY_UNDER_AI_FIRST = {'confirming money arrived', DEPOSIT_PROMISE_WHY}
 
 _PROMPT_FIGURES = None
 
@@ -384,6 +420,155 @@ def tool_text(conversation, since):
         return ''
 
 
+def allowed_figures(conversation, since):
+    """Every number the assistant may say this turn: what the tools returned in
+    the last three days, what its rules tell it to say, what the customer wrote,
+    what is on the customer's quotations, and the dealer sentence."""
+    from datetime import timedelta
+    window = (since - timedelta(hours=FIGURE_WINDOW_HOURS)) if since is not None else None
+    figures = (figures_from_tool_messages(conversation, window) + _prompt_figures()
+               + figures_from_customer(conversation, window) + figures_on_file(conversation))
+    try:
+        from car_import.services import policy
+        figures += figures_in(policy.dealer_gap_text())
+    except Exception:
+        logger.exception('car_import: could not read the dealer sentence for the gate')
+    return figures
+
+
+# ── the owner's rules of 2026-10-09, as checks ───────────────────────────────
+#: Two of these in one reply is a list of options. The owner: «مش عايزينه يكتب
+#: إيه الكماليات أو يدي مثال» — the cars come «كاملة أو بريميوم بلس», full stop.
+OPTION_TERMS = ('فتحة سقف', 'فتحه سقف', 'بانوراما', 'كراسي جلد', 'كراسي كهربا', 'ميموري', 'شنطة كهربا',
+                'شنطه كهربا', 'عداد ديجيتال', 'إضاءة led', 'اضاءة led', 'مساعدة قيادة', 'كاميرا خلفية',
+                'كاميرات 360', 'burmester', 'تعليق هوائي', 'مثبت سرعة', 'مقاعد مدف')
+
+#: "It comes back to YOU" — the deposit, said to the customer.
+_REFUND_TO_YOU = re.compile(
+    r'(بترجعلك|بترجع لك|بترجع لحضرتك|بترجعهالك|بترجعها لك|بتترجعلك|بتترجع لك|بتترجع لحضرتك|هترجعلك|هترجع لك|'
+    r'هترجع لحضرتك|هتترجعلك|هتترجع لحضرتك|ترجعلك|بتستردها|هتستردها|تستردها|هتسترد|بتسترد)')
+
+
+def lists_options(text):
+    low = str(text or '').lower()
+    return sum(1 for term in OPTION_TERMS if term in low) >= 2
+
+
+def promises_deposit_back(text):
+    """True when the reply tells the customer the deposit returns to them —
+    not when it denies it («مش بتستردها»), and not when it states the
+    condition («لو حضرتك صاحب المبادرة … بترجعلك»)."""
+    text = str(text or '')
+    for match in _REFUND_TO_YOU.finditer(text):
+        if 'مش' in text[max(0, match.start() - 12):match.start()]:
+            continue
+        lead = text[max(0, match.start() - 90):match.start()]
+        if 'لو ' in lead and 'صاحب المبادر' in lead:
+            continue
+        return True
+    return False
+
+
+def company_provides_initiative(conversation):
+    """True when this customer's initiative is the company's: they said they
+    hold none, or their latest initiative offer charges the powers of attorney."""
+    partner = getattr(conversation, 'social_partner', None) if conversation is not None else None
+    if partner is None:
+        return False
+    try:
+        from car_import.models import Quote
+        from car_import.services import agent_help
+        holds = agent_help.known_initiative(partner)
+        if holds is not None:
+            return holds is False
+        quote = (Quote.all_objects.filter(partner_id=partner.pk, programme='initiative')
+                 .exclude(total_eur=0).order_by('-id').first())
+        return bool(quote is not None and quote.own_initiative is not True and quote.poa_usd is not None)
+    except Exception:
+        logger.exception('car_import: could not tell whose initiative it is')
+        return False
+
+
+def _owner_rule_problems(text, conversation):
+    problems = []
+    if lists_options(text):
+        problems.append({'rule': 'options_list', 'severity': 'warn', 'why': 'a list of options'})
+    if promises_deposit_back(text) and company_provides_initiative(conversation):
+        problems.append({'rule': 'promise', 'severity': 'block', 'why': DEPOSIT_PROMISE_WHY})
+    return problems
+
+
+def correctable(text, conversation, since):
+    """What is wrong with this reply that one more run can put right — as the
+    sentences the model is told, or [] when the reply may go.
+
+    The gate could only do two things with a reply: send it with a note to
+    staff, or stop it and hand the customer over. Neither fits a made-up price:
+    sent, the customer has read it; stopped, they wait for a person over
+    something the assistant can simply say properly. So the reply is dropped
+    unseen and written again, once (`patches._corrected`)."""
+    from car_import.services import policy, turn_context
+    reasons = []
+    invented = _untraceable_figures(text, allowed_figures(conversation, since), with_percent=False)
+    if invented:
+        partner = getattr(conversation, 'social_partner', None) if conversation is not None else None
+        sentence = turn_context.dealer_gap_line(partner) if partner is not None else policy.dealer_gap_text()
+        reasons.append(
+            'فيه أرقام فلوس مش راجعة من أي أداة (%s). ممنوع أي سعر لعربية في مصر أو عند الوكيل، وأي نطاق أسعار، وأي '
+            'تحويل لجنيه، وأي مثال بالأرقام من عندك. لو الكلام عن الفرق عن الوكيل: «%s» وبس.'
+            % ('، '.join(invented[:5]), sentence))
+    if lists_options(text):
+        reasons.append('فيه تعديد كماليات. ممنوع تعدّ كماليات أو تدي أمثلة: قول بس «%s».'
+                       % turn_context.OPTIONS_LINE_AR)
+    if promises_deposit_back(text) and company_provides_initiative(conversation):
+        reasons.append('قلت إن الوديعة بترجع للعميل، والشركة هي اللي موفّرة المبادرة: «قيمة الوديعة مش بتستردها '
+                       'حضرتك — بيستردها صاحب المبادرة بس».')
+    return reasons
+
+
+def retry_hint(reasons):
+    return ('[SYSTEM — ردّك اللي فات اتلغى قبل ما يوصل للعميل، والعميل مشافوش. السبب: ' + ' '.join(reasons)
+            + ' اكتب الرد على رسالة العميل من جديد، قصير، من غير الحاجات دي، ومن غير ما تذكر إن فيه رد اتلغى.]')
+
+
+#: Tools that only read. A run that called anything else did something — sent
+#: an offer, filed a receipt, handed over — and must not be run a second time.
+READ_ONLY_TOOLS = {'search_ka_approved_answers', 'ka_search_cars', 'ka_initiative_deposit', 'ka_customs_value'}
+
+
+def run_was_read_only(conversation, since):
+    """True when every tool this run called only looked something up."""
+    if conversation is None or since is None:
+        return False
+    try:
+        from modules.chat.models import Message
+        rows = Message.objects_all.filter(conversation=conversation, type='tool_call',
+                                          created_at__gte=since).values_list('content', flat=True)
+        for content in rows:
+            content = content if isinstance(content, dict) else {}
+            name = content.get('tool_name')
+            args = content.get('tool_input') if isinstance(content.get('tool_input'), dict) else {}
+            if name in READ_ONLY_TOOLS:
+                continue
+            if name == 'ka_quote_car' and not args.get('send_offer'):
+                continue                  # a price only: nothing is recorded or sent
+            if name == 'ka_deal_status' and not args.get('send_update'):
+                continue
+            return False
+        return True
+    except Exception:
+        logger.exception("car_import: could not read this run's tool calls")
+        return False
+
+
+def note_correction(conversation, dropped, reasons):
+    """The reply that was dropped, on the record for the people watching."""
+    _note(conversation,
+          '♻️ رد المساعد اتلغى قبل ما يوصل للعميل واتكتب تاني:\n' + '\n'.join(f'- {r}' for r in reasons)
+          + '\n\nالرد اللي اتلغى (العميل مشافوش):\n' + str(dropped),
+          subject='رد المساعد اتكتب تاني')
+
+
 def gate(text, conversation=None, since=None, workflow_name=''):
     """Decide what leaves, and record why. Returns (text_to_send, problems).
 
@@ -408,10 +593,9 @@ def gate(text, conversation=None, since=None, workflow_name=''):
     # no tool ever returned.
     from datetime import timedelta
     window = (since - timedelta(hours=FIGURE_WINDOW_HOURS)) if since is not None else None
-    allowed = (figures_from_tool_messages(conversation, window) + _prompt_figures()
-               + figures_from_customer(conversation, window) + figures_on_file(conversation))
-    problems = check_reply(text, allowed_figures=allowed,
+    problems = check_reply(text, allowed_figures=allowed_figures(conversation, since),
                            allowed_text=tool_text(conversation, window))
+    problems += _owner_rule_problems(text, conversation)
     problems = _apply_policy(problems)
     if not problems:
         return text, problems

@@ -354,6 +354,67 @@ HUMAN_TOPIC_WORDS = (
 )
 
 
+#: A customer weighing the import against buying in Egypt.
+COMPARISON_WORDS = ('الوكيل', 'عن مصر', 'في مصر بكام', 'سعرها في مصر', 'اسعار مصر', 'أسعار مصر', 'هوفر',
+                    'هوفّر', 'هتوفر', 'هتوفّر', 'وفرت', 'وفّرت', 'اوفر', 'أوفر', 'توفير', 'فرق السعر',
+                    'الفرق في السعر', 'ارخص', 'أرخص', 'مثال', 'هكسب', 'اكسب', 'أكسب', 'ربح')
+OPTION_WORDS = ('كماليات', 'الكماليات', 'اوبشن', 'أوبشن', 'ابشن', 'أبشن', 'اوبش', 'option')
+REFUND_WORDS = ('ترجع', 'هترجع', 'بترجع', 'استرد', 'بسترد', 'هسترد', 'تسترد', 'ترد لي', 'ترجعلي', 'هترجعلي')
+DEPOSIT_WORDS = ('وديعة', 'الوديعة', 'وديعه', 'الوديعه', 'مبادرة', 'المبادرة', 'مبادره', 'المبادره', 'الفلوس',
+                 'فلوس')
+
+#: All the assistant says about what comes with a car from Germany (owner,
+#: 2026-10-09: «مش عايزينه يكتب إيه الكماليات أو يدي مثال، يذكر بس إن العربية
+#: بتيجي من ألمانيا كاملة أو بريميوم بلس»).
+OPTIONS_LINE_AR = 'العربيات اللي بتيجي من ألمانيا بتبقى كاملة أو بريميوم بلس'
+
+
+def dealer_gap_line(partner):
+    """The approved sentence about the dealer's price, with the deposit's
+    return added only for a customer who holds their own initiative."""
+    from car_import.services import agent_help, policy
+    line = policy.dealer_gap_text()
+    if agent_help.known_initiative(partner) is True:
+        line += '، وقيمة المبادرة هتستردها بعد 5 سنين'
+    return line
+
+
+def owner_rules_1009(message, partner):
+    """Warnings for the three things the assistant got wrong in the client's
+    chat of 2026-10-08, raised by the customer's own words: the dealer's price,
+    the options, and who gets the deposit back. A long thread is full of the
+    assistant's earlier wrong answers, and it copies them — so each warning
+    says the old replies are void."""
+    from car_import.services import agent_help
+    text = str(message or '').lower()
+    warnings = []
+    if any(word in text for word in COMPARISON_WORDS):
+        warnings.append(
+            'العميل بيقارن بمصر أو بالوكيل، أو بيسأل هيوفّر كام، أو طالب مثال بالأرقام: قول الجملة دي زي ما هي — '
+            '«%s» — ومتزوّدش عليها أي رقم. ممنوع تقول سعر عربية في مصر أو عند الوكيل، أو نطاق أسعار («من كذا '
+            'لكذا»)، أو تكلفة استيراد تقريبية بالجنيه، أو رقم توفير تاني، أو «مثال بالأرقام» من عندك. أي رد قديم في '
+            'المحادثة فيه أرقام زي دي اتلغى. عايز رقم حقيقي؟ اعرض تسعّرله عربية معيّنة بـ ka_quote_car.'
+            % dealer_gap_line(partner))
+    if any(word in text for word in OPTION_WORDS):
+        warnings.append(
+            'العميل بيسأل عن الكماليات: قول بس «%s». متعدّش كماليات ومتديش أمثلة ومتقارنش كماليات بالوكيل. '
+            'عربية معيّنة من البحث؟ ابعت اللينك بتاعها.' % OPTIONS_LINE_AR)
+    if any(word in text for word in REFUND_WORDS) and any(word in text for word in DEPOSIT_WORDS):
+        holds = agent_help.known_initiative(partner)
+        if holds is True:
+            rule = 'العميل ده صاحب المبادرة: الوديعة بترجعله هو بعد 5 سنين.'
+        elif holds is False:
+            rule = ('الشركة هي اللي موفّرة المبادرة للعميل ده: «قيمة الوديعة مش بتستردها حضرتك — بيستردها صاحب '
+                    'المبادرة بس». عمرك ما تقوله إنها بترجعله.')
+        else:
+            rule = ('الوديعة بيستردها صاحب المبادرة بس: لو العميل صاحب المبادرة بترجعله بعد 5 سنين، ولو الشركة '
+                    'موفّراها مش بترجعله.')
+        warnings.append(
+            'العميل بيسأل عن استرداد الوديعة: %s أي رد قديم في المحادثة قال غير كده اتلغى. ومتشرحش طريقة '
+            'الاسترداد ولا عملتها ولا الجهة اللي بترجّعها من عندك — لو سأل قول إنك هتأكدله.' % rule)
+    return warnings
+
+
 def build(partner, conversation, message):
     """Everything `prepare_turn` hands the model, in one call. In Arabic: a
     worker has no active language, and "Paid" in the middle of an Arabic
@@ -388,6 +449,14 @@ def _build(partner, conversation, message):
         facts.append('حالة الدفع المسجّلة: %s' % deal.get_payment_state_display())
 
     warnings = turn_warnings(message, deal, conversation)
+    try:
+        warnings += owner_rules_1009(message, partner)
+        # Standing, on purpose: the follow-up («اديني مثال», «؟») has none of
+        # the words above, and it is where the made-up figures came out.
+        warnings.append('المقارنة بسعر الوكيل أو بمصر، في أي وقت: الجملة المعتمدة الوحيدة هي «%s». من غير أي سعر '
+                        'للوكيل ولا رقم توفير تاني ولا مثال بالأرقام.' % dealer_gap_line(partner))
+    except Exception:
+        pass
     # The one link the model may write without a tool: the website's car list.
     # A live run sent "khaled-automobile.com" from memory — a site that is not ours.
     try:

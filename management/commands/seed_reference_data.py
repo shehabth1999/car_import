@@ -333,6 +333,11 @@ class Command(BaseCommand):
                 ('car_import.office_map_link', 'https://maps.app.goo.gl/tREoajEJNPsKTcRv5',
                  'لينك مكان مقر الشركة على الخريطة (Google Maps). بيتضاف تحت رسالة تعديل العقد كسطر '
                  '«🗺️ اللوكيشن». فاضي = الرسالة بتتبعت بالعنوان بس.'),
+                # The owner's sentence of 2026-10-09 (services/policy.py): the only
+                # thing the assistant says about the dealer's price.
+                ('car_import.dealer_price_gap_text', 'الفرق بينا وبين الوكيل حوالي 200 ألف جنيه',
+                 'الجملة الوحيدة اللي المساعد بيقولها لما العميل يقارن بسعر الوكيل أو بمصر أو يسأل «هوفّر كام؟». '
+                 'عدّل الرقم لما السوق يتغيّر. المساعد عمره ما بيقول سعر الوكيل نفسه ولا رقم توفير تاني.'),
             ):
                 row, made = ConfigParameter.objects.get_or_create(
                     key=key, defaults={'value': value, 'description': note})

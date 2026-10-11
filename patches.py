@@ -49,6 +49,10 @@ def apply_patches():
         started = timezone.now()
         result = original(workflow_id, input_data, **kwargs)
         try:
+            result = _corrected(original, result, workflow_id, input_data, kwargs, started)
+        except Exception:
+            logger.exception('car_import: the second run for a wrong reply failed; the first one stands')
+        try:
             return _gate(result, workflow_id, kwargs, started)
         except Exception:
             # The gate must never be the reason a customer hears nothing. If
@@ -61,6 +65,53 @@ def apply_patches():
     aistudio_services.execute_workflow_sync = execute_workflow_sync
     _PATCHED = True
     logger.info('car_import: outbound gate installed in front of execute_workflow_sync')
+
+
+def _corrected(original, result, workflow_id, input_data, kwargs, started):
+    """The reply, or — when a check can see it is wrong and nothing was done
+    yet — the reply of one more run that was told why.
+
+    Owner, 2026-10-09: the assistant made up the dealer's prices and a saving
+    of a million pounds, listed options, and told a customer the company
+    provides an initiative to that the deposit comes back to them. The gate saw
+    one of the three figures and sent the reply anyway with a note to staff —
+    which is its policy, because stopping a reply hands the customer to a
+    queue. This is the third thing it can do: drop the reply unseen and have
+    it written again, once, with the reason (`supervisor.correctable`).
+
+    Only a run that did nothing but look things up is run twice: an offer
+    sent, a receipt filed or a hand-over must not happen a second time."""
+    if not getattr(result, 'success', False) or getattr(result, 'status', 'completed') == 'interrupted':
+        return result
+    text = getattr(result, 'output', None)
+    if not isinstance(text, str) or not text.strip():
+        return result
+    if not _workflow_name(workflow_id).startswith(OUR_WORKFLOW_PREFIX):
+        return result
+    conversation = kwargs.get('conversation')
+    if conversation is None or _escalated_during(conversation, started):
+        return result
+
+    from car_import.services import supervisor
+    reasons = supervisor.correctable(_chat_formatting(text), conversation, started)
+    if not reasons or not supervisor.run_was_read_only(conversation, started):
+        return result
+
+    hint = supervisor.retry_hint(reasons)
+    again = dict(kwargs)
+    batch = list(kwargs.get('partner_message') or [])
+    data = input_data
+    if batch:
+        again['partner_message'] = batch + [{'role': 'user', 'content': [{'type': 'text', 'text': hint}]}]
+    else:
+        data = dict(input_data, message=f"{hint}\n{input_data.get('message') or ''}")
+    logger.warning('car_import: reply dropped and written again — %s', ' | '.join(reasons)[:300])
+    second = original(workflow_id, data, **again)
+    rewritten = getattr(second, 'output', None)
+    if not (getattr(second, 'success', False) and isinstance(rewritten, str) and rewritten.strip()):
+        return result                      # the second run gave nothing: the gate deals with the first
+    supervisor.note_correction(conversation, text, reasons)
+    return second
 
 
 def _gate(result, workflow_id, kwargs, started):

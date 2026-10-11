@@ -48,3 +48,24 @@ def may_quote_simulated_cars():
     """A simulated advert is a fake car. Quotable only where somebody said so
     on purpose — the test tenant, while mobile.de access is pending."""
     return _value(SIMULATED_QUOTES_KEY) in _ON
+
+
+#: The one sentence about the dealer's price (owner, 2026-10-09). Shown a
+#: comparison with Egypt on 2026-10-08, the assistant made up the dealer's
+#: prices («3.5 لـ 3.8 مليون جنيه»), an import cost and a saving of a million.
+#: The owner: «معنديش فكرة سعر الوكيل منين جات الأسعار … ممكن نقول الفرق بينا
+#: وبين الوكيل حوالي 200 ألف جنيه». Management edits it in
+#: الإعدادات ← مفاتيح التشغيل when the market moves.
+DEALER_GAP_KEY = 'car_import.dealer_price_gap_text'
+DEFAULT_DEALER_GAP = 'الفرق بينا وبين الوكيل حوالي 200 ألف جنيه'
+
+
+def dealer_gap_text():
+    """What the assistant says when a customer compares with the dealer or
+    with Egypt — this sentence, and no other figure."""
+    try:
+        from modules.base.models import ConfigParameter
+        row = ConfigParameter.objects.filter(key=DEALER_GAP_KEY).values('value').first()
+    except Exception:
+        row = None
+    return str((row or {}).get('value') or '').strip() or DEFAULT_DEALER_GAP
