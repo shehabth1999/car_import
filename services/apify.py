@@ -36,6 +36,7 @@ logger = logging.getLogger(__name__)
 API_BASE = 'https://api.apify.com/v2'
 TOKEN_ENV = 'APIFY_TOKEN'
 SYNC_LIMIT_SECONDS = 300          # documented: a longer run answers 408
+MIN_BILLING_CEILING = 30          # items; see run_sync
 
 DAILY_CAP_KEY = 'car_import.apify_daily_results_cap'
 DEFAULT_DAILY_CAP = 300
@@ -152,7 +153,12 @@ def run_sync(actor, run_input, max_items, timeout=60):
                                 f"Raise {DAILY_CAP_KEY} to allow more.")
 
     timeout = max(10, min(int(timeout), SYNC_LIMIT_SECONDS))
-    query = urllib.parse.urlencode({'timeout': timeout, 'maxItems': max_items,
+    # Apify refuses a run whose maximum cost comes to less than $0.01 ("Maximum
+    # cost per run is less than the allowed minimum", first real run,
+    # 2026-10-11) — a one-advert read asked for a ceiling of a fraction of a
+    # cent. So the billing ceiling has a floor; how many items actually come
+    # back is the Actor input's business, and that is what gets billed.
+    query = urllib.parse.urlencode({'timeout': timeout, 'maxItems': max(max_items, MIN_BILLING_CEILING),
                                     'format': 'json', 'clean': 1})
     request = urllib.request.Request(
         f'{API_BASE}/acts/{_actor_path(actor)}/run-sync-get-dataset-items?{query}',

@@ -127,10 +127,7 @@ class Command(BaseCommand):
 
     def _line(self, row, backend):
         price = row.get('price_gross_eur')
-        if backend.name == 'apify':
-            # The Actor's published output says nothing about VAT.
-            vat = '  VAT unknown'
-        elif row.get('vatable'):
+        if row.get('vatable'):
             vat = '  VAT-deductible'
             if price:
                 vat += f"  (net ≈ {round(float(price) / 1.19):,} €)"

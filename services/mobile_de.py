@@ -265,10 +265,9 @@ class ApifyBackend:
     The same two questions as the other backends — a search, and one advert —
     asked in the Actor's vocabulary. What the Actor cannot do is said here once:
 
-    * it has NO price filter, so a budget is applied to what comes back;
-    * it has NO VAT filter and its documented output has no VAT field, so
-      `vatable` on a query is not honoured and every row arrives as not
-      vatable until a real run has shown what the data carries;
+    * it has NO price filter and NO VAT filter, so a budget and `vatable` are
+      applied to what comes back — it asks for twice as many adverts when
+      either is set, so that the filter still leaves enough;
     * it takes a model only from its own list (`Mercedes-Benz|C 200`), so a
       search needs a model or a class — a make alone is not something it can
       be asked for;
@@ -304,9 +303,12 @@ class ApifyBackend:
                 f"customer which model they want.")
 
         size = max(1, min(int(params.get('page.size', 20)), APIFY_MAX_ITEMS_PER_RUN))
+        narrowed_here = bool(params.get('vatable')) or any(
+            params.get(key) is not None for key in ('price.min', 'price.max'))
+        fetch = min(size * 2, APIFY_MAX_ITEMS_PER_RUN) if narrowed_here else size
         descending = str(params.get('sort.order', '')).upper().startswith('DESC')
         run_input = {
-            'searchCategory': 'Car', 'models': models, 'maxItems': size,
+            'searchCategory': 'Car', 'models': models, 'maxItems': fetch,
             'searchPageURLs': [], 'searchTerms': [],
             # Dealer reviews are not ours to collect, and each one slows the run.
             'automaticPaging': True, 'reviewLimit': 0, 'showDamagedVehicles': 'false',
@@ -330,8 +332,11 @@ class ApifyBackend:
         if params.get('country'):
             run_input['location'] = str(params['country']).upper()
 
-        ads = self._run(run_input, size, timeout=120)
+        ads = self._run(run_input, fetch, timeout=120)
         ads = [ad for ad in ads if _price_within(ad, params.get('price.min'), params.get('price.max'))]
+        if params.get('vatable'):
+            ads = [ad for ad in ads if _apify_vat(ad)[0]]
+        ads = ads[:size]
         return {'total': len(ads), 'page': {'number': 1, 'size': size}, 'ads': ads}
 
     def ad(self, ad_id):
@@ -378,6 +383,22 @@ def _classified(params):
     make = text.split('/makes/')[1].split('/')[0] if '/makes/' in text else ''
     model = text.split('/models/')[1].split('/')[0] if '/models/' in text else ''
     return make, model
+
+
+def _apify_vat(item):
+    """(vatable, rate %) for an Apify item.
+
+    Not in the Actor's README; read off real adverts on 2026-10-11. A car sold
+    with VAT shown carries `price.withoutVAT` and `price.vat` (19); a car sold
+    without — a private seller, or a dealer's margin-scheme stock — carries
+    neither. That absence is the whole signal, so anything unclear is "no":
+    the wrong "yes" understates a quote by the entire VAT.
+    """
+    price = item.get('price') if isinstance(item.get('price'), dict) else {}
+    net = price.get('withoutVAT') if isinstance(price.get('withoutVAT'), dict) else {}
+    rate = price.get('vat')
+    vatable = bool(net.get('amount')) and isinstance(rate, (int, float)) and rate > 0
+    return vatable, (rate if vatable else None)
 
 
 def _price_within(ad, low, high):
@@ -546,17 +567,15 @@ def _first_number(text):
 def _normalise_apify(item):
     """The Apify Actor's item as the columns SupplierListing keeps.
 
-    Written against the Actor's published sample (2026-10-11): the car's facts
-    sit in `attributes` under the site's English labels, as display text
-    ("89,106 km", "169 kW (230 hp)", "08/2016").
-
-    `vatable` is False on purpose. The published output says nothing about VAT,
-    and a guess the wrong way understates a quote by the whole 19% — so until a
-    real run has shown what the data carries, no row from here claims a reclaim.
+    Written against the Actor's published sample and checked on real adverts
+    (2026-10-11): the car's facts sit in `attributes` under the site's English
+    labels, as display text with non-breaking spaces ("89,106 km",
+    "169 kW (230 hp)", "08/2016"). `vatable` is `_apify_vat`.
     """
     attributes = item.get('attributes') if isinstance(item.get('attributes'), dict) else {}
     dealer = item.get('dealerDetails') if isinstance(item.get('dealerDetails'), dict) else {}
     total = ((item.get('price') or {}).get('total') or {})
+    vatable, vat_rate = _apify_vat(item)
 
     title = str(item.get('title') or '').strip()
     for lead in (item.get('brand'), item.get('model')):
@@ -573,7 +592,7 @@ def _normalise_apify(item):
     # "Mülhauser Straße 111, DE-47906 Kempen" → Kempen
     city = re.search(r'\b[A-Z]{1,3}-\d{4,5}\s+(.+)$', str(dealer.get('address') or '').strip())
 
-    return {
+    row = {
         'ad_id': str(item.get('id') or ''),
         'url': item.get('url') or '',
         'make': item.get('brand') or '',
@@ -591,7 +610,7 @@ def _normalise_apify(item):
         'condition_new': condition.startswith('new'),
         'accident_free': 'accident-free' in condition,
         'price_gross_eur': total.get('amount') if (total.get('currency') or 'EUR') == 'EUR' else None,
-        'vatable': False,
+        'vatable': vatable,
         'seller_name': str(dealer.get('name') or '')[:190],
         'seller_type': 'dealer' if 'dealer' in seller else ('private' if 'private' in seller else 'unknown'),
         'seller_city': (city.group(1).strip() if city else '')[:128],
@@ -601,6 +620,9 @@ def _normalise_apify(item):
         'is_simulated': False,
         'raw': item,
     }
+    if vatable:
+        row['vat_rate_pct'] = vat_rate
+    return row
 
 
 def _normalised(backend, ad):
@@ -737,7 +759,8 @@ def ad_id_from_link(text):
         value = (query.get(key) or [''])[0]
         if value.isdigit():
             return value
-    tail = re.search(r'/(\d{6,12})(?:\.html)?/?$', parts.path)
+    # Up to 16 digits: adverts posted since 2026 carry 14-digit ids.
+    tail = re.search(r'/(\d{6,16})(?:\.html)?/?$', parts.path)
     return tail.group(1) if tail else None
 
 

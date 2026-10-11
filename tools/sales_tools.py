@@ -180,7 +180,29 @@ def _eu_origin(context, listing, car_model, car, year):
             f"contracting. Do not refuse the car and do not guess where it is built.")
 
 
-def _resolve_price(listing_reference, gross_price_eur):
+#: A real advert that shows no price without VAT (first seen 2026-10-11, the day
+#: adverts started arriving through Apify): a private seller, or a dealer's
+#: margin-scheme stock. The calculator takes 19% off every price it is given,
+#: so on such a car it would quote about a fifth too low — and the listing now
+#: says so. Until the owner rules how these are priced, a person prices them.
+VAT_NOT_RECLAIMABLE_DO_NOW = (
+    "This advert is sold WITHOUT reclaimable German VAT (a private seller, or a dealer selling without VAT "
+    "shown), so the price calculator does not apply to it. Do NOT state or estimate any price for this car, "
+    "and do not ask the customer for its price or a screenshot. Tell the customer in ONE short line that this "
+    "advert's price has no reclaimable tax so a colleague will confirm what it costs, and offer to find the "
+    "same model from a dealer where the tax IS reclaimable (ka_search_cars, source import). A colleague was "
+    "tagged in the thread.")
+
+
+def _vat_not_reclaimable(context, listing):
+    from car_import.services import agent_help, sales_flow
+    agent_help.ask_staff(_partner(context), getattr(context, 'conversation', None), 'vat',
+                         f'{sales_flow.listing_label(listing)} (إعلان {listing.ad_id})')
+    return {"success": False, "error": "This advert is sold without reclaimable VAT; a colleague prices it",
+            "error_type": "vat_not_reclaimable", "do_now": VAT_NOT_RECLAIMABLE_DO_NOW}
+
+
+def _resolve_price(listing_reference, gross_price_eur, context=None):
     """(listing, gross, source_note) or an error dict."""
     from car_import.services import mobile_de, policy, sales_flow
 
@@ -216,6 +238,10 @@ def _resolve_price(listing_reference, gross_price_eur):
         if not listing.price_gross_eur:
             return {"success": False, "error": "The advert has no price", "error_type": "no_price",
                     "must_escalate": True}
+        # Only where the marketplace itself said so: a row typed in by hand
+        # leaves `vatable` unticked without meaning anything by it.
+        if listing.source == 'mobile.de' and not listing.is_simulated and not listing.vatable:
+            return _vat_not_reclaimable(context, listing)
         return listing, listing.price_gross_eur, ''
 
     gross = sales_flow.to_decimal(gross_price_eur)
@@ -478,7 +504,7 @@ def ka_price_car(context, listing_reference: Optional[str] = None,
 
         if not policy.ai_first():
             return _refused_by_policy()
-        resolved = _resolve_price(listing_reference, gross_price_eur)
+        resolved = _resolve_price(listing_reference, gross_price_eur, context)
         if isinstance(resolved, dict):
             return resolved
         listing, gross, source_note = resolved
@@ -592,7 +618,7 @@ def ka_send_quotation(context, listing_reference: Optional[str] = None,
             return {"success": False, "error": "No customer in context", "error_type": "no_partner"}
         if not identity.full_id_name(partner):
             return id_name_needed()
-        resolved = _resolve_price(listing_reference, gross_price_eur)
+        resolved = _resolve_price(listing_reference, gross_price_eur, context)
         if isinstance(resolved, dict):
             return resolved
         listing, gross, source_note = resolved
